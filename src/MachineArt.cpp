@@ -14,6 +14,7 @@ Color mix(Color a,Color b,float t){return {static_cast<unsigned char>(a.r*(1-t)+
 struct Art {
  Rectangle r;MachineAppearance a;Color edge,paint,pale,steel,glass,dark,hot,cold;float stroke;
  Art(Rectangle bounds,const MachineAppearance& look):r(bounds),a(look){
+  if(a.kind==MachineKind::SeedHopper)a.direction=(a.direction+3)%4;
   edge={32,59,66,255};paint=hex(machineSpec(a.kind).color);if(isUtilityEquipment(a.kind))paint=serviceColor(a.utility);pale=mix(paint,WHITE,.78f);steel={169,190,191,255};glass={229,243,240,255};dark={72,99,105,255};hot={234,112,65,255};cold={62,162,204,255};
   if(a.monochrome){edge=dark=BLACK;paint=steel={184,184,184,255};pale=glass=WHITE;hot=cold={100,100,100,255};}
   if(isLabGlassware(a.kind)&&!a.monochrome)edge={68,122,137,255};
@@ -95,6 +96,22 @@ Rectangle window(MachineKind k){switch(k){
 Rectangle machineFoodWindow(Rectangle bounds,MachineKind kind,int direction,int slot,bool paired){
  auto w=window(kind);if(paired&&slot<2){w.width=(w.width-.035f)*.5f;if(slot==1)w.x+=w.width+.035f;}
  if(slot==2)w={.42f,.77f,.22f,.14f};MachineAppearance look;look.kind=kind;look.direction=direction;return Art(bounds,look).rect(w.x,w.y,w.width,w.height);
+}
+void drawCropProduce(Rectangle bounds,const std::string& crop,double dirt,double freshness){
+ MachineAppearance look;look.kind=MachineKind::Feeder;Art d(bounds,look);d.paint=mix(hex(ingredient(crop).color),Color{108,84,48,255},float((1-freshness)*.6));Color leaf=mix(Color{66,145,76,255},Color{135,109,55,255},float(1-freshness));
+ if(crop=="carrot"||crop=="beet"){
+  if(crop=="carrot")d.polygon({{.24f,.36f},{.72f,.37f},{.44f,.94f}},d.paint);else d.oval(.48f,.60f,.29f,.27f,d.paint);
+  for(float x:{.26f,.48f,.70f})d.line(.48f,.35f,x,.08f,leaf,1.3f);
+ }else if(crop=="greens"||crop=="basil"){
+  d.line(.49f,.84f,.49f,.23f,leaf,1.2f);for(float y:{.34f,.57f}){d.oval(.32f,y,.20f,.12f,leaf);d.oval(.66f,y-.06f,.20f,.12f,leaf);}d.oval(.48f,.18f,.12f,.16f,leaf);
+ }else if(crop=="mushroom"){
+  d.box(.39f,.43f,.22f,.42f,d.pale);d.oval(.50f,.42f,.38f,.28f,d.paint);d.line(.16f,.49f,.85f,.49f,d.edge,.6f);
+ }else{
+  d.oval(.48f,.58f,crop=="pepper"?.29f:.34f,.31f,d.paint);d.oval(.36f,.48f,.07f,.05f,mix(d.paint,WHITE,.5f),false);
+  d.line(.48f,.28f,.53f,.10f,leaf,1.1f);d.oval(.63f,.24f,.14f,.055f,leaf,false);
+  if(crop=="berry")for(float y:{.47f,.65f})for(float x:{.35f,.52f,.68f})d.oval(x,y,.018f,.026f,d.pale,false);
+ }
+ int dots=std::clamp(int(std::ceil(dirt*25)),0,16);for(int n=0;n<dots;n++)d.oval(.23f+float((n*37)%53)/100,.38f+float((n*23)%37)/100,.024f,.024f,Color{110,78,46,255},false);
 }
 void drawMachineHousing(Rectangle bounds,const MachineAppearance& look){
  Art d(bounds,look);auto k=look.kind;
@@ -292,8 +309,17 @@ void drawMachineMechanism(Rectangle bounds,const MachineAppearance& look){
  case MachineKind::TemperatureLogger:for(float y:{.27f,.38f,.49f,.60f})d.line(.58f,y,.68f,y,d.edge,.7f);if(look.active){float level=.4f+.18f*std::sin(t*2);d.line(.50f,.68f,.50f,level,d.hot,2);}break;
  case MachineKind::DropletViewer:for(int n=0;n<7;n++){float x=.28f+.13f*(n%4),y=.30f+.16f*(n/4);d.oval(x,y,.035f,.035f,n%2?d.cold:d.paint,false);}break;
  case MachineKind::AromaSensor:for(float k=0;k<3;k++){float spread=.04f+k*.06f;d.arc(.74f,.52f,spread,.13f+k*.04f,-PI*.36f,PI*.36f,d.paint,.7f);}break;
- case MachineKind::FieldBed:case MachineKind::RaisedBed:{if(look.cropPlanted){int count=std::clamp(1+int(look.progress*4),1,5);for(int n=0;n<count;n++){float x=.22f+n*.14f;float h=.10f+float(look.progress)*.23f;d.line(x,.67f,x,.67f-h,d.paint,1.2f);if(look.progress>.12){d.oval(x-.035f,.67f-h*.70f,.05f,.025f,d.paint,false);d.oval(x+.035f,.67f-h*.88f,.05f,.024f,d.paint,false);}if(look.progress>.70)d.oval(x,.67f-h,.025f,.035f,d.hot,false);}}else{for(float x:{.24f,.50f,.76f})d.line(x,.54f,x+.04f,.58f,d.steel,.7f);}break;}
- case MachineKind::HydroponicBed:{if(look.cropPlanted)for(int n=0;n<4;n++){float x=.24f+n*.17f,h=.10f+float(look.progress)*.22f;d.line(x,.66f,x,.66f-h,d.paint,1.2f);d.oval(x-.03f,.66f-h*.68f,.045f,.022f,d.paint,false);d.line(x,.68f,x,.76f,d.edge,.8f);}else for(float x:{.28f,.50f,.72f})d.oval(x,.56f,.035f,.025f,d.cold,false);break;}
+ case MachineKind::FieldBed:case MachineKind::RaisedBed:case MachineKind::HydroponicBed:{
+  Color leaf=mix(Color{61,145,79,255},Color{160,118,61,255},float(1-look.cropHealth));if(look.monochrome)leaf=d.paint;
+  d.line(.17f,.76f,.17f+.66f*float(look.cropMoisture),.76f,d.cold,1.3f);
+  if(look.cropPlanted){float growth=float(std::clamp(look.progress,0.,1.));
+   for(int n=0;n<4;n++){float x=.23f+n*.18f,h=.05f+growth*.28f;
+    if(look.crop=="mushroom"){d.box(x-.02f,.65f-h*.65f,.04f,h*.65f,d.pale,false);d.oval(x,.65f-h*.7f,.025f+growth*.05f,.02f+growth*.04f,d.paint);continue;}
+    d.line(x,.67f,x,.67f-h,leaf,1.1f);if(growth>.10){d.oval(x-.035f,.67f-h*.65f,.045f,.025f,leaf,false);d.oval(x+.035f,.67f-h*.90f,.045f,.026f,leaf,false);}
+    if(growth>.55&&look.crop!="greens"&&look.crop!="basil"){Color fruit=look.monochrome?d.paint:mix(leaf,hex(ingredient(look.crop).color),(growth-.55f)/.45f);float y=look.crop=="carrot"||look.crop=="beet"?.68f:.67f-h*.60f;d.oval(x+.025f,y,.02f+growth*.017f,.025f+growth*.02f,fruit,false);}
+   }
+  }else for(float x:{.24f,.50f,.76f})d.line(x,.54f,x+.04f,.58f,d.steel,.7f);
+  break;}
  case MachineKind::SeedHopper:for(float x:{.40f,.50f,.60f}){d.oval(x,.28f,.025f,.023f,d.paint,false);d.line(x,.33f,x,.39f,d.edge,.65f);}break;
  case MachineKind::Fertigation:{float a=look.active?t*2:0;for(int n=0;n<3;n++){float x=.40f+std::cos(a+n*2*PI/3)*.08f,y=.57f+std::sin(a+n*2*PI/3)*.07f;d.oval(x,y,.035f,.035f,d.paint,false);}d.line(.17f,.37f,.30f,.37f,d.cold,1.2f);break;}
  case MachineKind::GrowLight:for(float x:{.30f,.50f,.70f}){float y=.49f+(look.active?.09f*std::sin(t*3+x*4):.09f);d.line(x,.45f,x-.06f,y,d.paint,.8f);d.line(x,.45f,x+.06f,y,d.paint,.8f);}break;

@@ -1,4 +1,4 @@
-AFTERTASTE / MOLECULAR WORKS 3.14.1
+AFTERTASTE / MOLECULAR WORKS 3.15.0
 Invent dishes on the actual factory floor / native C++17
 
 Serving and feedback
@@ -38,7 +38,18 @@ temperature target.
 
 Floor farming
 -------------
-Farming shares the factory floor and simulation clock. The starter demo places
+Farming shares the factory floor and simulation clock. The Flow overlay shows
+seed planting, nutrient delivery, working grow lights and pollination along
+their actual bed connections. Growing crops use their variety colour, growth
+stage, health and moisture readings. Harvested crops remain visible as produce
+on conveyors and inside harvesters, washers, graders and cold stores. Soil
+speckles disappear as washing removes dirt; grade, freshness and temperature
+readouts follow the real batch. The intake pulses when it stores a batch and
+keeps the last received crop as a read-only record. Route the crop conveyor
+straight into factory processing to use the batch directly, or send it through
+an intake to supply named farm inventory.
+
+The starter demo places
 a six-crop farm north of the molecular works: fruiting crops, leafy greens,
 roots, peppers, herbs and shade-grown mushrooms each occupy a separate bed and
 harvest lane. Raised soil, field plots and hydroponic troughs trade speed,

@@ -67,7 +67,7 @@ Blueprint Factory::marketGardenBlueprint(){
 const Batch* Factory::batchAt(Position p,int slot)const{
  auto m=at(p);if(!m)return nullptr;
  if(slot==1)return m->extra?&*m->extra:nullptr;if(slot==2)return m->sideOutput?&*m->sideOutput:nullptr;if(slot==3)return m->lastOutput?&*m->lastOutput:nullptr;
- if(m->item)return &*m->item;return isTastingDock(m->kind)&&m->lastOutput?&*m->lastOutput:nullptr;
+ if(m->item)return &*m->item;return (isTastingDock(m->kind)||m->kind==MachineKind::ProduceIntake)&&m->lastOutput?&*m->lastOutput:nullptr;
 }
 bool Factory::dispense(Position p){
  auto m=at(p);if(!m||m->kind!=MachineKind::Feeder||m->item){notice="Choose an empty ingredient feeder to dispense one measured batch.";return false;}

@@ -1,3 +1,22 @@
+AFTERTASTE / MOLECULAR WORKS 3.15.0 - VISIBLE FARM PRODUCTION
+29 October 2026 / macOS / Apple Silicon
+
+The floor renders actual crop growth, moisture and health, seed and growing
+support connections, harvested produce, measured washing, grading, chilling
+and named inventory receipts. Harvest batches retain bed provenance. Stored
+produce is retained only as a read-only receipt, not as active floor food.
+
+Native application build and link: PASS.
+Farm flow regression suite: PASS (44 checks: actual farm activity, blocked
+outputs, pause, washing, cooling, storage, mass preservation, cooking visuals
+and persistence of intake receipts).
+Farm relocation regression suite: PASS (save versions 5 and 6, custom walls,
+preserved crops and food, northern coordinates, stable reload).
+Native screenshot inspection: PASS (isolated six-crop farm using real model
+state; distinct crops, growing stages, produce in cold storage and farm links).
+The full historical test suite was not run for this release.
+
+Prior 3.14.0 - northern crop farm
 AFTERTASTE / MOLECULAR WORKS 3.14.0 - NORTHERN CROP FARM
 29 October 2026 / macOS / Apple Silicon
 

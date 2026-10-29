@@ -8,11 +8,16 @@ struct MaterialView {
  Compounds compounds{};
  double droplet=90,particle=180,air=0,shell=0,denatured=0,links=0,starch=0;
  bool vapor=false;std::string fraction;
+ bool cropBatch=false,cropIntact=false;double cropDirt=0,cropFreshness=1,cropQuality=1;
  std::map<std::string,double> ingredients;
  std::vector<std::string> events;
  std::vector<std::pair<double,std::string>> components;
 };
 MaterialView materialView(const CulinaryBatch& food);
+MaterialView materialView(const Batch& batch);
+enum class FarmFlowKind {Seed,Nutrients,Light,Pollination,Harvest,Storage,Compost};
+struct FarmFlow {Position from,to;FarmFlowKind kind;std::string crop;double amount=0,start=0,duration=.4;};
+struct FarmReading {MachineKind kind;std::string crop,status;bool planted=false,enabled=false;double growth=0,moisture=0,health=1,nutrients=0;int cooldown=0;};
 struct FloorSample {Position position;int slot=0;MaterialView material;std::vector<Position> route;uint64_t split=0,sidePart=0;std::vector<uint64_t> parts;};
 struct FloorMotion {uint64_t batch=0;Position from,to;int slot=0;MaterialView material;double start=0,duration=.4;};
 struct FloorChange {uint64_t batch=0;int tick=0;std::string title;std::vector<std::string> details;MaterialView material;};
@@ -21,6 +26,8 @@ public:
  std::map<uint64_t,FloorSample> samples;
  std::map<Position,FloorChange> changes;
  std::vector<FloorMotion> motions;
+ std::map<Position,FarmReading> farmReadings;
+ std::vector<FarmFlow> farmFlows;
  void clear();
  void observe(const Factory& factory,double now,double duration=.4);
  bool moving(uint64_t batch,double now)const;
