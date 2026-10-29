@@ -1,0 +1,18 @@
+Reference source: AFTERTASTE_MINIMAL_REACTOR.html
+Source SHA-256: 5fc86987fb90aa083a687a7d3fefc48e278a624fdf43f7d3dee565b2fe288b07
+Captured from the supplied file on 28 October 2026.
+
+reference.json is generated output from the original simulation, not from
+the converted C++ implementation. The original script was evaluated in an
+isolated Node VM with DOM rendering and browser persistence replaced by no-ops.
+Only the simulation, game commands, diners, scoring and forecasts were used.
+
+The 24 scenarios include initial and nine-turn transport states for all seven
+courses, layered processing, thermal destruction, network editing, disguises,
+sensory contexts, moving, rotating, undo, tasting, rerouting, machine caps,
+and forced cascades. Each state includes every chamber and full bite scoring.
+A separate original forecast records effects and perturbation sensitivity.
+
+Comparison permits 1e-9 * (1 + abs(reference)) numeric error. C++ adds default
+fields for typed material records; these extra fields are ignored. No source
+values are rewritten to match the native implementation.

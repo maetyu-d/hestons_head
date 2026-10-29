@@ -1,0 +1,404 @@
+AFTERTASTE / MOLECULAR WORKS 3.14.0 - NORTHERN CROP FARM
+29 October 2026 / macOS / Apple Silicon
+
+The demo now has a six-crop farm north of the factory with six independent
+seed-to-intake lines, field, raised and hydroponic beds, probes, pollination,
+fertigation and grow lights. Seasonal daylight and temperature affect outdoor
+beds, while crop-family rotation pressure changes growth, health and yield.
+Compost replenishes nutrients and eases soil fatigue. Existing 3.13.0 starter
+saves migrate their old garden and in-flight batches into the larger northern
+layout; custom workspaces retain their machines and receive the updated plan.
+
+Release C++ application build and link: PASS.
+Automated suites and GUI interaction/layout checks were not run.
+
+Prior 3.13.0 - first floor farm
+29 October 2026 / macOS / Apple Silicon
+
+The shared factory floor includes crop beds, seed stock and hoppers, fertigation,
+grow lights, pollination and soil readings. Crop conditions change growth,
+health, yield and batch composition. Harvested crops can be washed, graded,
+chilled and stored by ingredient name for matching factory feeders.
+
+Prior 3.12.0 - factory input buffers
+29 October 2026 / macOS / Apple Silicon
+
+Factory-level input buffers now track electricity, process water, farm produce
+and chemicals. Powered processes and water-using machines consume their inputs
+in both Free Build and Economy. Produce/Dairy ingredients draw from farm produce;
+Agent ingredients draw from chemicals. Inspector controls deliver more directly;
+no upstream supply systems were added.
+
+Release C++ application build and link: PASS.
+Automated suites and GUI interaction/layout checks were not run.
+
+Prior 3.11.0 - floor camera
+Floor zoom eases to its target while keeping the point under the cursor anchored.
+Middle drag, Alt-left drag and right drag pan; right click without dragging selects.
+
+Release C++ application build and link: PASS.
+Automated suites and GUI interaction/layout checks were not run.
+
+Prior 3.10.0 - serving and feedback
+29 October 2026 / macOS / Apple Silicon
+
+Three service audiences are available on each tasting dock: Restaurant pass,
+Research tasting and Chilled pickup. The restaurant ticket tracks matched batches
+and a simulation-tick deadline; expiries reset only the match streak. Reports
+explain sensory targets met or missed and suggest process adjustments. Research
+servings retain composition and process notes without a sales score. Chilled
+pickup holds batches above 8 C. Per-dock reports and recent cross-dock service
+history are available in the inspector.
+
+Release C++ application build and link: PASS.
+Automated suites and GUI interaction/layout checks were not run.
+
+Prior 3.9.0 - connected factory systems
+29 October 2026 / macOS / Apple Silicon
+
+Food ports are explicit on the floor and in the inspector: cyan inputs, dark
+main outlets and orange clockwise side streams. Both separator fractions stay
+as actual batches and can feed downstream processes.
+Typed service stations and lines provide shared power, heat, cooling, water and
+vacuum. Connected stations share capacity; adjacent processes consume the
+appropriate service demand and pause if that network is missing or exhausted.
+Four floor instruments sample pH, temperature, average droplet size and aroma,
+record batch identity and retain a short history. Named floor plans preserve
+machine settings, port directions, side routes and utility topology.
+
+Release C++ application build and link: PASS.
+Automated suites and GUI interaction/layout checks were not run.
+
+Prior 3.8.10 - serve point zoning
+
+Release C++ application build and link: PASS.
+Multiple tasting docks and collection vessels are supported. They must stay
+outside tinted factory areas; a serve point or conveyor can fill a straight
+one-tile perimeter opening and count as a boundary segment. Builds and blueprints
+are checked against zoning, and serving, forwarding or recording from an interior
+dock is blocked. Automated suites and GUI interaction/layout checks were not run.
+
+Prior 3.8.9 - factory walls
+
+Release C++ application build and link: PASS.
+Placeable wall tiles form boundaries on the shared floor. Closed loops mark their
+enclosed cells as factory area with a green floor tint; open floor remains outside.
+Wall cells block construction and batch routes, and saved workspaces retain their
+walls. Automated suites and GUI interaction/layout checks were not run.
+
+Prior 3.8.8 - lattice display alignment
+
+Release C++ application build and link: PASS.
+The connected 5-by-5 node lattice and its active-site highlight move down slightly
+inside the reactor window to center the graphic in the machine preview.
+Automated suites and GUI interaction/layout checks were not run for this build.
+
+Prior 3.8.7 - lattice reactor artwork
+
+Release C++ application build and link: PASS.
+The lattice reactor artwork uses a compact chassis and a connected 5-by-5
+molecular node display. The same mechanism is visible on the floor and in the
+enlarged focus preview; an animated active site shows the reactor working.
+Automated suites and GUI interaction/layout checks were not run for this build.
+
+Prior 3.8.6 - lattice reactor demo flow
+
+Release C++ application build and link: PASS.
+The starter demo stages one real tomato batch and one real olive-oil batch in
+its experiment feeders, focuses the inspector on the lattice reactor and routes
+the actual mixture through it into shared production. Fresh 3.8.5-or-older exact
+starter saves receive those two measured feeder batches once, only when the saved
+demo is otherwise pristine. User batches, stock and recipe records are retained.
+Automated suites and GUI interaction/layout checks were not run for this build.
+
+Prior 3.8.5 - molecular lattice reactor
+29 October 2026 / macOS / Apple Silicon
+
+Release C++ application build and link: PASS.
+The new floor reactor holds and transforms its actual incoming batch. Its saved
+5-by-5 board is derived from compounds in that batch; adjacent three-token matches
+queue chemistry using the shared simulation clock, real reaction conditions and
+replayable food history. Release sends the same batch onward through the factory.
+The experiment cell now routes through the reactor. Exact 3.8.4 starter saves are
+migrated in place while preserving held batches and existing dish records.
+Automated suites and GUI interaction/layout checks were not run for this build.
+
+Prior 3.8.4 - interconnected starter factory
+29 October 2026 / macOS / Apple Silicon
+
+Release C++ application build and link: PASS.
+The starter demo contains 91 physical machines across a 16-by-13 district. Six
+process branches feed shared one-tile-at-a-time conveyor routes and a shared mixer,
+homogeniser and final tasting dock. The tails fraction rejoins the finishing line;
+heads and hearts remain in separate collection receivers. Exact starter saves are
+interconnected in unused floor space while retaining existing live batches.
+Automated suites and GUI layout checks were not run for this refinement.
+
+Prior 3.8.3 expanded starter factory
+
+The starter demo grows from 30 to 55 physical machines by adding a three-cut
+fractional distillation train with working glass conduits, reflux columns,
+condensers and fraction receivers. The district expands to 12 by 13 tiles, and
+the first view fits the complete demo. An exact starter-district save receives
+the new line in an unused row while retaining existing machine and batch data.
+Automated suites and GUI layout checks were not run for this refinement.
+
+Prior 3.8.2 inspector-space refinement
+
+The inspector footer now reserves vertical space for saved dish rows only.
+With an empty dishbook, the detail viewport grows to the lower controls instead
+of leaving a blank dish-list slot. Saved dishes grow the list in 49 px rows, up
+to the available scroll area.
+Automated suites and GUI layout checks were not run for this refinement.
+
+Prior 3.8.1 enlarged focus preview
+
+The focus preview card is nearly twice its prior height. The selected machine
+and actual sample now occupy a larger visual area; batch amount, phase, temperature,
+pH, water activity, air, gel and ice readouts use separate lines beside the preview.
+Automated suites and GUI layout checks were not run for this refinement.
+
+Prior 3.8.0 focus preview build
+
+The inspector adds a live focus card using the selected machine's production
+artwork and current batch material. It renders actual ingredient colour, liquid
+level or vapour, air, gel and ice state alongside measured batch data. Empty
+equipment previews its actual status and settings. Automated suites and GUI
+artwork/layout checks were not run for this build.
+
+Prior 3.7 UI clarity build
+29 October 2026 / macOS / Apple Silicon
+
+Release C++ application build and link: PASS.
+The selected machine no longer receives a duplicate, floor-obscuring hover card.
+Hover detail cards for other machines are smaller; the inspector labels quality,
+cut phase, machine state and tile coordinates explicitly. The Flow key explains
+the live food markers with named material effects. Automated suites and GUI
+artwork/layout checks were not run for this build. The previous 3.6 and 3.5
+records below are historical and do not cover the UI updates.
+
+Prior 3.6 feature build - fractional distillation
+29 October 2026 / macOS / Apple Silicon
+
+Release C++17 application build and link: PASS.
+The 3.6 build adds fractional stills, reflux columns, fraction receivers,
+component-level vapour/fraction state, routing restrictions, live telemetry,
+and the complete three-cut construction plan. Automated suites and GUI artwork
+checks were not run for this build. The 3.5 validation record below is historical
+and does not cover these additions. Existing preview images are retained from 3.5.
+
+Fractional distillation
+-----------------------
+* Three appended machine kinds preserve the saved identifiers of every previous
+  machine: fractionating still, adjustable reflux column and fraction receiver.
+* A still routes its selected heads/hearts/tails volatile stream through the
+  clockwise side port while its main outlet retains the stillage. Each compound
+  and aroma mass is partitioned between the two physical batches.
+* Reflux columns process vapour only. Their stage count changes the compound
+  partition between enriched vapour and water-rich liquid reflux; the latter
+  exits the clockwise port and can return to its still.
+* Cooling condensers condense that same vapour batch to liquid. Fraction labels
+  survive condensation, and receivers hold, serve or forward the actual batch.
+* Vapour cannot enter a tasting dock or another still directly; incompatible
+  routing applies backpressure until food reaches a condenser. A liquid feed to
+  a reflux column is likewise held instead of being misprocessed.
+* Plans includes a 26-machine train with one feed, three cuts, three reflux
+  returns, three condensers and four separate collection vessels (three cuts
+  plus final stillage). It can be edited and stamped like any floor plan.
+* Cut, stage, temperature, vapour and fraction metadata are serialised with real
+  process history. Old saved foods default to liquid with no fraction label.
+
+Prior 3.5 validation - glass apparatus
+29 October 2026 / macOS / Apple Silicon
+
+Release C++17 build: PASS, including the glass apparatus and native interface.
+The 3.5 work adds physical glassware and transparent batch transport to the
+existing factory floor. The test suites were not rerun for this packaging update;
+the recorded 3.4 baseline below is retained for the unchanged molecular model.
+Reference reactor parity/regressions: PASS, 259,067 assertions.
+Factory sandbox: PASS, 279 checks.
+Molecular/compatibility suite: PASS, 220 checks.
+Physical floor invention: PASS, 59 checks.
+Read-only floor telemetry and material flow: PASS, 35 checks.
+AddressSanitizer + UndefinedBehaviorSanitizer: all five suites PASS.
+Sanitizer build uses -O1 without debug symbols. Unsupported macOS leak detection
+is disabled with ASAN_OPTIONS=detect_leaks=0.
+
+Distinct machine artwork
+--------------------------
+* All 35 physical devices have their own text-free equipment drawing, including
+  the glass tubing, coil, stopcock, beaker, reaction flask, condenser, burette
+  and mixing junction. The older compatibility kitchen also has its own stove.
+* Silhouettes, mechanisms, ports and real food windows replace identical cards
+  and type abbreviations on the floor. Quantity/state tags remain separate.
+* The same artwork is used in the build library and translucent placement previews.
+* Native offscreen checks render all 36 types at 24 px and 64 px in every outlet
+  direction: 288 type/size/direction cases. Every type has a distinct image within
+  each case set using a strictly monochrome palette, without text or ingredients.
+  This detects identical equipment drawings disguised only by different paint.
+* Idle artwork is invariant under time changes. Working mixers, pressure pistons,
+  centrifuge rotors and mill rollers respond to activity. Preview opacity differs
+  from placed equipment. Food windows stay inside the machine in every rotation.
+* Artwork verification preserves the complete FactoryState. The molecular
+  chemistry remains shared across every processor; machine definitions and save
+  data now include the appended glass apparatus kinds.
+* The normal floor animates mechanisms only when the actual machine is enabled,
+  processing real food, and the shared simulation clock is running. Batch transfer
+  and food structure continue to use actual material and measured changes.
+* Native machine-only floor layouts PASS at 1380x810 and 820x620, including rotated
+  equipment. Drawings, palette icons and actual food chambers were visually inspected.
+* Native real-food and invention workflows PASS at 1220x810 and 820x620. The 250%
+  close-up also passes. They retain real mixing, dosing, pressure processing,
+  recorded dishes, copied physical production lines and correct material ownership.
+* A previous-release factory was opened with the new artwork. Its saved JSON
+  remained exactly equal, including food, recipes, routes, stock and coordinates.
+* The five core suites passed in the recorded 3.4 baseline. A glass-laboratory
+  suite is registered in CTest for the new physical devices. QA uses isolated
+  save directories.
+
+machine-identities-preview.png shows the physical devices on the actual native
+factory floor. workspace-preview.png shows the equipment operating on real food.
+The machine-only layout is an isolated QA world in the same persistent floor view,
+not an additional player interface or a separate dish-creation screen.
+
+Glass laboratory
+----------------
+* The new 23-device plan is placed directly on the factory floor. It has two
+  measured feeder branches, a real two-input glass junction, a configurable
+  burette, heated flask, cooling condenser, residence coil, stopcock and beaker.
+* Glass tubing follows the connected inlet and chosen outlet, including bends.
+  Transfers carry the actual batch through one tile per simulation tick; food
+  slugs show ingredient colour, and idle or blocked tubes do not invent motion.
+* A closed stopcock holds upstream food. The residence coil applies its real
+  dwell. The flask and condenser change the real batch temperature, with the
+  ordinary thermal and freezing chemistry; the condenser does not create a
+  second distillate stream.
+* The burette adds its configured ingredient mass once per incoming batch and
+  consumes that pantry stock. The Y-junction waits for and blends two actual
+  feed batches. The beaker holds, serves or forwards that actual result.
+* Glass routes connect to existing feeders, processors, separators and docks.
+  Recorded dishes capture the route and apparatus settings; copied production
+  lines contain machines only, never copied food. Glass equipment and settings
+  use the existing save system.
+* The native glass-floor screenshot shows the same single persistent floor with
+  both feeder branches, routed glass, live batches and selected reaction flask.
+  Source builds successfully as a native macOS C++ application.
+
+Closer working view and starter layout
+--------------------------------------
+* Home frames a connected working line and nearby equipment at a readable scale.
+  Standard machine tiles are about 74 px wide (previously 38 px); the minimum
+  window starts around 45 px (previously about 21 px).
+* Native checks assert readable opening tiles and that Home restores a closer
+  view after Fit, while preserving the complete FactoryState.
+* New factories arrange all five starter cells inside 12 by 7 tiles, compared
+  with the previous 13 by 11. All four sample product phases still ship, and
+  the physical experiment cell still makes its actual measured dish.
+* Fit shows the whole factory with a tighter margin. Pan, wheel zoom, remote
+  construction and the sparse +/-1,000,000-tile world remain available.
+* Local framing stays at a useful scale even for an extended connected network.
+* Shorter floor annotations use clear space between rows; candidate row positions
+  are deduplicated to avoid repeated scoring in large factories.
+* Native invention and material-flow checks PASS at 1220x810 and 820x620; the
+  250% close-up also passes. The new views were visually inspected.
+* A previous 3.3 factory was opened with the closer camera in the native app.
+  Its saved JSON remained exactly equal, including all machine coordinates,
+  live batches, material states, routes and recipes. Existing saves are not moved
+  into the new starter layout. QA uses isolated folders and never player data.
+
+Visible floor flow checks
+-------------------------
+* Read-only telemetry preserves the complete FactoryState: material, clock, IDs,
+  economy, process history, recorded dishes and save data.
+* Measured source inventory determines the material glyphs, ingredient colours,
+  separate component regions and relative droplet/particle sizes.
+* Transfers interpolate only actual adjacent batch movements. A batch moves at
+  most one physical tile per tick. Animations expire and do not repeat while idle.
+* Held food, disabled equipment and blocked outlets create no phantom flow.
+* Serving consumes the batch and immediately removes any remaining motion trace.
+  Archived tasting records are excluded from active floor material.
+* A real 100 g tomato + 30 g oil experiment identifies both mixer inputs, the
+  actual 1.5 g lecithin dose and the homogeniser's real droplet reduction.
+* Machine effects compare the actual entry material with its current/output state
+  across the whole dwell, rather than displaying a canned technique description.
+* Heating shows actual temperature and protein changes; chilling shows actual ice.
+* Separators identify both retained fractions by the actual split component IDs,
+  report their measured masses, and animate the real clockwise side transfer.
+  A blocked side fraction remains visible without flowing through a missing port.
+* Clock rewinds clear presentation state from the previous world.
+* Air is shown as a volume fraction, rather than an impossible 150 percent.
+
+Native flow verification: PASS at 1220x810, 820x620 and a 250% floor close-up.
+Checks use real feeder batches and processing machines, verify visible material
+against actual inventory, exercise the rendered Flow toggle, and assert that the
+annotation control does not change the FactoryState. Native screenshots were
+visually inspected, including compact annotation placement and zoomed structures.
+These callback tests do not emulate physical keyboard events.
+
+Flow/V controls the annotations, route links and successful-transfer traces on the
+same persistent floor. Material chambers remain visible. Molecular glyphs illustrate
+the stylised model; relative particle sizes are not micrometre measurements.
+workspace-preview.png and molecular-floor-preview.png show the native running app.
+
+Actual-machine invention checks
+------------------------------
+* A fresh game contains no fabricated test plate or pre-invented dish.
+* Eight real machines form a controlled experiment cell: two single-dose feeders,
+  conveyors, mixer, precision doser, homogeniser and holding tasting dock.
+* Single mode produces no material until a real feeder is loaded.
+* 100 g tomato and 30 g oil consume exactly those ingredient quantities.
+* A mixer waits for a second actual batch instead of blending an absent input.
+* A real doser consumes 1.5 g lecithin once, and the real homogeniser produces
+  a 131.5 g emulsion through the shared simulation clock.
+* Process history and physical provenance retain all eight contributing machines.
+* Recording a dish at a tasting dock copies reference data only, without moving,
+  duplicating, consuming or transforming the held food.
+* Stale selections and arbitrary unfinished processors cannot record finished dishes.
+* A saved dish builds its actual physical line. No food, archived serving or
+  programmable recipe kitchen is included in the construction template.
+* Copied machines repeatedly produce named dishes while consuming pantry stock.
+* Serving consumes real inventory; its retained tasting record stays read-only.
+* Sending a held batch onward queues a move for the next clock tick, then real
+  thermal processing continues. A recorded extended line preserves the heater
+  and intermediate forwarding dock.
+* Saved separation lines include their actual by-product route and reclaimer.
+* Machine modes, live routes, tasting records and dish layouts persist exactly,
+  and resumed production is deterministic.
+* Invalid layout data preserves the current world.
+* Older off-floor drafts are recovered once into real holding docks. Their
+  existing material is preserved without duplication; missing physical provenance
+  cannot create a fabricated production line.
+
+Native interface checks: PASS at 1220x810 and 820x620 logical window sizes.
+Tests activate callbacks attached to rendered controls. They exercise exact source
+configuration, single dispensing, waiting for a second mixer input, real batch
+processing, recording at a dock, serving, stamping a physical line, repeated named
+production, checkpoints, experiment-cell plans, help and camera framing.
+The test asserts the absence of separate-plate, instant-processing and programmable
+kitchen construction controls. It also asserts that the former draft remains empty.
+These callback tests do not emulate physical keyboard events.
+
+Visual inspection: full-height factory floor, selected real batches, tasting-dock
+modes, exact dose controls, recorded dishes, physical line construction and compact
+layout. workspace-preview.png shows actual food being processed by the floor machines.
+
+An actual previous-interface save was also opened by the native app: its format
+migrated to version 3, the previous draft was recovered into a holding tasting dock,
+and the former off-floor inventory was emptied. QA data is isolated in build folders
+and does not touch player saves. Earlier notebook files and original HTML remain
+untouched.
+
+Underlying chemistry tests cover mass conservation, pH/buffering, hydrocolloids,
+protein/starch reactions, enzymes and heat inactivation, cultures, emulsification,
+foam drainage, freezing, browning, shared ancestry and independent components.
+The factory suite also covers all optional requests, finite/unlimited resources,
+congestion, remote construction, 1,000 machines with 600 shipments, and a 300-tile
+conveyor enforcing at most one physical move per batch per simulation tick.
+The original numerical reference uses 24 HTML fixtures at tolerance 1e-9.
+
+The executable is Mach-O arm64, with raylib statically linked and macOS system
+frameworks/libraries required. No browser, JavaScript engine, server, network
+resource or development checkout is required to run the native game.
+
+Chemistry uses stylised compound groups and accelerated ticks, rather than
+validated predictions or real preparation times.

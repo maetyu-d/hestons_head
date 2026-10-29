@@ -1,0 +1,38 @@
+#include "FloorTelemetry.h"
+#include <iostream>
+#include <stdexcept>
+using namespace aftertaste;
+static int checks=0;
+static void require(bool ok,const std::string& why){checks++;if(!ok)throw std::runtime_error(why);}
+static void ticks(Factory& f,int count){while(count--)f.step();}
+static double total(const CulinaryBatch& b){double value=0;for(auto& p:b.parts)value+=foodMass(p.food)+p.food.lostMass;return value;}
+int main(){try{
+ require(int(MachineKind::RecipeKitchen)==27&&int(MachineKind::GlassTube)==28,"new types append without changing older saved machine IDs");
+ Factory f;f.machines.clear();f.blueprints.clear();auto lab=Factory::glassLabBlueprint();require(lab.parts.size()==23&&f.stamp(lab,{0,0}),"place a real 23-device glass apparatus");
+ f.sandbox=false;f.cash=10000;f.powerCapacity=1000;f.water=1000;auto tomato=f.stock["tomato"],oil=f.stock["oil"],agent=f.stock["lecithin"];
+ require(!f.at({0,0})->automatic&&!f.at({4,0})->automatic&&!f.at({8,4})->automatic,"two controlled feeds and a holding beaker");
+ ticks(f,5);require(f.batches()==0,"glassware creates no material by itself");require(f.configure({7,4},"enabled"),"close a stopcock");
+ require(f.dispense({0,0})&&f.dispense({4,0}),"load two actual ingredients");ticks(f,7);require(f.at({1,4})->item&&f.at({2,3})->item,"equal-length glass branches preserve one tile per tick and reach the mixer together");require(!f.at({2,4})->item,"food does not skip glass bends");
+ f.step();require(f.at({2,4})->item&&f.at({2,4})->extra,"Y-junction receives two actual batches");
+ ticks(f,28);auto coil=f.at({6,4});require(coil->item&&coil->ready&&!f.at({7,4})->item&&!f.at({8,4})->item,"closed stopcock backs up the real coil output");auto id=coil->item->id;
+ require(std::abs(total(coil->item->food)-131.5)<1e-7,"glass route conserves ingredients including explicitly lost mass");
+ require(std::abs(f.stock["tomato"]-(tomato-1))<1e-9&&std::abs(f.stock["oil"]-(oil-.3))<1e-9&&std::abs(f.stock["lecithin"]-(agent-.015))<1e-9,"feeds and the burette charge exact quantities once");
+ require(coil->item->age>=28,"residence and blocked time advance actual food chemistry");
+ FloorTelemetry telemetry;telemetry.observe(f,0);f.step();telemetry.observe(f,1);require(telemetry.motions.empty(),"blocked glass does not fabricate flow animation");
+ require(f.configure({7,4},"enabled"),"open stopcock");f.step();require(f.at({7,4})->item&&f.at({7,4})->item->id==id&&!f.at({8,4})->item,"opening releases one physical hop");
+ require(f.configure({7,4},"enabled"),"close an occupied stopcock");ticks(f,3);require(f.at({7,4})->item&&f.at({7,4})->item->id==id,"closed valve retains held material");f.configure({7,4},"enabled");f.step();auto beaker=f.at({8,4});require(beaker->item&&beaker->item->id==id&&!beaker->ready,"receiving beaker holds the actual output");
+ bool heated=false,cooled=false,mixed=false;for(auto& op:beaker->item->food.history){mixed|=op.action==RecipeAction::Blend;heated|=op.action==RecipeAction::Process&&op.environment.technique==Technique::Heat;cooled|=op.action==RecipeAction::Process&&op.environment.technique==Technique::Freeze;}
+ require(heated&&cooled&&mixed,"glass junction, heated flask and cooling condenser apply actual model operations");require(beaker->item->route.size()==23,"all glass stages and both feed branches retain physical provenance");
+ auto food=beaker->item->food;auto dish=f.recordDish({8,4},"Glasshouse tomato",0,id);require(dish&&f.dishLayouts.count(dish),"record an actual dish at a receiving beaker");require(json(food)==json(beaker->item->food)&&f.batches()==1,"recording leaves real food untouched");
+ auto line=f.productionLine(dish);require(line&&line->parts.size()==23,"recorded dish captures every physical glass stage");for(auto& part:line->parts)require(!part.machine.item&&!part.machine.extra&&!part.machine.lastOutput,"glass blueprint contains equipment without food");
+ require(f.stamp(*line,{20,0}),"place a production copy of the glass recipe");ticks(f,120);require(f.dish(dish)->made>=4,"balanced glass branches repeatedly produce the recorded dish through real equipment");
+ require(f.serveAt({8,4})&&!beaker->item&&beaker->lastOutput,"beaker serves actual food and keeps a read-only record");
+ // A holding vessel can remain part of a longer process, rather than spawning a sample.
+ Factory forward;forward.machines.clear();forward.build({0,0},MachineKind::Feeder);forward.at({0,0})->automatic=false;forward.build({1,0},MachineKind::GlassTube);forward.build({2,0},MachineKind::GlassBeaker);forward.build({3,0},MachineKind::GlassTube);forward.build({4,0},MachineKind::Dispatch);forward.at({4,0})->automatic=false;forward.dispense({0,0});ticks(forward,2);auto batch=forward.at({2,0})->item->id;
+ require(forward.sendOnward({2,0})&&forward.at({2,0})->item,"beaker forwarding queues instead of teleporting");forward.step();require(forward.at({3,0})->item&&forward.at({3,0})->item->id==batch,"forwarding moves the original food through glass");forward.step();auto extended=forward.recordDish({4,0},"Through glass");auto extendedLine=forward.productionLine(extended);bool intermediate=false;if(extendedLine)for(auto& part:extendedLine->parts)intermediate|=part.machine.kind==MachineKind::GlassBeaker&&part.machine.forward;require(intermediate,"copied recipes preserve an intermediate forwarding beaker");
+ auto folder=std::filesystem::temp_directory_path()/"aftertaste-glass-tests";std::filesystem::create_directories(folder);f.storageFile=folder/"factory.json";require(f.save(),"save glass apparatus and live material");Factory loaded;loaded.storageFile=f.storageFile;require(loaded.load()&&json(static_cast<const FactoryState&>(f))==json(static_cast<const FactoryState&>(loaded)),"glass types, orientations, valves, batches, dishes and lines persist exactly");ticks(f,12);ticks(loaded,12);require(json(static_cast<const FactoryState&>(f))==json(static_cast<const FactoryState&>(loaded)),"continued glass production remains deterministic after reload");
+ // The cooling jacket removes heat from a real stream, with no invented distillate.
+ Factory cooling;cooling.machines.clear();cooling.build({0,0},MachineKind::Feeder);cooling.at({0,0})->automatic=false;cooling.build({1,0},MachineKind::GlassFlask);cooling.at({1,0})->duration=8;cooling.at({1,0})->temperature=85;cooling.build({2,0},MachineKind::GlassCondenser);cooling.build({3,0},MachineKind::GlassBeaker);cooling.dispense({0,0});ticks(cooling,9);require(cooling.at({2,0})->item.has_value(),"heated food reaches the condenser");double hot=analyse(cooling.at({2,0})->item->food).temperature;int batchCount=cooling.batches();ticks(cooling,6);require(cooling.at({3,0})->item&&analyse(cooling.at({3,0})->item->food).temperature<hot-30&&cooling.batches()==batchCount,"condenser cools the existing stream without producing extra food");
+ Factory fast;fast.machines.clear();fast.build({0,0},MachineKind::Feeder);fast.at({0,0})->automatic=false;fast.build({1,0},MachineKind::GlassFlask);fast.dispense({0,0});FloorTelemetry view;view.observe(fast,0);fast.step();view.observe(fast,0);auto hotId=fast.at({1,0})->item->id;require(view.moving(hotId,0),"actual arrival starts a glass transfer");fast.step();view.observe(fast,.01);require(!view.moving(hotId,.01)&&view.samples.at(hotId).material.metrics.temperature>20,"rapid next-tick processing clears a stale transfer and displays current food");
+ std::filesystem::remove_all(folder);std::cout<<"PASS glass laboratory: "<<checks<<" checks; real tubing, residence, valves, dosing, heat exchange, beaker tasting, recipe copying and persistence\n";return 0;
+ }catch(const std::exception& e){std::cerr<<"FAIL glass laboratory: "<<e.what()<<'\n';return 1;}}
