@@ -1,4 +1,4 @@
-AFTERTASTE / MOLECULAR WORKS 3.14.0
+AFTERTASTE / MOLECULAR WORKS 3.14.1
 Invent dishes on the actual factory floor / native C++17
 
 Serving and feedback

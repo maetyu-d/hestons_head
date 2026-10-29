@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(Aftertaste VERSION 3.14.0 LANGUAGES C CXX)
+project(Aftertaste VERSION 3.14.1 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -23,7 +23,7 @@ if(AFTERTASTE_BUILD_APP)
     add_executable(Aftertaste MACOSX_BUNDLE src/Main.cpp src/Interface.cpp src/FactoryInterface.cpp src/WorkspacePanels.cpp src/FloorRendering.cpp src/MachineArt.cpp src/GlassArt.cpp)
     set_target_properties(Aftertaste PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "Aftertaste"
       MACOSX_BUNDLE_GUI_IDENTIFIER "studio.aftertaste.reactor"
-      MACOSX_BUNDLE_BUNDLE_VERSION "3.14.0" MACOSX_BUNDLE_SHORT_VERSION_STRING "3.14.0"
+      MACOSX_BUNDLE_BUNDLE_VERSION "3.14.1" MACOSX_BUNDLE_SHORT_VERSION_STRING "3.14.1"
       MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in")
   else()
     add_executable(Aftertaste src/Main.cpp src/Interface.cpp src/FactoryInterface.cpp src/WorkspacePanels.cpp src/FloorRendering.cpp src/MachineArt.cpp src/GlassArt.cpp)
@@ -42,6 +42,9 @@ if(AFTERTASTE_BUILD_APP)
 endif()
 include(CTest)
 if(BUILD_TESTING)
+  add_executable(farm_migration_tests tests/FarmMigrationTests.cpp)
+  target_link_libraries(farm_migration_tests PRIVATE aftertaste_core)
+  add_test(NAME farm_relocation COMMAND farm_migration_tests)
   add_executable(aftertaste_tests tests/Tests.cpp)
   target_link_libraries(aftertaste_tests PRIVATE aftertaste_core)
   target_compile_definitions(aftertaste_tests PRIVATE FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/reference.json")
