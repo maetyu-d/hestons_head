@@ -1,5 +1,6 @@
 #include "Interface.h"
 #include "Power.h"
+#include "WaterWorks.h"
 #include "PowerArt.h"
 #include <algorithm>
 #include <cmath>
@@ -42,7 +43,7 @@ void Interface::drawEnergyRoutes(){
  for(const auto& [p,links]:factory.energyLinks)for(const auto& link:links)if(visible(link.medium)){auto r=factoryTile(p);rails.emplace(Key{p,link.medium},Rail{{r.x+tile*.5f,r.y+tile*.5f},&link,0});}
  // Align whole straight runs with their real terminal, rather than inserting a
  // tiny dogleg at each machine. Horizontal and vertical rails solve independently.
- const std::array<float,EnergyCount> lane={0,-.08f,0,.06f,-.06f,.10f,-.10f,.08f,-.08f,.12f,.14f,-.14f};
+ const std::array<float,EnergyCount> lane={0,-.08f,0,.06f,-.06f,.10f,-.10f,.08f,-.08f,.12f,.14f,-.14f,.18f,.20f,.22f,.24f,-.18f,-.22f};
  for(int axis=0;axis<2;axis++){std::set<Key> seen;int mask=axis?10:5;
   for(const auto& [key,rail]:rails){if(!(rail.link->ports&mask)||seen.count(key))continue;
    std::vector<Key> group{key};seen.insert(key);bool shared=false;std::optional<float> anchor;
@@ -101,8 +102,8 @@ void Interface::drawPowerInspector(Rectangle r){
  const Color ink{23,48,57,255},muted{87,113,121,255},paper{237,243,241,255},line{199,215,216,255},orange{240,83,43,255},green{38,133,111,255};DrawRectangleRec(r,WHITE);DrawRectangleLinesEx(r,1,line);float x=r.x+12,y=r.y+12,w=r.width-24;auto m=factory.at(factorySelected);auto link=energyLinkSelected?factory.energyLink(factorySelected,selectedEnergyMedium):nullptr;
  text(link?upper(energyName(link->medium)):m?upper(machineSpec(m->kind).name):"POWER ENGINEERING",x,y,11,ink,true);y+=23;
  text("TILE "+positionName(factorySelected),x,y,9.5f,muted);y+=20;
- Rectangle art{x,y,w,160};DrawRectangleRounded(art,.08f,5,Color{245,248,246,255});MachineAppearance look;look.kind=link?energyConduit(link->medium):m?m->kind:MachineKind::PowerCable;look.direction=m?m->dir:0;look.active=factory.running&&(link?link->enabled&&!link->tripped&&link->flow>.001:m&&m->enabled&&!m->power.tripped&&(m->power.flow>.001||m->power.generated>.001||m->power.rpm>20||m->power.lab.flux>.01));look.closed=link?link->tripped:m&&!m->enabled;look.time=factory.tick+(factory.running?factoryAccumulator/.55:0);if(m){look.labFlux=m->power.lab.flux;look.labVacuum=m->power.lab.vacuum;look.labStability=m->power.lab.stability;look.labCooling=m->power.lab.cooling;look.labArmed=m->power.lab.armed;double stored=0;for(auto v:m->power.store)stored+=v;look.progress=stored/std::max(1.,m->power.capacity);}else if(link)look.progress=link->flow/link->rating;
- drawMachineHousing({art.x+5,art.y+5,145,145},look);drawMachineMechanism({art.x+5,art.y+5,145,145},look);float tx=x+154,tw=w-160;if(tw>30){text(link?"LIVE CONDUIT":m&&isNuclearEquipment(m->kind)?"LAB APPARATUS":"LIVE POWER",tx,y+13,8.5f,muted,true);text(fit(link?(link->tripped?"TRIPPED":link->enabled?"CONNECTED":"ISOLATED"):m?m->status:"",tw,10,true),tx,y+34,10,link&&link->tripped?orange:green,true);text(link?roundTo(link->flow,1)+" / "+roundTo(link->rating,0):m?roundTo(m->kind==MachineKind::CuriosityPile||m->kind==MachineKind::StarChamber?m->power.flow:m->power.generated,1)+(m->kind==MachineKind::CuriosityPile||m->kind==MachineKind::StarChamber?" HEAT":" GEN"):"",tx,y+62,11,ink,true);text(link?"HEAT "+roundTo(link->heat*100,0)+"%":m?roundTo(m->power.delivered,1)+" OUT":"",tx,y+83,9,muted);}
+ Rectangle art{x,y,w,160};DrawRectangleRounded(art,.08f,5,Color{245,248,246,255});MachineAppearance look;look.kind=link?energyConduit(link->medium):m?m->kind:MachineKind::PowerCable;look.direction=m?m->dir:0;look.active=factory.running&&(link?link->enabled&&!link->tripped&&link->flow>.001:m&&m->enabled&&!m->power.tripped&&(m->power.flow>.001||m->power.generated>.001||m->power.rpm>20||m->power.lab.flux>.01));look.closed=link?link->tripped:m&&!m->enabled;look.time=factory.tick+(factory.running?factoryAccumulator/.55:0);if(m){look.labFlux=m->power.lab.flux;look.labVacuum=m->power.lab.vacuum;look.labStability=m->power.lab.stability;look.labCooling=m->power.lab.cooling;look.labArmed=m->power.lab.armed;double stored=0;for(auto v:m->power.store)stored+=v;look.progress=stored/std::max(1.,m->power.capacity);if(isWaterMachine(m->kind)){auto q=waterSample(*m);if(q.volume>1e-8){look.waterDirt=q.solids/q.volume;look.waterSalt=q.salt/q.volume;look.waterBio=q.bio/q.volume;}}}else if(link)look.progress=link->flow/link->rating;
+ drawMachineHousing({art.x+5,art.y+5,145,145},look);drawMachineMechanism({art.x+5,art.y+5,145,145},look);float tx=x+154,tw=w-160;if(tw>30){text(link?"LIVE CONDUIT":m&&isNuclearEquipment(m->kind)?"LAB APPARATUS":m&&isWaterMachine(m->kind)?"LIVE WATER":"LIVE POWER",tx,y+13,8.5f,muted,true);text(fit(link?(link->tripped?"TRIPPED":link->enabled?"CONNECTED":"ISOLATED"):m?m->status:"",tw,10,true),tx,y+34,10,link&&link->tripped?orange:green,true);text(link?roundTo(link->flow,1)+" / "+roundTo(link->rating,0):m?roundTo(m->kind==MachineKind::CuriosityPile||m->kind==MachineKind::StarChamber?m->power.flow:isWaterMachine(m->kind)?m->power.flow:m->power.generated,1)+(isWaterMachine(m->kind)?" L/TICK":m->kind==MachineKind::CuriosityPile||m->kind==MachineKind::StarChamber?" HEAT":" GEN"):"",tx,y+62,11,ink,true);text(link?"HEAT "+roundTo(link->heat*100,0)+"%":m?(m->kind==MachineKind::WaterOutlet?roundTo(m->waterProcess.delivered,1)+" L SUPPLIED":roundTo(m->power.delivered,1)+(isWaterMachine(m->kind)?" L OUT":" OUT")):"",tx,y+83,9,muted);}
  y+=170;
  inspectorBody={x,y,w,r.y+r.height-y-14};inspectorScroll=std::clamp(inspectorScroll,0.f,std::max(0.f,inspectorHeight-inspectorBody.height));beginClip(inspectorBody);y-=inspectorScroll;float start=y;
  button({x,y,w-4,27},energyRoutesAll?"Routes / all services":"Routes / selected services",[this]{energyRoutesAll=!energyRoutesAll;},energyRoutesAll,true,"Show all services, or isolate only the services connected to this equipment",{},10);y+=35;
@@ -111,6 +112,21 @@ void Interface::drawPowerInspector(Rectangle r){
   pair("Rating "+roundTo(link->rating,0),"rating-","rating+");float bw=(w-10)/2;button({x,y,bw,28},link->enabled?"Isolate":"Reconnect",[this]{factory.configureEnergyLink(factorySelected,selectedEnergyMedium,"enabled");},false,true,"Open or close this route",{},10);button({x+bw+5,y,bw,28},"Reset trip",[this]{factory.configureEnergyLink(factorySelected,selectedEnergyMedium,"reset");},false,link->tripped,"Reset after the conductor has cooled",{},10);y+=36;button({x,y,w-4,28},"Reclaim this conduit",[this]{factory.removeEnergyLink(factorySelected,selectedEnergyMedium);energyLinkSelected=false;},false,true,"Remove only this energy layer; floor machines remain in place",orange,10);y+=40;
   y+=paragraph("Different media cross without joining. Matching conduits join at visible junctions. Electrical routes have a finite rating and accumulate overload heat; a tripped conductor carries no power.",x,y,w,10.5f,muted)+12;
  }else if(m){
+  if(isWaterMachine(m->kind)){
+   auto q=waterSample(*m);text("WATER / "+roundTo(q.volume,2)+" L sample",x,y,10,ink,true);y+=21;
+   if(q.volume>1e-8){for(auto reading:{std::pair<std::string,double>{"Suspended solids",q.solids/q.volume},{"Dissolved salts",q.salt/q.volume},{"Biological load",q.bio/q.volume}}){text(reading.first+" / "+roundTo(reading.second,3)+" per L",x,y,10,muted);y+=19;}}
+   text("GAME LIMITS / solids .15 / salt 1 / bio .02",x,y,8.5f,muted,true);y+=24;
+   text("FLOW "+roundTo(m->power.flow,2)+" L/tick",x,y,10,ink,true);y+=24;
+   if(m->kind==MachineKind::BoreholePump){text("AQUIFER "+roundTo(factory.waterworks.aquifer,1)+" / "+roundTo(factory.waterworks.aquiferCapacity,0)+" L",x,y,10,muted,true);y+=24;}
+   if(m->kind==MachineKind::RainCollector){text("RAIN "+roundTo(waterRainfall(factory.tick)*100,0)+"%",x,y,10,muted,true);y+=24;}
+   if(m->kind==MachineKind::SandFilter||m->kind==MachineKind::MembraneFilter){text("Fouling "+roundTo(m->waterProcess.fouling*100,0)+"% / held solids "+roundTo(m->waterProcess.captured,2),x,y,9.5f,muted);y+=23;button({x,y,w-4,28},"Backwash / 2 L clean water",[this]{factory.configure(factorySelected,"water-rinse");},false,true,"Uses actual water and AC; sends retained solids to concentrate",{},10);y+=36;}
+   if(m->kind==MachineKind::MembraneFilter)pair("Recovery "+roundTo(m->waterProcess.recovery*100,0)+"%","water-recovery-","water-recovery+");
+   if(m->kind==MachineKind::UVSterilizer)pair("UV dose "+roundTo(m->waterProcess.uvDose*100,0)+"%","water-dose-","water-dose+");
+   if(m->kind==MachineKind::WaterOutlet)pair("Factory target "+roundTo(m->dose,0)+" L","water-target-","water-target+");
+   if(m->kind==MachineKind::WaterOutlet||m->kind==MachineKind::CleanWaterTank){button({x,y,w-4,28},"Purge held water to reject",[this]{factory.configure(factorySelected,"water-purge");},false,true,"A connected concentrate route must have room",{},10);y+=36;}
+   if(m->kind==MachineKind::ConcentrateTank){button({x,y,w-4,28},"Haul concentrate away",[this]{factory.configure(factorySelected,"water-haul");},false,true,"Records actual disposed volume and loads; costs 0.02 credits/L in Economy",{},10);y+=36;}
+   text("FACTORY SUPPLY / "+roundTo(factory.waterworks.delivered,1)+" L delivered",x,y,9.5f,muted,true);y+=21;text("RETURN / "+roundTo(factory.waterworks.greywater.volume,1)+" L waiting",x,y,9.5f,muted);y+=21;text("RECOVERY / "+roundTo(factory.waterworks.recovered,1)+" L reclaimed",x,y,9.5f,muted);y+=25;
+  }
   if(isNuclearEquipment(m->kind)){
    const auto& lab=m->power.lab;bool chamber=m->kind==MachineKind::CuriosityPile||m->kind==MachineKind::StarChamber;
    text("EXPERIMENT / abstract lab units",x,y,9,muted,true);y+=22;

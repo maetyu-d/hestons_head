@@ -1,3 +1,40 @@
+AFTERTASTE / MOLECULAR WORKS 3.23.0 - WATERWORKS
+30 October 2026 / macOS / Apple Silicon
+
+Twelve buildable water facilities, six separately routed water streams, finite
+shared groundwater, intermittent rain, source mixing, contaminant loads,
+filtration media, membrane recovery/reject, powered UV, quality-gated delivery,
+clean storage, actual process-water return, reed reclamation, concentrate
+storage/disposal and a sampling monitor. All operate on the existing floor.
+Save format 17 appends kind/medium IDs and pads older energy arrays; no clean
+water is granted during installation. Original machine state and clock persist.
+
+Native application build/link: PASS.
+Waterworks suite with version 16 saved factory: PASS (503 checks).
+Includes water-volume, solids and salt conservation; recorded biological
+reduction; actual AC and supply gating; unsafe-water holds and purges; finite
+aquifer; reject backpressure and measured disposal; real two-litre backwash;
+finite greywater recovery; matching reservoir banks; rotated process operation;
+plans without cloned inventory, media or observations; retained recovery/dose;
+complete persistence and atomic rejection of invalid quality; actual irrigation
+and food production from an empty water buffer; preservation of all 286 original
+machine states while adding twelve empty facilities, without input-buffer grants.
+Contact-rack suite with version 15: PASS (289 checks).
+Campus suite with version 14: PASS (357 checks).
+Solar docking suite with version 13: PASS (285 checks).
+Contact suite with version 12: PASS (282 checks).
+Nuclear laboratory suite: PASS (37 checks; 2,543.02 measured demo DC).
+Physical power suite: PASS (41 checks; 720 ticks generated 24,933.6,
+delivered 10,617, supplied all 720 ticks and served 139 dishes).
+Power layout suite: PASS (19 checks).
+Farm delivery suite: PASS (17 checks). Farm flow suite: PASS (44 checks).
+Isolated native preview: PASS, distinct apparatus, water focus, real filter/
+membrane/UV readings, supply and reuse counters advancing on an actual UI step.
+Original user factory was not advanced by the preview. The full historical and
+sanitizer suites were not rerun; prior food-fixture failures remain documented.
+
+Prior release validation
+------------------------
 AFTERTASTE / MOLECULAR WORKS 3.22.0 - CONTACT RACK AND SINGLE FACTORY FEED
 30 October 2026 / macOS / Apple Silicon
 

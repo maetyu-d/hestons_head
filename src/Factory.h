@@ -14,7 +14,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Position,x,y)
 Position nextPosition(Position p,int direction);
 std::string positionName(Position p);
 
-enum class MachineKind {Belt,Feeder,Mixer,Gel,Aerator,Chiller,Heater,Dryer,Cloche,Cycler,Dispatch,Bin,Doser,Homogenizer,Spherifier,SousVide,Fermenter,EnzymeReactor,Centrifuge,Filter,VacuumChamber,FreezeDryer,Extruder,Plater,Smoker,Mill,Binder,RecipeKitchen,GlassTube,GlassCoil,GlassValve,GlassBeaker,GlassFlask,GlassCondenser,Burette,GlassJunction,FractionatingStill,FractionatingColumn,FractionReceiver,LatticeReactor,Wall,UtilityLine,UtilityStation,PHProbe,TemperatureLogger,DropletViewer,AromaSensor,FieldBed,RaisedBed,HydroponicBed,SeedHopper,Fertigation,GrowLight,PollinatorHive,SoilProbe,Harvester,Washer,Grader,ColdStore,ProduceIntake,CompostBin,PowerCable,DCCable,DriveShaft,SteamPipe,ExhaustPipe,RawGasPipe,GasPipe,ReturnPipe,HeatPipe,CoolingPipe,SolarPanel,WindRotor,Gearbox,Alternator,BiomassBoiler,SteamAccumulator,SteamTurbine,PowerCondenser,FeedPump,HeatExchanger,Macerator,AnaerobicDigester,GasScrubber,GasHolder,GasEngine,BatteryRack,Flywheel,Inverter,Switchboard,PowerRelay,GridInlet,HeatTank,CoolingPlant,CuriosityPile,StarChamber,LabVacuumPump,QuenchBath,Calorimeter,ExperimentConsole,VacuumHose,InstrumentLead,Count};
+enum class MachineKind {Belt,Feeder,Mixer,Gel,Aerator,Chiller,Heater,Dryer,Cloche,Cycler,Dispatch,Bin,Doser,Homogenizer,Spherifier,SousVide,Fermenter,EnzymeReactor,Centrifuge,Filter,VacuumChamber,FreezeDryer,Extruder,Plater,Smoker,Mill,Binder,RecipeKitchen,GlassTube,GlassCoil,GlassValve,GlassBeaker,GlassFlask,GlassCondenser,Burette,GlassJunction,FractionatingStill,FractionatingColumn,FractionReceiver,LatticeReactor,Wall,UtilityLine,UtilityStation,PHProbe,TemperatureLogger,DropletViewer,AromaSensor,FieldBed,RaisedBed,HydroponicBed,SeedHopper,Fertigation,GrowLight,PollinatorHive,SoilProbe,Harvester,Washer,Grader,ColdStore,ProduceIntake,CompostBin,PowerCable,DCCable,DriveShaft,SteamPipe,ExhaustPipe,RawGasPipe,GasPipe,ReturnPipe,HeatPipe,CoolingPipe,SolarPanel,WindRotor,Gearbox,Alternator,BiomassBoiler,SteamAccumulator,SteamTurbine,PowerCondenser,FeedPump,HeatExchanger,Macerator,AnaerobicDigester,GasScrubber,GasHolder,GasEngine,BatteryRack,Flywheel,Inverter,Switchboard,PowerRelay,GridInlet,HeatTank,CoolingPlant,CuriosityPile,StarChamber,LabVacuumPump,QuenchBath,Calorimeter,ExperimentConsole,VacuumHose,InstrumentLead,RawWaterPipe,FilteredWaterPipe,PurifiedWaterPipe,CleanWaterPipe,GreywaterPipe,ConcentratePipe,BoreholePump,RainCollector,RawWaterTank,SandFilter,MembraneFilter,UVSterilizer,CleanWaterTank,WaterOutlet,GreywaterDrain,ReedReclaimer,ConcentrateTank,WaterAnalyzer,Count};
 enum class UtilityKind {Power,Heat,Cooling,Water,Vacuum,Count};
 enum class ServeStyle {OrderPass,ResearchTasting,ChilledPickup};
 std::string serveStyleName(ServeStyle style);
@@ -44,7 +44,7 @@ bool isMixingMachine(MachineKind kind);
 bool isDosingMachine(MachineKind kind);
 bool isTastingDock(MachineKind kind);
 bool isProcessingMachine(MachineKind kind);
-enum class EnergyMedium {AC,DC,Shaft,Steam,Exhaust,RawGas,Gas,Water,Heat,Cooling,Vacuum,Instrument,Count};
+enum class EnergyMedium {AC,DC,Shaft,Steam,Exhaust,RawGas,Gas,Water,Heat,Cooling,Vacuum,Instrument,RawWater,FilteredWater,PurifiedWater,CleanWater,Greywater,Concentrate,Count};
 constexpr size_t EnergyCount=size_t(EnergyMedium::Count);
 struct LabTrial {int tick=0;double heat=0,draw=0,dc=0,stability=0;std::string settings;};
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(LabTrial,tick,heat,draw,dc,stability,settings)
@@ -76,8 +76,24 @@ struct Batch {
  bool cropBatch=false;double cropQuality=1,cropDirt=0,cropFreshness=1;std::string residue;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Batch,id,age,matter,food,dish,route,cropBatch,cropQuality,cropDirt,cropFreshness,residue)
+struct WaterParcel {double volume=0,solids=0,salt=0,bio=0;};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(WaterParcel,volume,solids,salt,bio)
+struct WaterLoad {double solids=0,salt=0,bio=0;};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(WaterLoad,solids,salt,bio)
+constexpr size_t WaterStreamCount=6;
+struct WaterState {
+ std::array<WaterLoad,WaterStreamCount> loads{};
+ double captured=0,fouling=0,recovery=.75,uvDose=1,produced=0,rejected=0,delivered=0;
+ bool rinse=false,purge=false;WaterParcel sample;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(WaterState,loads,captured,fouling,recovery,uvDose,produced,rejected,delivered,rinse,purge,sample)
+struct WaterWorksState {
+ double aquifer=2000,aquiferCapacity=2000,extracted=0,rainCollected=0,recharged=0,delivered=0,recovered=0,killed=0;
+ WaterParcel greywater,disposed,supply;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(WaterWorksState,aquifer,aquiferCapacity,extracted,rainCollected,recharged,delivered,recovered,killed,greywater,disposed,supply)
 struct Machine {
- PowerState power;
+ PowerState power;WaterState waterProcess;
  MachineKind kind=MachineKind::Belt;int dir=0,duration=4,progress=0,cooldown=0;
  std::string ingredient="brine",status="Idle";
  double temperature=90,wear=0,dose=1,shear=.8;
@@ -119,7 +135,7 @@ struct Blueprint {std::string name;int width=1,height=1;std::vector<BlueprintPar
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Blueprint,name,width,height,parts,links)
 struct FactoryState {
  std::map<Position,std::vector<PowerLink>> energyLinks;
- PowerTotals grid;
+ PowerTotals grid;WaterWorksState waterworks;
  std::map<Position,Machine> machines;
  std::map<std::string,double> stock;
  std::map<std::string,double> farmInventory,farmQuality;
@@ -162,6 +178,7 @@ public:
  static Blueprint farmDeliveryBlueprint();
  static Blueprint powerDistrictBlueprint();
  static Blueprint nuclearLabBlueprint();
+ static Blueprint waterWorksBlueprint();
  bool installPowerDistrict();
  bool buildEnergyLink(Position p,EnergyMedium medium);bool removeEnergyLink(Position p,EnergyMedium medium);bool configureEnergyLink(Position p,EnergyMedium medium,const std::string& setting);
  PowerLink* energyLink(Position p,EnergyMedium medium);const PowerLink* energyLink(Position p,EnergyMedium medium)const;

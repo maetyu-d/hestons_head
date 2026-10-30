@@ -1,5 +1,49 @@
-AFTERTASTE / MOLECULAR WORKS 3.22.0
+AFTERTASTE / MOLECULAR WORKS 3.23.0
 Invent dishes on the actual factory floor / native C++17
+
+Waterworks / collection, treatment and reuse
+--------------------------------------------
+Select Water in the floor toolbar. The compact plant below the power rack has
+12 distinct facilities and six typed water pipe streams. Its main process is:
+
+Borehole + rain -> raw buffer -> sand filter -> membranes -> UV -> clean tank
+                                                              -> factory inlet
+Process-water return -> reed reclamation -> raw buffer; reject -> waste tank
+
+The borehole spends real AC and draws from a shared finite 2,000 L aquifer.
+Rain is intermittent, adds less salt, and slowly recharges groundwater. Actual
+water parcels carry suspended solids, dissolved salts and biological load.
+Sand captures solids in finite media; membranes split permeate and concentrate;
+UV spends electricity reducing the biological load. Higher membrane recovery
+saves water but increases salt passage. Fouling reduces flow and selectivity.
+
+The inlet tests actual quality before adding litres to the existing farm/factory
+input buffer. Dirty clean-labelled water is held, with the failing readings
+visible in its inspector. The default buffer target is 180 L. Sources, storage,
+filters and the inlet all stop correctly when their downstream capacity fills.
+No disconnected or unpowered treatment stage manufactures clean water.
+
+A powered backwash spends 2 L of actual clean stock and moves captured solids
+to concentrate. Purge unsafe stored water through the reject line. Haul actual
+concentrate from its finite tank to restore capacity; Economy charges 0.02 per L.
+Process washing returns a measured fraction to greywater. Irrigation and boiler
+makeup are not captured as sewer returns. Reed reclamation recovers 90% as raw
+water, which still passes through the complete treatment line.
+
+Point the quality monitor at water equipment. Inspect volume and loads per litre,
+flow, aquifer level, filter loading, recovery and UV dose. The floor shows actual
+flow, filtration silt, membrane yield and post-UV biology; distinct machine
+shapes and coloured ports keep all processing in the same factory view.
+Matching reservoirs join by contact as a bank. Different water streams remain
+separate even when their pipes cross. The waterworks uses one short AC branch.
+
+Water quality and UV dose are stylised game values. The displayed game limits
+are solids 0.15, salt 1 and biological load 0.02 per L. Reusable plans preserve
+settings, directions and routes while clearing stored water, filter cake and
+observations. Save format 17 adds the empty demo equipment without advancing
+the existing factory or granting clean water. Emergency direct water deliveries
+remain available through Factory Inputs.
+
 
 Contact power rack / one factory feed
 -------------------------------------

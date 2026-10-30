@@ -1,7 +1,7 @@
 #include "PowerArt.h"
 #include <cmath>
 namespace aftertaste {
-Color energyColor(EnergyMedium e){static const std::array<Color,EnergyCount> c={Color{218,170,54,255},Color{66,166,158,255},Color{121,145,151,255},Color{213,119,75,255},Color{167,159,151,255},Color{154,127,74,255},Color{123,162,78,255},Color{64,151,192,255},Color{218,96,57,255},Color{75,190,218,255},Color{155,140,181,255},Color{177,133,163,255}};return c.at(size_t(e));}
+Color energyColor(EnergyMedium e){static const std::array<Color,EnergyCount> c={Color{218,170,54,255},Color{66,166,158,255},Color{121,145,151,255},Color{213,119,75,255},Color{167,159,151,255},Color{154,127,74,255},Color{123,162,78,255},Color{64,151,192,255},Color{218,96,57,255},Color{75,190,218,255},Color{155,140,181,255},Color{177,133,163,255},Color{117,155,155,255},Color{98,182,178,255},Color{105,191,214,255},Color{37,159,201,255},Color{148,139,114,255},Color{188,146,87,255}};return c.at(size_t(e));}
 namespace {
 struct Draw {Rectangle r;MachineAppearance a;Color ink={32,59,66,255},body={190,207,204,255},light={238,245,241,255},tone={202,163,66,255};float w;
  Draw(Rectangle bounds,MachineAppearance look):r(bounds),a(look){w=std::clamp(std::min(r.width,r.height)*.03f,1.f,2.1f);unsigned n=unsigned(std::stoul(machineSpec(a.kind).color.substr(1),nullptr,16));tone={static_cast<unsigned char>(n>>16),static_cast<unsigned char>(n>>8),static_cast<unsigned char>(n),255};if(a.monochrome){ink=BLACK;body={175,175,175,255};light=WHITE;tone={110,110,110,255};}}
@@ -13,7 +13,7 @@ struct Draw {Rectangle r;MachineAppearance a;Color ink={32,59,66,255},body={190,
  void wheel(float x,float y,float radius,int blades=6){circle(x,y,radius,body);float phase=a.active?float(a.time)*2:0;for(int n=0;n<blades;n++){float t=phase+n*6.2831853f/blades;line(x,y,x+std::cos(t)*radius*.82f,y+std::sin(t)*radius*.82f,tone,1.3f);}circle(x,y,radius*.15f,ink);}
 };
 }
-void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=MachineKind;Draw d(r,look);auto k=look.kind;
+void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=MachineKind;Draw d(r,look);auto k=look.kind;if(k==K::RainCollector||k==K::WaterAnalyzer)d.a.direction=0;
  if(isEnergyConduit(k)){auto col=look.monochrome?d.tone:energyColor(conduitMedium(k));d.line(.04f,.5f,.96f,.5f,d.ink,3);d.line(.04f,.5f,.96f,.5f,col,1.6f);if(k==K::DriveShaft){d.box(.18f,.36f,.15f,.28f,d.body);d.box(.66f,.36f,.15f,.28f,d.body);}else{d.circle(.25f,.5f,.065f,d.body);d.circle(.75f,.5f,.065f,d.body);}
   switch(k){
    case K::VacuumHose:d.circle(.50f,.50f,.17f,d.light);d.line(.39f,.50f,.61f,.50f,d.tone,1.1f);break;
@@ -30,6 +30,16 @@ void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=Machin
    default:break;
   }return;}
  switch(k){
+ case K::BoreholePump:d.feet();d.box(.10f,.69f,.80f,.13f,d.body);d.box(.40f,.35f,.20f,.35f,d.light);d.circle(.50f,.35f,.21f,d.body);d.line(.50f,.83f,.50f,.99f,d.tone,2);d.box(.25f,.12f,.50f,.10f,d.tone);break;
+ case K::RainCollector:d.box(.10f,.49f,.80f,.12f,d.body);d.line(.10f,.35f,.50f,.10f,d.ink,1.4f);d.line(.50f,.10f,.90f,.35f,d.ink,1.4f);d.box(.25f,.62f,.50f,.23f,d.light);d.line(.50f,.61f,.50f,.75f,d.tone,2);break;
+ case K::RawWaterTank:case K::CleanWaterTank:case K::ConcentrateTank:d.tank(.65f);d.box(.23f,.27f,.54f,.43f,d.light);d.line(.32f,.13f,.68f,.13f,d.tone,1.6f);for(float y:{.35f,.45f,.55f,.65f})d.line(.78f,y,.86f,y,d.ink,.6f);break;
+ case K::SandFilter:d.feet();d.box(.25f,.10f,.50f,.68f,d.light);d.box(.29f,.19f,.42f,.15f,d.body);d.box(.29f,.36f,.42f,.14f,d.tone);for(int n=0;n<5;n++)d.circle(.34f+n*.08f,.61f,.035f,d.body);d.line(.75f,.15f,.88f,.15f,d.ink,1.2f);d.line(.88f,.15f,.88f,.69f,d.ink,1.2f);break;
+ case K::MembraneFilter:d.feet();d.box(.10f,.22f,.80f,.48f,d.body);for(int n=0;n<3;n++){d.box(.19f,.29f+n*.11f,.55f,.085f,d.light);d.circle(.77f,.33f+n*.11f,.04f,d.tone);}d.circle(.24f,.76f,.12f,d.light);d.circle(.76f,.13f,.08f,d.light);break;
+ case K::UVSterilizer:d.feet();d.box(.10f,.31f,.80f,.39f,d.body);d.box(.16f,.38f,.68f,.24f,d.light);d.line(.22f,.50f,.78f,.50f,d.tone,3);d.box(.31f,.15f,.38f,.12f,d.tone);break;
+ case K::WaterOutlet:d.feet();d.box(.10f,.19f,.56f,.59f,d.light);d.circle(.37f,.40f,.14f,d.body);d.line(.20f,.65f,.65f,.65f,d.tone,2);d.line(.65f,.65f,.84f,.48f,d.tone,2);d.line(.66f,.48f,.84f,.48f,d.tone,1.5f);d.line(.84f,.48f,.84f,.65f,d.tone,1.5f);break;
+ case K::GreywaterDrain:d.box(.10f,.54f,.80f,.28f,d.body);for(float x:{.22f,.36f,.50f,.64f,.78f})d.line(x,.56f,x,.74f,d.ink,1);d.line(.23f,.17f,.23f,.45f,d.tone,1.8f);d.line(.13f,.34f,.23f,.45f,d.tone,1.2f);d.line(.33f,.34f,.23f,.45f,d.tone,1.2f);break;
+ case K::ReedReclaimer:d.box(.10f,.59f,.80f,.25f,d.body);for(float x:{.25f,.43f,.62f,.78f}){d.line(x,.59f,x,.22f,d.tone,1.1f);d.line(x,.45f,x-.10f,.31f,d.tone,1.1f);d.line(x,.38f,x+.09f,.24f,d.tone,1.1f);}d.box(.13f,.65f,.74f,.10f,d.light);break;
+ case K::WaterAnalyzer:{d.feet();d.box(.18f,.19f,.64f,.56f,d.body);d.box(.27f,.29f,.46f,.25f,d.ink);d.circle(.32f,.65f,.045f,d.tone);d.circle(.51f,.65f,.045f,d.light);int direction=look.direction%4;float sx=direction==0?.82f:direction==2?.18f:.5f,sy=direction==1?.75f:direction==3?.19f:.47f;d.line(sx,sy,direction==0?.99f:direction==2?.01f:.5f,direction==1?.99f:direction==3?.01f:.47f,d.ink,1.2f);break;}
  case K::CuriosityPile:
   d.feet();d.box(.10f,.73f,.80f,.10f,d.body);d.box(.17f,.27f,.66f,.46f,d.body);
   d.circle(.50f,.28f,.28f,d.light);d.box(.23f,.28f,.54f,.43f,d.light);
@@ -86,7 +96,7 @@ void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=Machin
  case K::HeatTank:d.tank(.72f);d.box(.34f,.27f,.32f,.39f,d.light);d.line(.50f,.32f,.50f,.61f,d.tone,2);break;
  case K::CoolingPlant:d.feet();d.box(.08f,.24f,.85f,.58f,d.body);d.circle(.34f,.50f,.22f,d.light);d.circle(.72f,.50f,.13f,d.tone);d.box(.13f,.12f,.73f,.10f,d.tone);break;
  default:break;}
- Machine portMachine;portMachine.kind=k;portMachine.dir=0;
+ Machine portMachine;portMachine.kind=k;portMachine.dir=(k==K::RainCollector||k==K::WaterAnalyzer)?look.direction:0;
  auto ports=energyPorts(portMachine);for(size_t n=0;n<ports.size();n++){auto port=ports[n];float shift=0;for(size_t j=0;j<ports.size();j++)if(j!=n&&ports[j].direction==port.direction)shift=(j<n?.07f:-.07f);float px=port.direction==0?.96f:port.direction==2?.04f:.5f+shift,py=port.direction==1?.96f:port.direction==3?.04f:.5f+shift;
   Color c=look.monochrome?d.tone:energyColor(port.medium);d.box(px-.035f,py-.035f,.07f,.07f,c);
   float dx=port.direction==0?1:port.direction==2?-1:0,dy=port.direction==1?1:port.direction==3?-1:0;float sign=port.output?1.f:-1.f;float ex=px+dx*.025f*sign,ey=py+dy*.025f*sign;
@@ -94,8 +104,18 @@ void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=Machin
  }
  if(acceptsEnergyFuel(k)){d.box(.01f,.45f,.07f,.10f,d.body);if(k==K::Macerator)d.box(.92f,.45f,.07f,.10f,d.body);if(hasSideOutlet(k))d.box(.45f,.92f,.10f,.07f,look.monochrome?d.tone:Color{226,113,61,255});}
 }
-void drawEnergyMechanism(Rectangle r,const MachineAppearance& look){using K=MachineKind;Draw d(r,look);float t=look.active?float(look.time):0;double fill=std::clamp(look.progress,0.,1.);
+void drawEnergyMechanism(Rectangle r,const MachineAppearance& look){using K=MachineKind;Draw d(r,look);if(look.kind==K::RainCollector||look.kind==K::WaterAnalyzer)d.a.direction=0;float t=look.active?float(look.time):0;double fill=std::clamp(look.progress,0.,1.);
  switch(look.kind){
+ case K::BoreholePump:d.wheel(.50f,.35f,.13f,4);break;
+ case K::RainCollector:if(look.active)for(int n=0;n<4;n++){float y=.12f+float(std::fmod(t*.22+n*.22,1.))*.33f;d.line(.20f+n*.19f,y,.17f+n*.19f,y+.07f,d.tone,.7f);}break;
+ case K::RawWaterTank:case K::CleanWaterTank:case K::ConcentrateTank:{Color water=d.tone;if(!look.monochrome&&look.waterDirt>1)water={145,139,106,255};float h=float(fill)*.37f;d.box(.27f,.67f-h,.46f,std::max(.004f,h),water);if(look.waterBio>.05)for(int n=0;n<3;n++)d.circle(.34f+n*.14f,.58f-.04f*std::sin(t+n),.018f,d.light);break;}
+ case K::SandFilter:for(int n=0;n<3;n++){float y=.18f+float(std::fmod(t*.15+n*.3,1.))*.48f;d.circle(.50f,y,.014f,d.tone);}break;
+ case K::MembraneFilter:d.wheel(.24f,.76f,.075f,3);for(int n=0;n<3;n++){float x=.23f+float(std::fmod(t*.2+n*.3,1.))*.40f;d.line(x,.33f+n*.11f,x+.055f,.33f+n*.11f,d.tone,.7f);}break;
+ case K::UVSterilizer:for(int n=0;n<4;n++){float x=.24f+n*.16f;d.line(x,.36f,x+.03f*std::sin(t*2+n),.63f,d.tone,.8f);}break;
+ case K::WaterOutlet:d.line(.37f,.40f,.44f,.33f+float(fill)*.10f,d.ink,.7f);break;
+ case K::GreywaterDrain:for(int n=0;n<3;n++){float x=.46f+n*.15f;d.circle(x,.45f+float(std::fmod(t*.2+n*.23,1.))*.10f,.014f,d.tone);}break;
+ case K::ReedReclaimer:for(float x:{.25f,.43f,.62f,.78f})d.line(x,.56f,x+.025f*std::sin(t+x*9),.20f,d.tone,.8f);break;
+ case K::WaterAnalyzer:{std::array<double,3> readings={look.waterDirt/2,look.waterSalt/6,look.waterBio/4};for(int n=0;n<3;n++)d.line(.34f+n*.13f,.48f,.34f+n*.13f,.48f-float(std::clamp(readings[size_t(n)],0.,1.))*.16f,d.tone,1.4f);break;}
  case K::CuriosityPile:{
   float glow=float(look.labFlux);d.circle(.50f,.54f,.055f+glow*.03f,d.tone);
   for(int n=0;n<3;n++){float y=.66f-float(std::fmod(t*.12+n*.22,1.))*.23f;d.circle(.31f+n*.18f,y,.012f+glow*.009f,d.tone);}
