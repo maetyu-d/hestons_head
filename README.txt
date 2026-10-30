@@ -1,5 +1,33 @@
-AFTERTASTE / MOLECULAR WORKS 3.18.0
+AFTERTASTE / MOLECULAR WORKS 3.19.0
 Invent dishes on the actual factory floor / native C++17
+
+Docked power apparatus
+----------------------
+Place power equipment edge to edge. Its chassis couplers share separate AC,
+DC, cooling, vacuum and control services with adjoining power equipment.
+Only the four cardinal edges connect: a gap or diagonal placement breaks the
+contact. Isolating or tripping a machine opens its couplers. No energy is created
+by a contact; providers still consume actual stored energy, fuel, water and work.
+Heat, shaft, steam and other process stages dock through matching physical ports.
+
+The nuclear demonstration is now a compact 10-piece bench, with no local service
+cables or pipes. Its reactor and star chamber touch their calorimeters; the
+recorder, pump, bath, battery and inverter share bench contacts. One AC cable
+leaves the switchboard and joins the factory supply. A broken export cable or
+open switchboard cuts off remote consumers while the local experiments remain
+assembled. Conduits remain available when you deliberately separate equipment.
+
+Short connector cassettes show occupied chassis edges. Their coloured pins
+identify separate services and flash only during actual transfers. The inspector
+lists docked neighbours and distinguishes bench service from external ports.
+The Lab toolbar button frames this compact assembly at a useful working scale.
+
+Stock version 12 nuclear layouts are compacted on load without changing any
+machine state, fuel, readings, resources, factory food or time. Custom apparatus,
+orientations, service ratings, isolation or construction block automatic moving.
+Saved stock process plans receive the new compact arrangement; custom plans stay
+as authored. Rotated and stamped contact benches retain their working topology.
+
 
 Curiosity laboratory / experimental nuclear power
 -------------------------------------------------
@@ -10,15 +38,15 @@ quench bath, twin-bulb calorimeters and an oscilloscope make each stage visible.
 All nuclear quantities are invented game units; tuning is an experimental
 puzzle. Existing solar, wind and residue generation remain available as support.
 
-Recorder -> instrument lead -> chamber interlock.
-Pump -> glass vacuum line -> star chamber.
+Adjoining recorder -> bench contacts -> chamber interlock.
+Adjoining pump -> vacuum coupler -> star chamber.
 Water + AC -> quench bath -> chamber and calorimeter cold jackets.
 Cartridge -> experimental heat -> calorimeter -> DC -> inverter -> factory AC.
 
 Arm or scram each chamber, adjust resonance and drive, and vary star-chamber
 pulse timing. The star draws real excitation power. Tuning, vacuum and cooling
 change measured yield; a poor experiment can recover less DC than it spends.
-A disconnected recorder opens the interlock. Lost vacuum stops pulses. A hot
+A detached or isolated recorder opens the interlock. Lost vacuum stops pulses. A hot
 jacket latches a scram. Scram removes drive while residual excitation decays.
 Disarm and cool before changing cartridges; each new 40-charge cartridge uses
 0.40 kg from the supplied chemical buffer. The quench bath uses supplied water;

@@ -13,6 +13,7 @@ E storageMedium(K k){return k==K::BatteryRack?E::DC:k==K::Flywheel?E::Shaft:k==K
 }
 bool isEnergyConduit(K k){return (k>=K::PowerCable&&k<=K::CoolingPipe)||k==K::VacuumHose||k==K::InstrumentLead;}
 bool isEnergyMachine(K k){return k>=K::SolarPanel&&k<K::Count&&!isEnergyConduit(k);}
+bool isContactService(E e){return e==E::AC||e==E::DC||e==E::Cooling||e==E::Vacuum||e==E::Instrument;}
 bool acceptsEnergyFuel(K k){return k==K::Macerator||k==K::BiomassBoiler||k==K::AnaerobicDigester;}
 E conduitMedium(K k){return k==K::VacuumHose?E::Vacuum:k==K::InstrumentLead?E::Instrument:E(int(k)-int(K::PowerCable));}K energyConduit(E e){return e==E::Vacuum?K::VacuumHose:e==E::Instrument?K::InstrumentLead:K(int(K::PowerCable)+int(e));}
 std::string energyName(E e){static const std::array<const char*,EnergyCount> names={"AC electricity","DC electricity","shaft power","live steam","exhaust steam","raw biogas","clean gas","return water","recovered heat","cooling","lab vacuum","instrument signal"};return names.at(ix(e));}
@@ -81,12 +82,12 @@ std::vector<MachineSpec> energyMachineSpecs(){return {
  {K::GridInlet,"Metered grid inlet","GI","Optional imported AC with a per-tick limit. Draws only from the delivered electricity reserve; economy charges actual imports.","#a7a38b",40,0,0,0},
  {K::HeatTank,"Insulated heat tank","HTK","Stores recovered heat with standing losses, separating generation from later heating demand.","#b58669",75,0,0,0},
  {K::CoolingPlant,"Recovery cooling plant","CP","Uses AC electricity and optional recovered heat to supply a connected cooling circuit.","#6aa7bc",115,0,0,0},
- {K::CuriosityPile,"Sealed curiosity pile","NU","A tabletop nuclear experiment in a shielded bell jar. A finite fictional oddium cartridge releases heat; a wired console and quench circuit keep it stable. Scram stops excitation, with residual heat left to cool.","#8caa64",180,0,0,0},
+ {K::CuriosityPile,"Sealed curiosity pile","NU","A tabletop nuclear experiment in a shielded bell jar. A finite fictional oddium cartridge releases heat; a docked recorder and quench bath keep it stable. Scram stops excitation, with residual heat left to cool.","#8caa64",180,0,0,0},
  {K::StarChamber,"Jam-jar star chamber","STAR","A fictional pulsed nuclear bench. Consumes AC excitation and sealed cartridge charge. Vacuum, resonance tuning and cooling determine heat yield; poor tuning can cost more electricity than the calorimeter recovers.","#ac80b5",210,0,0,0},
- {K::LabVacuumPump,"Vacuum bench and cold trap","VAC","An oil pump and glass trap maintain an actual routed vacuum supply. The chamber loses vacuum when the hose or pump is isolated.","#97a6b3",70,0,0,0},
+ {K::LabVacuumPump,"Vacuum bench and cold trap","VAC","An oil pump and glass trap supply adjoining bench apparatus by contact. A hose can bridge a gap. The chamber loses vacuum when the pump is detached or isolated.","#97a6b3",70,0,0,0},
  {K::QuenchBath,"Recirculating quench bath","QB","A transparent cooling bath with immersed coils. Uses AC and a little supplied water to remove heat from experiments and the calorimeter.","#6db8c7",90,0,0,0},
  {K::Calorimeter,"Twin-bulb calorimeter","CAL","Measures incoming experimental heat and converts part into DC. A cold reference improves conversion; the remaining heat is accounted as loss. Connect DC to a battery or inverter.","#ce9f67",130,0,0,0},
- {K::ExperimentConsole,"Experiment recorder","SCOPE","A wired oscilloscope and chart recorder. Powers experiment interlocks and logs heat, electrical draw, recovered DC and stability every 24 ticks. Change one setting and compare measured runs.","#8baf9a",85,0,0,0},
+ {K::ExperimentConsole,"Experiment recorder","SCOPE","A dockable oscilloscope and chart recorder. Powers experiment interlocks and logs heat, electrical draw, recovered DC and stability every 24 ticks. Change one setting and compare measured runs.","#8baf9a",85,0,0,0},
  {K::VacuumHose,"Glass vacuum line","VH","Square glass service tubing for the vacuum pump and star chamber. Crosses electrical circuits without joining them.","#9e8db7",4,0,0,0},
  {K::InstrumentLead,"Instrument lead","SIG","Routes the recorder's interlock signal to experimental chambers. An open lead disarms excitation rather than silently continuing.","#b58eaa",3,0,0,0}};}
 void initialisePowerDevice(Machine& m){
@@ -103,13 +104,20 @@ std::string powerContents(const Machine& m){std::string s;for(size_t n=0;n<Energ
 
 class PowerRuntime {
 public:
- struct Graph {std::map<Position,int> ports;std::map<Position,int> component;};
+ struct Graph {std::map<Position,int> ports,contacts;std::map<Position,int> component;};
  struct Transfer {Position source;E medium;double debit=0,credit=0;std::vector<Position> path;};
  struct Budget {std::map<std::pair<Position,E>,double> balance,loads,used;};
+ std::map<std::pair<Position,Position>,std::array<double,EnergyCount>> contactTransfers;
  double lastShaftRPM=0;Factory& f;std::array<Graph,EnergyCount> graphs;std::map<Position,std::vector<Transfer>> allocations;std::map<Position,double> remaining;std::map<std::pair<Position,E>,double> spent;
  explicit PowerRuntime(Factory& factory):f(factory){
   for(auto& [p,links]:f.energyLinks)for(auto& link:links){link.flow=link.overload=0;if(link.enabled&&!link.tripped)graphs[ix(link.medium)].ports[p]=link.ports;}
   for(auto& [p,m]:f.machines){m.power.flow=m.power.generated=m.power.delivered=m.power.demand=0;m.power.voltage=0;if(!isEnergyMachine(m.kind)||!m.enabled||m.power.tripped)continue;std::array<int,EnergyCount> masks{};for(auto port:energyPorts(m))masks[ix(port.medium)]|=1<<port.direction;for(size_t n=0;n<EnergyCount;n++)if(masks[n])graphs[n].ports[p]=masks[n];}
+  // Side-by-side chassis share separate bench services. A contact only exists
+  // on an occupied cardinal edge; cables still use the actual external ports.
+  for(const auto& [p,m]:f.machines)if(isEnergyMachine(m.kind)&&m.enabled&&!m.power.tripped)for(int d=0;d<4;d++){
+   auto neighbor=f.at(nextPosition(p,d));if(!neighbor||!isEnergyMachine(neighbor->kind)||!neighbor->enabled||neighbor->power.tripped)continue;
+   for(size_t n=0;n<EnergyCount;n++)if(isContactService(E(n))){graphs[n].ports[p]|=1<<d;graphs[n].contacts[p]|=1<<d;}
+  }
   for(const auto& [p,m]:f.machines)if(m.kind==K::Switchboard&&(!m.enabled||m.power.tripped))graphs[ix(E::AC)].ports.erase(p);
   for(auto& graph:graphs){std::set<Position> unseen;for(auto& [p,mask]:graph.ports)unseen.insert(p);int id=0;while(!unseen.empty()){auto first=*unseen.begin();std::vector<Position> open{first};unseen.erase(first);graph.component[first]=id;for(size_t n=0;n<open.size();n++)for(int d=0;d<4;d++){Position q=nextPosition(open[n],d);auto other=graph.ports.find(q);if(other==graph.ports.end()||!(graph.ports[open[n]]&(1<<d))||!(other->second&(1<<((d+2)%4))))continue;if(unseen.erase(q)){open.push_back(q);graph.component[q]=id;}}id++;}}
  }
@@ -124,21 +132,23 @@ public:
   int sinkMask=15;
   if(auto m=f.at(sink);m&&isEnergyMachine(m->kind)&&!junction(m->kind)){
    sinkMask=0;for(auto port:energyPorts(*m))if(port.medium==e&&(!port.output||bidirectional(m->kind)))sinkMask|=1<<port.direction;
+   if(isContactService(e))sinkMask|=graph.contacts[sink];
    if(!sinkMask)return result;start=sink;
   }
   std::map<Position,Position> parent;std::vector<Position> open{start};parent[start]=start;
   for(size_t n=0;n<open.size();n++){
    Position current=open[n];auto machine=f.at(current);
-   // Converters are endpoints. Their input and output ports never form a passive bypass.
+   // Process converters remain endpoints. Bench-service backplanes may relay
+   // one medium through touching equipment, without converting that medium.
    if(current!=sink&&machine&&isEnergyMachine(machine->kind)&&!junction(machine->kind)){
     bool ownMedium=false;for(auto port:energyPorts(*machine))if(port.medium==e)ownMedium=true;
-    if(ownMedium)continue;
+    if(ownMedium&&!(isContactService(e)&&graph.contacts[current]!=0))continue;
    }
    int mask=current==sink?sinkMask:graph.ports[current];
    for(int d=0;d<4;d++){Position q=nextPosition(current,d);auto other=graph.ports.find(q);if(other==graph.ports.end()||parent.count(q)||!(mask&(1<<d))||!(other->second&(1<<((d+2)%4))))continue;
     auto device=f.at(q);if(device&&isEnergyMachine(device->kind)&&!junction(device->kind)){
      bool ownMedium=false,sourcePort=false;for(auto port:energyPorts(*device))if(port.medium==e){ownMedium=true;if(port.output&&port.direction==(d+2)%4)sourcePort=true;}
-     if(ownMedium&&!sourcePort)continue;
+     if(ownMedium&&!sourcePort&&!(isContactService(e)&&(graph.contacts[q]&(1<<((d+2)%4)))))continue;
     }
     auto link=f.energyLink(q,e);if(link&&b.loads[{q,e}]>=link->rating-eps)continue;parent[q]=current;open.push_back(q);
    }
@@ -151,7 +161,9 @@ public:
   }return result;
  }
  void commit(const Transfer& tr,double fraction=1){auto m=f.at(tr.source);if(!m)return;double debit=tr.debit*fraction,credit=tr.credit*fraction;m->power.store[ix(tr.medium)]=std::max(0.,m->power.store[ix(tr.medium)]-debit);m->power.delivered+=debit;spent[{tr.source,tr.medium}]+=debit;f.grid.loss+=debit-credit;
-  for(size_t n=0;n<tr.path.size();n++){Position p=tr.path[n];if(auto link=f.energyLink(p,tr.medium)){link->flow+=debit;if(n+1<tr.path.size()){auto q=tr.path[n+1];link->dir=q.x>p.x?0:q.y>p.y?1:q.x<p.x?2:3;}}}
+  for(size_t n=0;n<tr.path.size();n++){Position p=tr.path[n];
+   if(n+1<tr.path.size()){Position q=tr.path[n+1];auto a=f.at(p),b=f.at(q);if(a&&b&&isEnergyMachine(a->kind)&&isEnergyMachine(b->kind)){auto key=q<p?std::make_pair(q,p):std::make_pair(p,q);contactTransfers[key][ix(tr.medium)]+=q<p?-debit:debit;}}
+   if(auto link=f.energyLink(p,tr.medium)){link->flow+=debit;if(n+1<tr.path.size()){auto q=tr.path[n+1];link->dir=q.x>p.x?0:q.y>p.y?1:q.x<p.x?2:3;}}}
  }
  double take(Position p,E e,double amount,bool partial=false,bool skipStorage=false){auto b=budget();auto transfers=plan(p,e,amount,b,skipStorage);double total=0;for(auto& x:transfers)total+=x.credit;if(!partial&&total+eps<amount)return 0;lastShaftRPM=0;for(auto& x:transfers){if(e==E::Shaft){auto source=f.at(x.source);if(source)lastShaftRPM+=source->power.rpm*x.credit/std::max(eps,total);}commit(x);}return total;}
  double total(E e)const{double sum=0;for(auto& [p,m]:f.machines)if(m.enabled)sum+=m.power.store[ix(e)];return sum;}
@@ -273,6 +285,7 @@ bool Factory::buildEnergyLink(Position p,E e){if(energyLink(p,e))return false;if
 bool Factory::removeEnergyLink(Position p,E e){auto link=energyLink(p,e);if(!link)return false;snapshot();auto& v=energyLinks[p];v.erase(std::remove_if(v.begin(),v.end(),[&](const PowerLink& l){return l.medium==e;}),v.end());if(v.empty())energyLinks.erase(p);dirty=true;return true;}
 bool Factory::configureEnergyLink(Position p,E e,const std::string& setting){auto link=energyLink(p,e);if(!link)return false;snapshot();if(setting=="enabled")link->enabled=!link->enabled;else if(setting=="reset"){if(link->heat>.6){notice="Conduit is still hot. Isolate it or reduce load before resetting.";return false;}link->tripped=false;}else if(setting=="rating+")link->rating=std::min(1000.,link->rating+10);else if(setting=="rating-")link->rating=std::max(1.,link->rating-10);dirty=true;return true;}
 void Factory::beginPowerStep(){grid=PowerTotals{};for(auto& [p,m]:machines)if(isEnergyMachine(m.kind)){grid.active=true;break;}if(!grid.active){powerRuntime.reset();return;}powerRuntime=std::make_shared<PowerRuntime>(*this);powerRuntime->generate();powerRuntime->allocate();}
+double Factory::powerContactFlow(Position a,Position b,E e)const{if(!powerRuntime)return 0;auto key=b<a?std::make_pair(b,a):std::make_pair(a,b);auto i=powerRuntime->contactTransfers.find(key);return i==powerRuntime->contactTransfers.end()?0:i->second[ix(e)]*(b<a?-1:1);}
 bool Factory::powerAvailable(Position p,double amount)const{if(amount<=eps)return true;if(grid.active){auto m=at(p);double needed=m&&(m->kind==K::Mixer||m->kind==K::Heater)?amount*.2:amount;return powerRuntime&&powerRuntime->available(p,needed);}return electricity+eps>=amount;}
 void Factory::usePower(Position p,double amount){if(amount<=0)return;if(grid.active){if(powerRuntime){auto i=powerRuntime->remaining.find(p);if(i!=powerRuntime->remaining.end())powerRuntime->consume(p,std::min(amount,i->second));}}else electricity=std::max(0.,electricity-amount);}
 void Factory::finishPowerStep(){if(powerRuntime)powerRuntime->settle();}

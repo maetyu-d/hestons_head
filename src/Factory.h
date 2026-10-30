@@ -165,6 +165,7 @@ public:
  bool installPowerDistrict();
  bool buildEnergyLink(Position p,EnergyMedium medium);bool removeEnergyLink(Position p,EnergyMedium medium);bool configureEnergyLink(Position p,EnergyMedium medium,const std::string& setting);
  PowerLink* energyLink(Position p,EnergyMedium medium);const PowerLink* energyLink(Position p,EnergyMedium medium)const;
+ double powerContactFlow(Position from,Position to,EnergyMedium medium)const;
  bool powerAvailable(Position p,double amount)const;void usePower(Position p,double amount);
  void beginPowerStep();void finishPowerStep();
  std::optional<Blueprint> productionLine(uint64_t dish)const;

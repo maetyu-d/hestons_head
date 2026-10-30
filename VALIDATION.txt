@@ -1,3 +1,31 @@
+AFTERTASTE / MOLECULAR WORKS 3.19.0 - CONTACT POWER BENCH
+30 October 2026 / macOS / Apple Silicon
+
+Cardinal chassis contacts share AC/DC, cooling, vacuum and control services.
+Typed process ports retain direct heat/shaft/steam connections. The demo nuclear
+lab now uses ten adjoining machines and one AC export cable. Visible coupling
+cassettes and actual transfer telemetry replace the local pipe/cable network.
+Save format 13 protects custom construction during stock-layout compaction.
+
+Native application build/link: PASS.
+Contact power suite with the user's version 12 save: PASS (282 checks).
+Includes side contact, no diagonal or gap coupling, cable-free local generation,
+actual transferred energy, remote factory supply over the export cable, breaker
+and cable isolation, detached supports, working rotated plans, finite-battery
+conservation, preservation of all 254 machine states with only the ten stock lab
+positions changed, unchanged resources/clock, stable reload and custom-layout
+protection. New cartridge grants are not part of compaction.
+Nuclear experiment suite: PASS (37 checks with the compact module).
+Physical power suite: PASS (41 checks; 720 ticks, 18,963.5 generated,
+10,979 delivered, supply on all 720 ticks, 139 dishes served).
+Power routing suite: PASS (151 checks).
+Native visual inspection: PASS, contact cassettes and compact live assembly at
+300% zoom, real calorimeter output, working recorder/pump and no local wiring.
+The full historical and sanitizer suites were not rerun. Pre-existing historical
+food-fixture failures remain documented in the prior release entry below.
+
+Prior release validation
+------------------------
 AFTERTASTE / MOLECULAR WORKS 3.18.0 - CURIOSITY LABORATORY
 30 October 2026 / macOS / Apple Silicon
 

@@ -3,7 +3,7 @@
 namespace aftertaste {
 bool isNuclearEquipment(MachineKind k){return k>=MachineKind::CuriosityPile&&k<=MachineKind::ExperimentConsole;}
 double labTuningTarget(MachineKind k){return k==MachineKind::StarChamber?.70:.55;}
-Blueprint Factory::nuclearLabBlueprint(){
+static Blueprint pipedNuclearLabBlueprint(){
  using K=MachineKind;using E=EnergyMedium;Blueprint b;b.name="Curiosity laboratory / nuclear experiments";b.width=19;b.height=13;
  auto add=[&](Position p,K kind)->Machine&{Machine m;m.kind=kind;initialisePowerDevice(m);m.duration=kind==K::StarChamber?6:1;b.parts.push_back({p,m});return b.parts.back().machine;};
  add({1,1},K::BatteryRack);add({4,1},K::Inverter).power.rate=80;
@@ -23,6 +23,40 @@ Blueprint Factory::nuclearLabBlueprint(){
  for(const auto& part:b.parts)for(auto port:energyPorts(part.machine)){auto i=links.find({nextPosition(part.at,port.direction),port.medium});if(i!=links.end())i->second.ports|=1<<((port.direction+2)%4);}
  for(auto& [key,link]:links)b.links.push_back({key.first,link});return b;
 }
+Blueprint Factory::nuclearLabBlueprint(){
+ auto b=pipedNuclearLabBlueprint();b.width=6;b.height=3;b.links.clear();
+ const std::array<Position,10> dock={Position{2,0},{3,0},{1,0},{1,1},{2,1},{3,1},{0,2},{1,2},{2,2},{4,0}};
+ for(size_t n=0;n<b.parts.size();n++)b.parts[n].at=dock[n];
+ PowerLink cable;cable.medium=EnergyMedium::AC;cable.rating=100;cable.ports=5;b.links.push_back({{5,0},cable});return b;
+}
+namespace {
+void connectLabExport(FactoryState& state){
+ using E=EnergyMedium;
+ auto node=[&](Position p)->PowerLink&{auto& v=state.energyLinks[p];for(auto& l:v)if(l.medium==E::AC)return l;PowerLink l;l.medium=E::AC;l.rating=100;l.ports=0;v.push_back(l);return v.back();};
+ Position p{nuclearLabOrigin.x+5,nuclearLabOrigin.y};
+ for(Position end:{Position{-29,p.y},Position{-29,1},Position{-16,1}})while(p!=end){int d=p.x!=end.x?(p.x<end.x?0:2):(p.y<end.y?1:3);Position q=nextPosition(p,d);node(p).ports|=1<<d;node(q).ports|=1<<((d+2)%4);p=q;}
+}
+}
+bool compactLegacyNuclearLabIn(FactoryState& state){
+ const Position oldOrigin{-47,-2};auto old=pipedNuclearLabBlueprint(),compact=Factory::nuclearLabBlueprint();
+ std::set<Position> oldParts;
+ for(const auto& part:old.parts){Position p{oldOrigin.x+part.at.x,oldOrigin.y+part.at.y};auto i=state.machines.find(p);if(i==state.machines.end()||i->second.kind!=part.machine.kind||i->second.dir!=part.machine.dir)return false;oldParts.insert(p);}
+ std::map<Position,std::vector<PowerLink>> expected;
+ for(const auto& n:old.links)expected[{oldOrigin.x+n.at.x,oldOrigin.y+n.at.y}].push_back(n.link);
+ // Only the stock apparatus footprint can move. Custom routing, isolation,
+ // direction changes or construction in the new dock footprint block migration.
+ for(int y=0;y<old.height;y++)for(int x=0;x<old.width;x++){
+  Position p{oldOrigin.x+x,oldOrigin.y+y};if(state.machines.count(p)&&!oldParts.count(p))return false;
+  auto a=state.energyLinks.find(p),b=expected.find(p);if((a==state.energyLinks.end())!=(b==expected.end()))return false;if(a==state.energyLinks.end())continue;
+  if(a->second.size()!=b->second.size())return false;for(const auto& e:b->second){auto i=std::find_if(a->second.begin(),a->second.end(),[&](const auto& l){return l.medium==e.medium;});if(i==a->second.end()||i->ports!=e.ports||i->rating!=e.rating||i->enabled!=e.enabled||i->tripped)return false;}
+ }
+ for(const auto& part:compact.parts){Position p{nuclearLabOrigin.x+part.at.x,nuclearLabOrigin.y+part.at.y};if(state.machines.count(p)&&!oldParts.count(p))return false;}
+ std::vector<Machine> live;for(const auto& part:old.parts){Position p{oldOrigin.x+part.at.x,oldOrigin.y+part.at.y};live.push_back(state.machines.at(p));state.machines.erase(p);}
+ for(const auto& [p,links]:expected)state.energyLinks.erase(p);
+ for(size_t n=0;n<compact.parts.size();n++)state.machines.emplace(Position{nuclearLabOrigin.x+compact.parts[n].at.x,nuclearLabOrigin.y+compact.parts[n].at.y},std::move(live[n]));
+ for(const auto& n:compact.links)state.energyLinks[{nuclearLabOrigin.x+n.at.x,nuclearLabOrigin.y+n.at.y}].push_back(n.link);
+ connectLabExport(state);for(auto& b:state.blueprints)if(b.name==old.name&&b.width==old.width&&b.height==old.height)b=compact;return true;
+}
 bool installNuclearLabIn(FactoryState& state){
  using K=MachineKind;using E=EnergyMedium;
  if(std::any_of(state.machines.begin(),state.machines.end(),[](const auto& p){return isNuclearEquipment(p.second.kind);}))return false;
@@ -33,11 +67,10 @@ bool installNuclearLabIn(FactoryState& state){
  for(int x=-28;x<-27;x++)if(state.machines.count({x,1})||state.energyLinks.count({x,1}))return false;
  for(const auto& part:plan.parts)state.machines.emplace(Position{origin.x+part.at.x,origin.y+part.at.y},part.machine);
  for(const auto& node:plan.links)state.energyLinks[{origin.x+node.at.x,origin.y+node.at.y}].push_back(node.link);
- auto node=[&](Position p)->PowerLink&{auto& v=state.energyLinks[p];for(auto& l:v)if(l.medium==E::AC)return l;PowerLink l;l.medium=E::AC;l.rating=100;l.ports=0;v.push_back(l);return v.back();};
- for(int x=-29;x<-16;x++){node({x,1}).ports|=1;node({x+1,1}).ports|=4;}
- auto& pile=state.machines.at({origin.x+10,origin.y+4});pile.power.lab.fuel=60;pile.power.lab.armed=true;
- auto& star=state.machines.at({origin.x+10,origin.y+9});star.power.lab.fuel=30;star.power.lab.armed=true;
- auto& battery=state.machines.at({origin.x+1,origin.y+1});double startup=std::min(40.,state.electricity);state.electricity-=startup;battery.power.store[size_t(E::DC)]=startup;
+ connectLabExport(state);
+ auto& pile=state.machines.at({origin.x+1,origin.y+1});pile.power.lab.fuel=60;pile.power.lab.armed=true;
+ auto& star=state.machines.at({origin.x+1,origin.y+2});star.power.lab.fuel=30;star.power.lab.armed=true;
+ auto& battery=state.machines.at({origin.x+2,origin.y});double startup=std::min(40.,state.electricity);state.electricity-=startup;battery.power.store[size_t(E::DC)]=startup;
  if(std::none_of(state.blueprints.begin(),state.blueprints.end(),[&](const auto& p){return p.name==plan.name;}))state.blueprints.push_back(plan);
  return true;
 }
