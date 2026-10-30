@@ -1,6 +1,7 @@
 #pragma once
 #include "Culinary.h"
 #include <cstdint>
+#include <memory>
 
 namespace aftertaste {
 struct Position {
@@ -13,7 +14,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Position,x,y)
 Position nextPosition(Position p,int direction);
 std::string positionName(Position p);
 
-enum class MachineKind {Belt,Feeder,Mixer,Gel,Aerator,Chiller,Heater,Dryer,Cloche,Cycler,Dispatch,Bin,Doser,Homogenizer,Spherifier,SousVide,Fermenter,EnzymeReactor,Centrifuge,Filter,VacuumChamber,FreezeDryer,Extruder,Plater,Smoker,Mill,Binder,RecipeKitchen,GlassTube,GlassCoil,GlassValve,GlassBeaker,GlassFlask,GlassCondenser,Burette,GlassJunction,FractionatingStill,FractionatingColumn,FractionReceiver,LatticeReactor,Wall,UtilityLine,UtilityStation,PHProbe,TemperatureLogger,DropletViewer,AromaSensor,FieldBed,RaisedBed,HydroponicBed,SeedHopper,Fertigation,GrowLight,PollinatorHive,SoilProbe,Harvester,Washer,Grader,ColdStore,ProduceIntake,CompostBin};
+enum class MachineKind {Belt,Feeder,Mixer,Gel,Aerator,Chiller,Heater,Dryer,Cloche,Cycler,Dispatch,Bin,Doser,Homogenizer,Spherifier,SousVide,Fermenter,EnzymeReactor,Centrifuge,Filter,VacuumChamber,FreezeDryer,Extruder,Plater,Smoker,Mill,Binder,RecipeKitchen,GlassTube,GlassCoil,GlassValve,GlassBeaker,GlassFlask,GlassCondenser,Burette,GlassJunction,FractionatingStill,FractionatingColumn,FractionReceiver,LatticeReactor,Wall,UtilityLine,UtilityStation,PHProbe,TemperatureLogger,DropletViewer,AromaSensor,FieldBed,RaisedBed,HydroponicBed,SeedHopper,Fertigation,GrowLight,PollinatorHive,SoilProbe,Harvester,Washer,Grader,ColdStore,ProduceIntake,CompostBin,PowerCable,DCCable,DriveShaft,SteamPipe,ExhaustPipe,RawGasPipe,GasPipe,ReturnPipe,HeatPipe,CoolingPipe,SolarPanel,WindRotor,Gearbox,Alternator,BiomassBoiler,SteamAccumulator,SteamTurbine,PowerCondenser,FeedPump,HeatExchanger,Macerator,AnaerobicDigester,GasScrubber,GasHolder,GasEngine,BatteryRack,Flywheel,Inverter,Switchboard,PowerRelay,GridInlet,HeatTank,CoolingPlant,Count};
 enum class UtilityKind {Power,Heat,Cooling,Water,Vacuum,Count};
 enum class ServeStyle {OrderPass,ResearchTasting,ChilledPickup};
 std::string serveStyleName(ServeStyle style);
@@ -33,7 +34,7 @@ struct MachineSpec {
  MachineKind kind;std::string name,code,description,color;
  int cost=0,duration=0;double power=0,water=0;
 };
-const std::array<MachineSpec,61>& machineSpecs();
+const std::array<MachineSpec,size_t(MachineKind::Count)>& machineSpecs();
 const MachineSpec& machineSpec(MachineKind kind);
 bool isTransport(MachineKind kind);
 bool hasSideOutlet(MachineKind kind);
@@ -43,12 +44,31 @@ bool isMixingMachine(MachineKind kind);
 bool isDosingMachine(MachineKind kind);
 bool isTastingDock(MachineKind kind);
 bool isProcessingMachine(MachineKind kind);
+enum class EnergyMedium {AC,DC,Shaft,Steam,Exhaust,RawGas,Gas,Water,Heat,Cooling,Count};
+constexpr size_t EnergyCount=size_t(EnergyMedium::Count);
+struct PowerState {
+ std::array<double,EnergyCount> store{};
+ double workCredit=0;double rate=12,capacity=200,throttle=1,temperature=20,rpm=0,flow=0,generated=0,delivered=0,demand=0,voltage=1,heat=0,low=.25,high=.75;
+ int priority=1;bool tripped=false,armed=true;
+ std::vector<double> history;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(PowerState,store,workCredit,rate,capacity,throttle,temperature,rpm,flow,generated,delivered,demand,voltage,heat,low,high,priority,tripped,armed,history)
+struct PowerLink {EnergyMedium medium=EnergyMedium::AC;double rating=60,flow=0,heat=0,overload=0;int dir=0;bool enabled=true,tripped=false;};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(PowerLink,medium,rating,flow,heat,overload,dir,enabled,tripped)
+struct EnergyPort {EnergyMedium medium;int direction;bool output=false;};
+struct PowerTotals {double generated=0,requested=0,delivered=0,loss=0,stored=0,recoveredHeat=0,ventedMass=0;bool active=false;};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(PowerTotals,generated,requested,delivered,loss,stored,recoveredHeat,ventedMass,active)
+bool isEnergyMachine(MachineKind kind);bool isEnergyConduit(MachineKind kind);bool acceptsEnergyFuel(MachineKind kind);
+std::string energyName(EnergyMedium medium);EnergyMedium conduitMedium(MachineKind kind);MachineKind energyConduit(EnergyMedium medium);
+struct Machine;std::vector<EnergyPort> energyPorts(const Machine& machine);
+class PowerRuntime;
 struct Batch {
  uint64_t id=0;int age=0;Cell matter;CulinaryBatch food;uint64_t dish=0;std::vector<Position> route;
- bool cropBatch=false;double cropQuality=1,cropDirt=0,cropFreshness=1;
+ bool cropBatch=false;double cropQuality=1,cropDirt=0,cropFreshness=1;std::string residue;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Batch,id,age,matter,food,dish,route,cropBatch,cropQuality,cropDirt,cropFreshness)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Batch,id,age,matter,food,dish,route,cropBatch,cropQuality,cropDirt,cropFreshness,residue)
 struct Machine {
+ PowerState power;
  MachineKind kind=MachineKind::Belt;int dir=0,duration=4,progress=0,cooldown=0;
  std::string ingredient="brine",status="Idle";
  double temperature=90,wear=0,dose=1,shear=.8;
@@ -84,9 +104,13 @@ struct Shipment {
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Shipment,product,phase,quality,value,requested,tick,audience,servedAt,feedback)
 struct BlueprintPart {Position at;Machine machine;};
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(BlueprintPart,at,machine)
-struct Blueprint {std::string name;int width=1,height=1;std::vector<BlueprintPart> parts;};
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Blueprint,name,width,height,parts)
+struct BlueprintLink {Position at;PowerLink link;};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(BlueprintLink,at,link)
+struct Blueprint {std::string name;int width=1,height=1;std::vector<BlueprintPart> parts;std::vector<BlueprintLink> links;};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Blueprint,name,width,height,parts,links)
 struct FactoryState {
+ std::map<Position,std::vector<PowerLink>> energyLinks;
+ PowerTotals grid;
  std::map<Position,Machine> machines;
  std::map<std::string,double> stock;
  std::map<std::string,double> farmInventory,farmQuality;
@@ -127,6 +151,12 @@ public:
  static Blueprint fractionalDistillationBlueprint();
  static Blueprint marketGardenBlueprint();
  static Blueprint farmDeliveryBlueprint();
+ static Blueprint powerDistrictBlueprint();
+ bool installPowerDistrict();
+ bool buildEnergyLink(Position p,EnergyMedium medium);bool removeEnergyLink(Position p,EnergyMedium medium);bool configureEnergyLink(Position p,EnergyMedium medium,const std::string& setting);
+ PowerLink* energyLink(Position p,EnergyMedium medium);const PowerLink* energyLink(Position p,EnergyMedium medium)const;
+ bool powerAvailable(Position p,double amount)const;void usePower(Position p,double amount);
+ void beginPowerStep();void finishPowerStep();
  std::optional<Blueprint> productionLine(uint64_t dish)const;
  bool setIngredient(Position p,const std::string& key);
  bool setRecipe(Position p,uint64_t dish);
@@ -149,6 +179,7 @@ public:
  void setPlanName(size_t index,const std::string& name);
  bool save()const;bool load();
 private:
+ std::shared_ptr<PowerRuntime> powerRuntime;
  static void rebuildLattice(Machine& machine,const Batch& batch);
  static bool latticeReaction(const Machine& machine,const Batch& batch,int family,Technique& technique,std::string& reason);
  void updateTicketClock();

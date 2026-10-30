@@ -1,3 +1,45 @@
+AFTERTASTE / MOLECULAR WORKS 3.17.0 - PHYSICAL ELECTRICITY PRODUCTION
+30 October 2026 / macOS / Apple Silicon
+
+The western district adds solar/DC, wind/shafts, steam generation and biogas,
+AC conversion, storage, reserve dispatch, rated circuits and useful heat/cooling.
+Food and farm loads now consume actual connected supply. Fuel and by-products
+retain real material; turbine exhaust returns as boiler water. Plants, food
+and power share one floor. Plans retain typed routes without copying inventory.
+
+Native C++ application build and link: PASS.
+Physical electricity suite: PASS (255 checks including the supplied version 8
+factory migration; all 210 original machines, live food and crops preserved).
+Coverage includes disconnected supply, wrong current type, port rotation,
+converter isolation, finite storage, actual cable flow and losses, switchboard
+isolation, overload trips/cooling/reset, boiler ignition, real fuel and water,
+steam/exhaust mass, digestate mass, engine black start, priority allocation,
+heat recovery, relay hysteresis, complete plans, exact reload and rejection of
+invalid energy links. A 720-tick hybrid demo generated 13,597 units, delivered
+6,597 units to processes, supplied loads on 654 ticks and served 79 dishes.
+This is a finite grid: shortages remain possible and affect actual processing.
+
+AddressSanitizer and UndefinedBehaviorSanitizer: PASS (41 core power checks,
+including the 720-tick demo). Leak detection is unsupported on this macOS build
+and was disabled for that run.
+Farm delivery regression: PASS (17 checks).
+Farm flow regression: PASS (44 checks).
+Farm relocation regression: PASS (versions 5 and 6, northern farm preservation;
+western power recovery beds are counted separately from the production farm).
+Native artwork: PASS (94 equipment types, 752 monochrome checks at two sizes
+and four rotations, paused mechanisms, ghosts, bounded windows, unchanged model).
+Native UI inspection: PASS (upgraded saved factory, same-floor Power navigation,
+large preview, terminal list, settings, stored resources and measured history).
+The full historical test suite was not run for this release.
+
+The existing save had no electricity reserve and nearly exhausted water and
+chemicals. Migration preserves those values; it does not refill them. Direct
+input deliveries remain available. Only up to 250 units of existing electricity
+are transferred into a startup battery when available. Original save backups
+are retained before opening the installed update.
+
+Prior release validation
+------------------------
 AFTERTASTE / MOLECULAR WORKS 3.16.0 - PHYSICAL FARM DELIVERY
 30 October 2026 / macOS / Apple Silicon
 

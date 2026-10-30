@@ -1,4 +1,5 @@
 #include "MachineArt.h"
+#include "PowerArt.h"
 #include "GlassArt.h"
 #include <algorithm>
 #include <cmath>
@@ -91,6 +92,7 @@ Rectangle window(MachineKind k){switch(k){
  case MachineKind::ColdStore:return {.22f,.25f,.58f,.50f};
  case MachineKind::ProduceIntake:return {.24f,.39f,.52f,.34f};
  case MachineKind::CompostBin:return {.24f,.34f,.52f,.43f};
+ default:break;
  }return {.25f,.35f,.5f,.3f};}
 }
 Rectangle machineFoodWindow(Rectangle bounds,MachineKind kind,int direction,int slot,bool paired){
@@ -114,6 +116,7 @@ void drawCropProduce(Rectangle bounds,const std::string& crop,double dirt,double
  int dots=std::clamp(int(std::ceil(dirt*25)),0,16);for(int n=0;n<dots;n++)d.oval(.23f+float((n*37)%53)/100,.38f+float((n*23)%37)/100,.024f,.024f,Color{110,78,46,255},false);
 }
 void drawMachineHousing(Rectangle bounds,const MachineAppearance& look){
+ if(isEnergyMachine(look.kind)||isEnergyConduit(look.kind)){drawEnergyHousing(bounds,look);return;}
  Art d(bounds,look);auto k=look.kind;
  if(isGlassConduit(k)){drawGlassWall(glassPath(bounds,k,(look.direction+2)%4,look.direction),std::min(bounds.width,bounds.height)*(k==MachineKind::GlassCoil?.115f:.18f),look.ghost,look.monochrome);return;}
  // Small feet, pipes and outlines replace the identical rectangular cards.
@@ -237,11 +240,13 @@ void drawMachineHousing(Rectangle bounds,const MachineAppearance& look){
   d.feet(.25f,.75f);d.box(.13f,.23f,.74f,.61f,d.pale);d.box(.20f,.31f,.60f,.42f,d.dark);d.oval(.50f,.52f,.22f,.17f,d.glass);d.line(.28f,.52f,.72f,.52f,d.edge,1.3f);d.line(.40f,.39f,.60f,.65f,d.paint,1.4f);d.line(.60f,.39f,.40f,.65f,d.paint,1.4f);d.box(.23f,.13f,.54f,.08f,d.steel);break;
  case MachineKind::RecipeKitchen:
   d.feet();d.box(.12f,.16f,.76f,.68f,d.pale);d.box(.22f,.42f,.56f,.31f,d.dark);for(float x:{.30f,.70f})d.oval(x,.28f,.10f,.08f,d.steel);break;
+ default:break;
  }
  // These are routing hardware, not extra inventory or simulated ingredient flow.
  if(k!=MachineKind::Belt&&k!=MachineKind::Wall&&!isUtilityEquipment(k)&&!isSensor(k)&&!isFarmInfrastructure(k)){if(k==MachineKind::LatticeReactor){d.box(.07f,.465f,.12f,.07f,d.steel,false);d.box(.81f,.465f,.12f,.07f,d.steel,false);d.line(.08f,.50f,.18f,.50f,d.glass,.65f);d.line(.82f,.50f,.92f,.50f,d.glass,.65f);}else{if(k!=MachineKind::Bin)d.port(.94f,.50f);if(k!=MachineKind::Feeder)d.port(.06f,.50f);}if(k==MachineKind::Mixer||k==MachineKind::Plater)d.port(.50f,.055f);if(hasSideOutlet(k))d.port(.50f,.94f,true);}
 }
 void drawMachineMechanism(Rectangle bounds,const MachineAppearance& look){
+ if(isEnergyMachine(look.kind)||isEnergyConduit(look.kind)){drawEnergyMechanism(bounds,look);return;}
  Art d(bounds,look);float t=look.active?float(look.time):0;bool fine=std::min(bounds.width,bounds.height)>=29;
  switch(look.kind){
  case MachineKind::Belt:for(float x:{.27f,.52f,.77f}){d.line(x-.07f,.39f,x+.03f,.50f,d.glass,.9f);d.line(x+.03f,.50f,x-.07f,.61f,d.glass,.9f);}break;
@@ -333,6 +338,7 @@ void drawMachineMechanism(Rectangle bounds,const MachineAppearance& look){
  case MachineKind::CompostBin:{float angle=look.active?t*2:0;for(int n=0;n<3;n++){float a=angle+n*2*PI/3;d.line(.50f,.52f,.50f+std::cos(a)*.14f,.52f+std::sin(a)*.11f,d.paint,1.3f);}d.oval(.50f,.52f,.035f,.035f,d.edge,false);break;}
  case MachineKind::Wall:break;
  case MachineKind::RecipeKitchen:d.line(.30f,.49f,.70f,.49f,d.steel);d.line(.30f,.67f,.70f,.67f,d.steel);break;
+ default:break;
  }
  // A physical outlet arrow stays readable while the machine itself is rotated.
  if(look.kind!=MachineKind::Bin&&look.kind!=MachineKind::Wall&&!isUtilityEquipment(look.kind)&&!isFarmInfrastructure(look.kind)){d.line(.89f,.45f,.96f,.50f,d.edge,.8f);d.line(.96f,.50f,.89f,.55f,d.edge,.8f);}

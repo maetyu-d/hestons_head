@@ -1,4 +1,5 @@
 #include "Factory.h"
+#include "Power.h"
 #include <algorithm>
 #include <stdexcept>
 
@@ -88,6 +89,7 @@ bool Factory::discardBatch(Position p,int slot){auto m=at(p);if(!m||slot==3)retu
 uint64_t Factory::recordDish(Position p,const std::string& name,int slot,uint64_t expectedBatch){
  auto m=at(p);auto b=batchAt(p,slot);if(!m||!isTastingDock(m->kind)||!b||b->food.parts.empty()||dishbook.size()>=500){notice="Bring a finished batch to a tasting dock or receiving beaker before recording a dish.";return 0;}
  if(enclosedFactoryTiles().count(p)){notice="This tasting dock is inside a factory area. Move it beyond the walls or into a wall opening before recording a dish.";return 0;}
+ if(!b->residue.empty()){notice="Industrial residues must be composted or reprocessed; they cannot be recorded as edible dishes.";return 0;}
  if(expectedBatch&&b->id!=expectedBatch){notice="The selected serving changed. Pause or hold the vessel, inspect the batch, then record it.";return 0;}
  if(b->food.history.empty()||!validCulinary(b->food))return 0;
  CulinaryBatch replay;for(auto& op:b->food.history)if(!executeStep(replay,op)||replay.parts.size()>16){notice="This batch has an incomplete process record.";return 0;}
@@ -99,7 +101,7 @@ uint64_t Factory::recordDish(Position p,const std::string& name,int slot,uint64_
  if(complete&&hasFeeder&&!nodes.empty()){
   int minx=1000001,miny=1000001,maxx=-1000001,maxy=-1000001;for(auto pos:nodes){minx=std::min(minx,pos.x);miny=std::min(miny,pos.y);maxx=std::max(maxx,pos.x);maxy=std::max(maxy,pos.y);}
   if(maxx-minx<=1000&&maxy-miny<=1000){Blueprint layout;layout.name=d.name;layout.width=maxx-minx+1;layout.height=maxy-miny+1;
-   for(auto pos:nodes){auto source=at(pos);if(!source)continue;auto copy=*source;copy.item.reset();copy.extra.reset();copy.sideOutput.reset();copy.lastOutput.reset();copy.program.clear();copy.programOutput.clear();copy.cursor=copy.subtick=copy.progress=copy.cooldown=0;copy.ready=false;copy.wear=0;copy.status="Idle";if(isTastingDock(copy.kind)){copy.recipe=pos==p?d.id:0;copy.forward=pos!=p;copy.automatic=false;}layout.parts.push_back({{pos.x-minx,pos.y-miny},copy});}
+   for(auto pos:nodes){auto source=at(pos);if(!source)continue;auto copy=*source;copy.item.reset();copy.extra.reset();copy.sideOutput.reset();copy.lastOutput.reset();copy.program.clear();copy.programOutput.clear();copy.cursor=copy.subtick=copy.progress=copy.cooldown=0;copy.ready=false;copy.wear=0;clearPowerInventory(copy);copy.status="Idle";if(isTastingDock(copy.kind)){copy.recipe=pos==p?d.id:0;copy.forward=pos!=p;copy.automatic=false;}layout.parts.push_back({{pos.x-minx,pos.y-miny},copy});}
    dishLayouts[d.id]=std::move(layout);
   }
  }

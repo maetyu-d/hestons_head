@@ -1,5 +1,60 @@
-AFTERTASTE / MOLECULAR WORKS 3.16.0
+AFTERTASTE / MOLECULAR WORKS 3.17.0
 Invent dishes on the actual factory floor / native C++17
+
+Electricity production
+----------------------
+The western power district shares the same floor and clock with the northern
+farm and molecular works. Use Power in the floor toolbar to centre it, or Fit
+to see all three districts. Solar and wind respond to the shared day, season
+and gusts; walls and tall equipment reduce exposure. Panels produce DC, wind
+rotors supply shafts, alternators produce AC, and inverters connect DC storage
+to the AC factory. Gear ratio changes shaft speed and alternator efficiency.
+
+Build AC/DC cables, drive shafts, live/exhaust steam pipes, raw/clean gas lines,
+return-water pipes and recovered heat/cooling circuits by dragging. These
+layers share floor cells with food equipment. Different media cross without
+joining; matching media form junctions. The small coloured machine terminals
+show actual input/output directions. Rotate equipment to change its terminals.
+Right-click selects a route, or choose Inspect energy routes below in a machine
+inspector. A conduit brush selects its own layer beneath equipment. Cycle Layer
+to inspect overlapping routes, change ratings, isolate or reset them.
+
+The biomass train burns actual organic food batches. Ignition needs a small AC
+black-start supply. Steam production needs water; the turbine returns equal
+exhaust mass, and its condenser recovers boiler water and useful heat. A feed
+pump adds measured makeup water. Wet fuel reduces heat yield. Ash leaves the
+boiler's clockwise food side outlet; blocked residues stop new firing.
+
+The digester consumes actual organic compounds from incoming leftovers. Warmth
+changes conversion speed. Raw biogas needs a scrubber with connected water;
+clean gas can be stored or consumed by an engine. Engine starting uses AC,
+running consumes gas, and its shaft drives an alternator. Digestate is retained
+as a real side stream. Both residues can supply a compost bin beside a grow bed;
+industrial residues cannot be served or recorded as edible dishes.
+
+Heat exchangers, heat tanks and recovery cooling plants reuse generation heat.
+Heaters and chillers can replace part of their AC demand with connected thermal
+supply. Tanks have a controllable excess-heat bypass; closing every heat outlet
+can back up an engine or condenser. Every store is finite, every conduit has a
+throughput rating, and conversions lose energy. Batteries, flywheels and steam
+accumulators have independent capacity, output-rate and standing-loss limits.
+A flywheel can be hand-cranked for an explicit small external work input.
+
+The reserve relay uses separate low/start and high/stop battery thresholds to
+avoid rapid switching. Set boilers and gas engines to reserve or continuous
+operation. Food and farm loads have Critical, Normal and Optional priorities.
+Under shortage, mixers and heaters advance more slowly on partial supply;
+precision processes hold. Overloaded electrical conductors and switchboards
+accumulate heat and trip. Isolate, let them cool, then reset the breaker.
+
+The inspector shows actual flows, RPM, stores, resource ports and measured output
+history. Flow animates only committed transfers and freezes when paused. Plans
+save the complete arrangement and typed routes but never duplicate fuel, stored
+energy or live food. Version 8 northern demo saves receive the western district
+when its site is clear; existing machines, crops, food and other buffers remain
+intact. Existing electricity is moved into the initial battery reserve up to
+250 units, never created. The optional metered grid inlet is initially isolated;
+when enabled, it draws a limited rate from delivered import reserves.
 
 Serving and feedback
 --------------------
@@ -29,8 +84,9 @@ Utility stations and matching utility lines create shared power, heat, cooling,
 water and vacuum networks. Connected lines share station capacity, and adjacent
 machines tap the service they use. A station activates that service network;
 processes that need it require an adjacent line and enough shared capacity.
-Without a station, the added network constraint is off. The factory input buffers
-for electricity and process water deplete while machines operate in every mode;
+Without a station, the added network constraint is off. Without production equipment, the legacy electricity buffer supplies loads.
+With a physical grid, connected generation supplies them and a metered grid inlet
+is needed to use imported electricity. Process water still depletes in every mode;
 water draw follows each machine's water demand. These buffers are separate from
 optional utility-line capacity. Economy also applies its grid-capacity limit and
 operating fees. Heating and cooling demand follows the machine's selected

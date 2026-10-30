@@ -10,6 +10,10 @@ elif [ -x "$cmake_dir/ctest" ]; then
   "$cmake_dir/ctest" --test-dir build -C Release --output-on-failure
 else
   ./build/aftertaste_tests
+  ./build/power_tests
+  ./build/farm_delivery_tests
+  ./build/farm_flow_tests
+  ./build/farm_migration_tests
   ./build/factory_tests
   ./build/culinary_tests
   ./build/floor_tests

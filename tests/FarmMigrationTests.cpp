@@ -32,7 +32,8 @@ int main(){try{
   require(migrated.at({-5,-10})->item->route==std::vector<Position>{{-6,-10},{-5,-10}},"farm batch routes relocated once");
   require(migrated.at({-4,0})->item->route==std::vector<Position>{{-6,-10},{-4,0}},"downstream batch provenance relocated");
   require(migrated.farmInventory.at("tomato")==2.3&&migrated.batches()==old.batches(),"inventory and food retained");
-  int beds=0;for(const auto& [pos,m]:migrated.machines)if(isFarmBed(m.kind)){require(pos.y<0,"all farm beds north of factory");beds++;}
+  // Count the northern production farm; the western power demo has separate compost recovery beds.
+  int beds=0;for(const auto& [pos,m]:migrated.machines)if(isFarmBed(m.kind)&&pos.x>=-7){require(pos.y<0,"all farm beds north of factory");beds++;}
   require(beds==6,"six northern crop lanes installed");
   require(migrated.save(),"save relocated farm");Factory again;again.storageFile=old.storageFile;require(again.load(),"reload relocated farm");
   require(json(static_cast<FactoryState&>(again))==json(static_cast<FactoryState&>(migrated)),"migration remains stable across reloads");

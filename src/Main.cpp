@@ -46,7 +46,7 @@ int main(int argc,char** argv){
    if(glassCheck)ui.checkGlassStep(frames);
    if(glassCheck&&frames==16)std::cout<<"PASS glass lab: rendered construction plan, connected glass routes, real stopcock backpressure, burette source, heated/cooled food, beaker recording and serving, no separate plate\n";
    if(machineCheck)ui.checkMachineStep(frames,machineDirection);
-   if(machineCheck&&frames==5)std::cout<<"PASS machine recognition: all 35 physical devices, 288 monochrome render checks across two sizes and four rotations, translucent previews, idle/working mechanisms, bounded food windows, unchanged model\n";
+   if(machineCheck&&frames==5)std::cout<<"PASS machine recognition: 94 equipment types, 752 monochrome render checks across two sizes and four rotations, translucent previews, idle/working mechanisms, bounded food windows, unchanged model\n";
    if(flowCheck)ui.checkFlowStep(frames,closeup);
    if(flowCheck&&frames==60)std::cout<<"PASS native floor flow: live transfers, molecular structures, measured reactions, actual ingredient labels and Flow toggle preserve the world\n";
    if(check&&frames==23)std::cout<<"PASS factory-floor invention: measured feeder batches, actual mixer/doser/homogeniser, tasting, naming, physical line copying and repeated production; no separate test plate\n";

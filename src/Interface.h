@@ -27,7 +27,7 @@ private:
  std::string tooltip,librarySearch,sourceIngredient="tomato",doseText="100.00",dishName="Untitled dish",planName;
  int editFocus=0,batchSlot=0,componentIndex=0,latticeSelected=-1,planRenameIndex=-1;
  FloorTelemetry floorTelemetry;
- bool floorFlow=true;
+ bool floorFlow=true,energyLinkSelected=false;EnergyMedium selectedEnergyMedium=EnergyMedium::AC;
  bool initialFraming=true,sourceBrushConfigured=false;
  uint64_t referenceRecipe=0;
  double sourceDose=100;
@@ -48,7 +48,7 @@ private:
  Vector2 pointer()const;float viewWidth()const;float viewHeight()const;
  void beginClip(Rectangle r);void endClip();void drawTooltip();void editText(std::string& value,size_t limit);
  void stepFactory();void updateFactory();void advanceFactory();void drawFactory();void drawFactoryMap();void drawFactoryOverlay();
- void drawLibrary(Rectangle r);void drawInspector(Rectangle r);
+ void drawLibrary(Rectangle r);void drawInspector(Rectangle r);void drawPowerInspector(Rectangle r);void drawEnergyRoutes();
  Position factoryPosition(Vector2 point)const;Rectangle factoryTile(Position p)const;
  void paintFactory(Position p);void fitFactory();void homeFactory();void selectMachine(Position p);
  const Batch* inspectedBatch()const;bool commitDose();void setSource();void armSource(MachineKind kind);
