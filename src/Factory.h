@@ -14,7 +14,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Position,x,y)
 Position nextPosition(Position p,int direction);
 std::string positionName(Position p);
 
-enum class MachineKind {Belt,Feeder,Mixer,Gel,Aerator,Chiller,Heater,Dryer,Cloche,Cycler,Dispatch,Bin,Doser,Homogenizer,Spherifier,SousVide,Fermenter,EnzymeReactor,Centrifuge,Filter,VacuumChamber,FreezeDryer,Extruder,Plater,Smoker,Mill,Binder,RecipeKitchen,GlassTube,GlassCoil,GlassValve,GlassBeaker,GlassFlask,GlassCondenser,Burette,GlassJunction,FractionatingStill,FractionatingColumn,FractionReceiver,LatticeReactor,Wall,UtilityLine,UtilityStation,PHProbe,TemperatureLogger,DropletViewer,AromaSensor,FieldBed,RaisedBed,HydroponicBed,SeedHopper,Fertigation,GrowLight,PollinatorHive,SoilProbe,Harvester,Washer,Grader,ColdStore,ProduceIntake,CompostBin,PowerCable,DCCable,DriveShaft,SteamPipe,ExhaustPipe,RawGasPipe,GasPipe,ReturnPipe,HeatPipe,CoolingPipe,SolarPanel,WindRotor,Gearbox,Alternator,BiomassBoiler,SteamAccumulator,SteamTurbine,PowerCondenser,FeedPump,HeatExchanger,Macerator,AnaerobicDigester,GasScrubber,GasHolder,GasEngine,BatteryRack,Flywheel,Inverter,Switchboard,PowerRelay,GridInlet,HeatTank,CoolingPlant,CuriosityPile,StarChamber,LabVacuumPump,QuenchBath,Calorimeter,ExperimentConsole,VacuumHose,InstrumentLead,RawWaterPipe,FilteredWaterPipe,PurifiedWaterPipe,CleanWaterPipe,GreywaterPipe,ConcentratePipe,BoreholePump,RainCollector,RawWaterTank,SandFilter,MembraneFilter,UVSterilizer,CleanWaterTank,WaterOutlet,GreywaterDrain,ReedReclaimer,ConcentrateTank,WaterAnalyzer,Count};
+enum class MachineKind {Belt,Feeder,Mixer,Gel,Aerator,Chiller,Heater,Dryer,Cloche,Cycler,Dispatch,Bin,Doser,Homogenizer,Spherifier,SousVide,Fermenter,EnzymeReactor,Centrifuge,Filter,VacuumChamber,FreezeDryer,Extruder,Plater,Smoker,Mill,Binder,RecipeKitchen,GlassTube,GlassCoil,GlassValve,GlassBeaker,GlassFlask,GlassCondenser,Burette,GlassJunction,FractionatingStill,FractionatingColumn,FractionReceiver,LatticeReactor,Wall,UtilityLine,UtilityStation,PHProbe,TemperatureLogger,DropletViewer,AromaSensor,FieldBed,RaisedBed,HydroponicBed,SeedHopper,Fertigation,GrowLight,PollinatorHive,SoilProbe,Harvester,Washer,Grader,ColdStore,ProduceIntake,CompostBin,PowerCable,DCCable,DriveShaft,SteamPipe,ExhaustPipe,RawGasPipe,GasPipe,ReturnPipe,HeatPipe,CoolingPipe,SolarPanel,WindRotor,Gearbox,Alternator,BiomassBoiler,SteamAccumulator,SteamTurbine,PowerCondenser,FeedPump,HeatExchanger,Macerator,AnaerobicDigester,GasScrubber,GasHolder,GasEngine,BatteryRack,Flywheel,Inverter,Switchboard,PowerRelay,GridInlet,HeatTank,CoolingPlant,CuriosityPile,StarChamber,LabVacuumPump,QuenchBath,Calorimeter,ExperimentConsole,VacuumHose,InstrumentLead,RawWaterPipe,FilteredWaterPipe,PurifiedWaterPipe,CleanWaterPipe,GreywaterPipe,ConcentratePipe,BoreholePump,RainCollector,RawWaterTank,SandFilter,MembraneFilter,UVSterilizer,CleanWaterTank,WaterOutlet,GreywaterDrain,ReedReclaimer,ConcentrateTank,WaterAnalyzer,MineralHopper,ReagentExtractor,CultureVat,SaltReactor,ReagentSeparator,ReagentEvaporator,ReagentPolisher,ReagentTank,ReagentAnalyzer,ReagentIntake,ReagentRecovery,Count};
 enum class UtilityKind {Power,Heat,Cooling,Water,Vacuum,Count};
 enum class ServeStyle {OrderPass,ResearchTasting,ChilledPickup};
 std::string serveStyleName(ServeStyle style);
@@ -71,11 +71,18 @@ bool isEnergyMachine(MachineKind kind);bool isEnergyConduit(MachineKind kind);bo
 std::string energyName(EnergyMedium medium);EnergyMedium conduitMedium(MachineKind kind);MachineKind energyConduit(EnergyMedium medium);
 struct Machine;std::vector<EnergyPort> energyPorts(const Machine& machine);
 class PowerRuntime;
+struct ReagentLot {std::string key;double active=0,impurity=0;bool mineral=false,assayed=false;};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(ReagentLot,key,active,impurity,mineral,assayed)
+struct ReagentState {double minerals=0,starter=0,waste=0,produced=0,delivered=0;std::string sampleKey;double samplePurity=0,sampleConcentration=0,sampleMass=0;};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(ReagentState,minerals,starter,waste,produced,delivered,sampleKey,samplePurity,sampleConcentration,sampleMass)
+struct ReagentWorksState {std::map<std::string,double> inventory;double mineralImported=0,starterImported=0,produced=0,delivered=0,returnedWater=0,disposed=0;};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(ReagentWorksState,inventory,mineralImported,starterImported,produced,delivered,returnedWater,disposed)
 struct Batch {
+ ReagentLot reagent;
  uint64_t id=0;int age=0;Cell matter;CulinaryBatch food;uint64_t dish=0;std::vector<Position> route;
  bool cropBatch=false;double cropQuality=1,cropDirt=0,cropFreshness=1;std::string residue;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Batch,id,age,matter,food,dish,route,cropBatch,cropQuality,cropDirt,cropFreshness,residue)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Batch,reagent,id,age,matter,food,dish,route,cropBatch,cropQuality,cropDirt,cropFreshness,residue)
 struct WaterParcel {double volume=0,solids=0,salt=0,bio=0;};
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(WaterParcel,volume,solids,salt,bio)
 struct WaterLoad {double solids=0,salt=0,bio=0;};
@@ -93,7 +100,7 @@ struct WaterWorksState {
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(WaterWorksState,aquifer,aquiferCapacity,extracted,rainCollected,recharged,delivered,recovered,killed,greywater,disposed,supply)
 struct Machine {
- PowerState power;WaterState waterProcess;
+ PowerState power;WaterState waterProcess;ReagentState reagentProcess;
  MachineKind kind=MachineKind::Belt;int dir=0,duration=4,progress=0,cooldown=0;
  std::string ingredient="brine",status="Idle";
  double temperature=90,wear=0,dose=1,shear=.8;
@@ -135,7 +142,7 @@ struct Blueprint {std::string name;int width=1,height=1;std::vector<BlueprintPar
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Blueprint,name,width,height,parts,links)
 struct FactoryState {
  std::map<Position,std::vector<PowerLink>> energyLinks;
- PowerTotals grid;WaterWorksState waterworks;
+ PowerTotals grid;WaterWorksState waterworks;ReagentWorksState reagentworks;
  std::map<Position,Machine> machines;
  std::map<std::string,double> stock;
  std::map<std::string,double> farmInventory,farmQuality;
@@ -179,6 +186,7 @@ public:
  static Blueprint powerDistrictBlueprint();
  static Blueprint nuclearLabBlueprint();
  static Blueprint waterWorksBlueprint();
+ static Blueprint reagentWorksBlueprint();
  bool installPowerDistrict();
  bool buildEnergyLink(Position p,EnergyMedium medium);bool removeEnergyLink(Position p,EnergyMedium medium);bool configureEnergyLink(Position p,EnergyMedium medium,const std::string& setting);
  PowerLink* energyLink(Position p,EnergyMedium medium);const PowerLink* energyLink(Position p,EnergyMedium medium)const;

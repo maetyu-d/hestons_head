@@ -55,6 +55,8 @@ const std::vector<Ingredient>& pantry(){
   add("bicarbonate","Bicarbonate","BC","#cbdad3","Agent","Neutralises acid and generates gas. More alkaline mixtures brown more readily.",{{Base,.75},{Other,.25}},{},0,0,.2,.5);
   add("binder","Transglutaminase","TG","#b48c9f","Agent","Catalyses protein crosslinks in a mild-temperature window, producing a different structure from hydrocolloid gels.",{{Transglutaminase,.6},{Other,.4}},{},0,0,0,.5,9);
   add("xanthan","Xanthan","XA","#a2c0a0","Agent","Cold-thickening polymer. Raises viscosity, slows separation and changes foam drainage without a hot setting stage.",{{Xanthan,.95},{Water,.05}},{},0,0,0,.3,6);
+  add("lactic_acid","Lactic acid","LA","#d79b84","Agent","Purified fermentation acid for measured pH adjustment.",{{Acid,.90},{Water,.10}},{},0,0,0,.5,5);
+  add("nutrient","Mineral nutrients","NP","#94a46c","Agent","Refined mineral blend for the farm fertigation input.",{{Salt,.25},{Calcium,.10},{Other,.65}},{},0,0,0,1,3);
   return v;
  }();return list;
 }

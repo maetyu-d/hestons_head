@@ -1,4 +1,5 @@
 #include "PowerArt.h"
+#include "ReagentWorks.h"
 #include <cmath>
 namespace aftertaste {
 Color energyColor(EnergyMedium e){static const std::array<Color,EnergyCount> c={Color{218,170,54,255},Color{66,166,158,255},Color{121,145,151,255},Color{213,119,75,255},Color{167,159,151,255},Color{154,127,74,255},Color{123,162,78,255},Color{64,151,192,255},Color{218,96,57,255},Color{75,190,218,255},Color{155,140,181,255},Color{177,133,163,255},Color{117,155,155,255},Color{98,182,178,255},Color{105,191,214,255},Color{37,159,201,255},Color{148,139,114,255},Color{188,146,87,255}};return c.at(size_t(e));}
@@ -29,6 +30,32 @@ void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=Machin
    case K::CoolingPipe:d.line(.50f,.25f,.50f,.75f,d.ink,.8f);d.line(.32f,.34f,.68f,.66f,d.ink,.8f);d.line(.32f,.66f,.68f,.34f,d.ink,.8f);break;
    default:break;
   }return;}
+ if(isReagentMachine(k)){
+  // Lab glass remains upright; only the physical material ports rotate.
+  d.a.direction=0;d.feet();
+  switch(k){
+   case K::MineralHopper:d.box(.16f,.15f,.68f,.16f,d.tone);d.line(.18f,.32f,.38f,.66f,d.ink,1.3f);d.line(.82f,.32f,.62f,.66f,d.ink,1.3f);d.box(.38f,.65f,.24f,.15f,d.body);break;
+   case K::ReagentExtractor:d.box(.13f,.73f,.74f,.09f,d.tone);d.circle(.5f,.48f,.28f,d.light);d.box(.43f,.12f,.14f,.20f,d.light);d.line(.50f,.13f,.50f,.67f,d.ink,.8f);d.box(.35f,.09f,.30f,.07f,d.body);break;
+   case K::CultureVat:d.tank(.61f);d.box(.26f,.28f,.48f,.41f,d.light);d.line(.50f,.08f,.50f,.67f,d.ink,.9f);d.box(.36f,.05f,.28f,.10f,d.tone);d.circle(.84f,.25f,.09f,d.light);d.line(.76f,.25f,.70f,.25f,d.ink,1);break;
+   case K::SaltReactor:d.box(.10f,.71f,.80f,.11f,d.body);for(float x:{.31f,.70f}){d.circle(x,.49f,.19f,d.light);d.box(x-.045f,.16f,.09f,.17f,d.light);}d.line(.31f,.17f,.70f,.17f,d.tone,1);d.box(.42f,.67f,.16f,.10f,d.tone);break;
+   case K::ReagentSeparator:d.box(.12f,.20f,.76f,.58f,d.body);d.circle(.49f,.48f,.25f,d.light);d.circle(.49f,.48f,.08f,d.tone);for(int n=0;n<3;n++){float t=n*2.094f;d.line(.49f,.48f,.49f+std::cos(t)*.19f,.48f+std::sin(t)*.19f,d.tone,1.4f);}break;
+   case K::ReagentEvaporator:d.box(.13f,.72f,.72f,.11f,d.tone);d.circle(.35f,.53f,.23f,d.light);d.box(.31f,.18f,.08f,.16f,d.light);d.line(.36f,.20f,.65f,.20f,d.ink,1);d.box(.62f,.26f,.17f,.34f,d.body);for(float y:{.31f,.40f,.49f})d.line(.65f,y,.76f,y,d.tone,1);d.line(.70f,.60f,.85f,.73f,d.tone,1);break;
+   case K::ReagentPolisher:d.box(.33f,.10f,.34f,.67f,d.light);for(float y:{.24f,.37f,.50f,.63f}){d.box(.36f,y,.28f,.045f,d.tone);}d.box(.22f,.76f,.56f,.07f,d.body);break;
+   case K::ReagentTank:d.box(.41f,.10f,.18f,.20f,d.light);d.circle(.50f,.55f,.28f,d.light);d.box(.23f,.71f,.54f,.09f,d.body);for(float y:{.43f,.53f,.63f})d.line(.67f,y,.74f,y,d.ink,.55f);break;
+   case K::ReagentAnalyzer:d.box(.12f,.25f,.76f,.52f,d.body);d.box(.23f,.34f,.42f,.25f,d.ink);d.circle(.75f,.40f,.05f,d.tone);d.circle(.75f,.59f,.04f,d.light);break;
+   case K::ReagentIntake:d.box(.17f,.22f,.66f,.56f,d.light);d.box(.29f,.32f,.42f,.25f,d.tone);d.line(.35f,.46f,.45f,.55f,d.light,1.3f);d.line(.45f,.55f,.65f,.36f,d.light,1.3f);d.box(.30f,.68f,.40f,.07f,d.body);break;
+   case K::ReagentRecovery:d.box(.23f,.22f,.54f,.54f,d.light);d.box(.32f,.14f,.36f,.10f,d.tone);d.line(.32f,.64f,.68f,.64f,d.ink,1);for(float x:{.35f,.50f,.65f})d.circle(x,.69f,.025f,d.tone);break;
+   default:break;
+  }
+  Draw ports(r,look);
+  if(k==K::ReagentAnalyzer)ports.line(.88f,.5f,.99f,.5f,d.ink,1.2f);
+  if(k!=K::MineralHopper&&k!=K::ReagentAnalyzer)ports.box(.01f,.45f,.08f,.10f,Color{40,170,190,255});
+  if(k!=K::ReagentRecovery&&k!=K::ReagentIntake&&k!=K::ReagentAnalyzer)ports.box(.91f,.45f,.08f,.10f,d.ink);
+  if(hasSideOutlet(k))ports.box(.45f,.91f,.10f,.08f,Color{226,113,61,255});
+  // Separate gold AC tap, away from food and side-fraction couplings.
+  d.box(.10f,.84f,.07f,.07f,energyColor(EnergyMedium::AC));
+  return;
+ }
  switch(k){
  case K::BoreholePump:d.feet();d.box(.10f,.69f,.80f,.13f,d.body);d.box(.40f,.35f,.20f,.35f,d.light);d.circle(.50f,.35f,.21f,d.body);d.line(.50f,.83f,.50f,.99f,d.tone,2);d.box(.25f,.12f,.50f,.10f,d.tone);break;
  case K::RainCollector:d.box(.10f,.49f,.80f,.12f,d.body);d.line(.10f,.35f,.50f,.10f,d.ink,1.4f);d.line(.50f,.10f,.90f,.35f,d.ink,1.4f);d.box(.25f,.62f,.50f,.23f,d.light);d.line(.50f,.61f,.50f,.75f,d.tone,2);break;
@@ -104,7 +131,21 @@ void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=Machin
  }
  if(acceptsEnergyFuel(k)){d.box(.01f,.45f,.07f,.10f,d.body);if(k==K::Macerator)d.box(.92f,.45f,.07f,.10f,d.body);if(hasSideOutlet(k))d.box(.45f,.92f,.10f,.07f,look.monochrome?d.tone:Color{226,113,61,255});}
 }
-void drawEnergyMechanism(Rectangle r,const MachineAppearance& look){using K=MachineKind;Draw d(r,look);if(look.kind==K::RainCollector||look.kind==K::WaterAnalyzer)d.a.direction=0;float t=look.active?float(look.time):0;double fill=std::clamp(look.progress,0.,1.);
+void drawEnergyMechanism(Rectangle r,const MachineAppearance& look){
+ if(isReagentMachine(look.kind)){
+  Draw d(r,look);d.a.direction=0;
+  if(look.reagentFill>0&&look.kind!=MachineKind::ReagentAnalyzer){
+   Color color=d.tone;if(!look.reagentKey.empty()){auto value=ingredient(look.reagentKey).color;unsigned n=unsigned(std::stoul(value.substr(1),nullptr,16));color={static_cast<unsigned char>(n>>16),static_cast<unsigned char>(n>>8),static_cast<unsigned char>(n),255};}
+   float level=.12f+.20f*float(std::clamp(look.reagentFill,0.,1.));
+   // A bounded liquid viewport exposes the live lot rather than a decorative fill.
+   d.box(.36f,.64f-level,.28f,level,look.monochrome?d.body:Fade(color,.8f));
+   if(look.active&&look.kind==MachineKind::CultureVat)for(int n=0;n<3;n++){float rise=float(std::fmod(look.time*.12+n*.31,1.));d.circle(.42f+n*.075f,.61f-rise*.22f,.018f,d.light);}
+   if(look.reagentPurity<.85)for(int n=0;n<3;n++)d.circle(.40f+n*.075f,.60f,.012f,d.ink);
+  }
+  if(look.kind==MachineKind::ReagentAnalyzer){for(int n=0;n<5;n++)d.line(.27f+n*.055f,.52f,.27f+n*.055f,.43f-.04f*std::sin(n+look.time*.1f),d.tone,.7f);}
+  return;
+ }
+using K=MachineKind;Draw d(r,look);if(look.kind==K::RainCollector||look.kind==K::WaterAnalyzer)d.a.direction=0;float t=look.active?float(look.time):0;double fill=std::clamp(look.progress,0.,1.);
  switch(look.kind){
  case K::BoreholePump:d.wheel(.50f,.35f,.13f,4);break;
  case K::RainCollector:if(look.active)for(int n=0;n<4;n++){float y=.12f+float(std::fmod(t*.22+n*.22,1.))*.33f;d.line(.20f+n*.19f,y,.17f+n*.19f,y+.07f,d.tone,.7f);}break;

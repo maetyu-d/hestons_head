@@ -1,5 +1,67 @@
-AFTERTASTE / MOLECULAR WORKS 3.23.0
+AFTERTASTE / MOLECULAR WORKS 3.24.0
 Invent dishes on the actual factory floor / native C++17
+
+Reagent laboratory / the fourth supply system
+---------------------------------------------
+Select Chem in the floor toolbar. Three parallel material lines below the
+waterworks make the last core factory input: named chemicals. All eleven new
+apparatus types are buildable, and the complete 7 by 8 arrangement is in Plans.
+There is one floor, one clock, and actual batches between every process.
+
+Crop feeder -> extraction -> separation -> polishing -> concentration -> flask
+                                                            assay -> inlet
+Mineral hopper -> reaction bench -> the same purification/measurement stages
+Crop feeder -> culture vat -> the same purification/measurement stages
+
+Feed crop batches directly from harvest and washing, or use pantry feeders that
+draw the existing named farm stock. Extraction recovers actual pectin, starch,
+lecithin or protein precursor; extracted precursor is removed from the residue.
+Cultures use actual fermentable crop sugars, a small finite starter, water and
+AC. Choose culture, yeast, xanthan, amylase, binder or lactic acid. Temperature,
+dwell, crop condition and contamination affect yield and the purification load.
+These are stylised game conversions, not real chemical manufacturing recipes.
+
+Mineral refining makes farm nutrients, salt, calcium, citrate or bicarbonate.
+Import raw mineral blend at the hopper (+500 g; 20 credits in Economy), then
+refine it on the floor. Calcium and citrate additionally consume an actual acid
+reagent supply, so fermentation and mineral refining can form a process chain.
+Load a starter at a culture vat (+10 g; 8 credits in Economy). Once the lab makes
+its own culture, use 1 g from named stock to seed the vat again. Raw feedstock
+and initial starter imports remain the boundary to systems not built yet.
+
+Separators trade recovery for dry purity. Polishing removes most remaining
+impurities at a small active loss. The concentrator removes carrier water into
+an actual side condensate; overheating damages active reagent into impurity.
+Both product and side fraction remain material, with mass conserved. Side
+streams can feed another purification/extraction, compost or organic power
+processes as appropriate. Receivers return carrier water to the waterworks
+for treatment and hold finite solids; haul these to restore capacity.
+
+A flask holds its actual lot until a powered adjacent assay instrument points
+at it. The instrument certifies that batch identity and reports dry purity and
+concentration. The factory inlet requires an assay, >=85% dry purity and >=35%
+concentration. An off-spec lot stays held and can leave the side port for further
+processing. Only the named active ingredient is added to pantry/factory stock.
+Making pectin does not fund calcium, enzymes or any other unrelated reagent.
+Fertigation consumes mineral nutrients, closing the farm/lab supply loop.
+
+Chemical quantities are grams of the corresponding pantry formulation. Dry
+purity means formulation versus unwanted impurity; concentration includes the
+carrier. Factory CHEM totals include named stock plus any generic imported
+reserve. Generic deliveries remain an optional fallback. Sealed fictional
+nuclear cartridges still use their own imported feed rather than edible agents.
+
+Lab chassis share AC by contact; a single square header and perimeter branch
+connect the demo to the factory grid. Glass tubing and conveyors move real lots.
+Distinct flasks, vats, spinning separators, columns and assay equipment show
+actual material on the floor. The inspector exposes recipes, dwell, temperature,
+selectivity, lot measurements, side fractions and named inventory.
+
+Plans retain settings, directions and material/electrical routes, and copy no
+feedstock, starter, live lots, retained solids or measurements. Save format 18
+retains existing factories and adds the empty lab only on a vacant site. It does
+not advance time or grant chemicals, minerals or cultures to existing saves.
+
 
 Waterworks / collection, treatment and reuse
 --------------------------------------------

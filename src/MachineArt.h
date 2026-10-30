@@ -12,6 +12,7 @@ struct MachineAppearance {
  UtilityKind utility=UtilityKind::Power;
  double progress=0;double labFlux=0,labVacuum=0,labStability=0,labCooling=0;bool labArmed=false;
  double waterDirt=0,waterSalt=0,waterBio=0;
+ double reagentFill=0,reagentPurity=0;std::string reagentKey="";
  bool cropPlanted=false;
  bool forwarding=false;std::string crop="tomato";double cropHealth=1,cropMoisture=.62;
 };

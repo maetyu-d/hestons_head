@@ -1,3 +1,43 @@
+AFTERTASTE / MOLECULAR WORKS 3.24.0 - REAGENT LABORATORY
+30 October 2026 / macOS / Apple Silicon
+
+Eleven new apparatus types; a 36-part, three-line demo; fifteen named reagent
+recipes; two additional pantry agents (lactic acid and mineral nutrients).
+Extraction removes its real precursor from spent crop material. Cultures use
+finite crop sugars, starter, water and electricity. Mineral refining consumes
+finite feed and, for calcium/citrate, an acid reagent input. Fraction separation,
+polishing and concentration retain actual side fractions. Measurement certifies
+the actual lot; inlets require 85% dry purity and 35% concentration. Named stock
+cannot fund unrelated agents. Nutrients supply fertigation; own culture can
+recharge a vat. Side receivers return water for treatment and hold finite solids.
+
+Native application build/link: PASS, no new compiler warnings.
+Reagent suite with actual version 17 factory: PASS (601 checks).
+Includes all fifteen recipes, precursor and total mass conservation, heat damage
+without duplicated condensate, actual water/power/starter/acid demand, yield
+windows, blocked side ports and finite receivers, assay/quality holds and off-
+spec rerouting, named supply and multi-agent budget checks, real three-line
+production, culture reuse, complete persistence and atomic invalid inventory
+rejection, rotated operation, plans without cloned material, protected custom
+sites, and exact retention of all 298 original machine states and input buffers.
+The full operating demo supplies all three agents; delivered nutrients may be
+consumed immediately by the working farm.
+
+Waterworks/version16: PASS 503. Contact rack/version15: PASS 289.
+Compact campus/version14: PASS 357. Docking/version13: PASS 285.
+Contact power/version12: PASS 282. Nuclear lab: PASS 37.
+Physical power: PASS 41 (720 ticks, 28,022.6 generated, 13,286.9 delivered,
+all 720 ticks supplied, 139 dishes served). Power layout: PASS 19.
+Farm delivery: PASS 17. Farm flow: PASS 44.
+Save format 18 adds the empty lab on a vacant site. New agent stock keys start
+at zero in old saves; existing clocks, food, farm, water and power are retained.
+Native inspection: Chem shortcut, full three-line framing, enlarged apparatus,
+recipes and input controls verified. Original save retained tick 11985, all
+298 original machine states and input amounts; 36 empty devices added.
+The full historical food-fixture and sanitizer suites were not rerun.
+
+Prior release validation
+------------------------
 AFTERTASTE / MOLECULAR WORKS 3.23.0 - WATERWORKS
 30 October 2026 / macOS / Apple Silicon
 
