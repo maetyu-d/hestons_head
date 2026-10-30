@@ -30,9 +30,10 @@ Blueprint Factory::nuclearLabBlueprint(){
  PowerLink cable;cable.medium=EnergyMedium::AC;cable.rating=100;cable.ports=5;b.links.push_back({{5,0},cable});return b;
 }
 namespace {
-void connectLabExport(FactoryState& state){
+void connectLabExport(FactoryState& state,bool campus=false){
  using E=EnergyMedium;
  auto node=[&](Position p)->PowerLink&{auto& v=state.energyLinks[p];for(auto& l:v)if(l.medium==E::AC)return l;PowerLink l;l.medium=E::AC;l.rating=100;l.ports=0;v.push_back(l);return v.back();};
+ if(campus)return; // Its output docks into the campus perimeter cable.
  Position p{nuclearLabOrigin.x+5,nuclearLabOrigin.y};
  for(Position end:{Position{-29,p.y},Position{-29,1},Position{-16,1}})while(p!=end){int d=p.x!=end.x?(p.x<end.x?0:2):(p.y<end.y?1:3);Position q=nextPosition(p,d);node(p).ports|=1<<d;node(q).ports|=1<<((d+2)%4);p=q;}
 }
@@ -60,14 +61,21 @@ bool compactLegacyNuclearLabIn(FactoryState& state){
 bool installNuclearLabIn(FactoryState& state){
  using K=MachineKind;using E=EnergyMedium;
  if(std::any_of(state.machines.begin(),state.machines.end(),[](const auto& p){return isNuclearEquipment(p.second.kind);}))return false;
- auto board=state.machines.find({-14,1});if(board==state.machines.end()||board->second.kind!=K::Switchboard)return false;
- auto plan=Factory::nuclearLabBlueprint();auto origin=nuclearLabOrigin;
- // The entire annex and its export corridor must be vacant. Custom work is kept.
- for(int y=0;y<plan.height;y++)for(int x=0;x<plan.width;x++){Position p{origin.x+x,origin.y+y};if(state.machines.count(p)||state.energyLinks.count(p))return false;}
- for(int x=-28;x<-27;x++)if(state.machines.count({x,1})||state.energyLinks.count({x,1}))return false;
+ auto board=state.machines.find({powerCampusOrigin.x+4,powerCampusOrigin.y+2});bool campus=board!=state.machines.end()&&board->second.kind==K::Switchboard;
+ if(!campus){board=state.machines.find({-14,1});if(board==state.machines.end()||board->second.kind!=K::Switchboard)return false;}
+ auto plan=Factory::nuclearLabBlueprint();auto origin=campus?powerCampusLabOrigin:nuclearLabOrigin;
+ // Only the campus plan's own perimeter/service lines may already occupy the
+ // bench. A player cable, changed rating or apparatus still blocks installation.
+ std::map<Position,std::vector<PowerLink>> planned;
+ if(campus)for(const auto& n:Factory::powerDistrictBlueprint().links)planned[{powerCampusOrigin.x+n.at.x,powerCampusOrigin.y+n.at.y}].push_back(n.link);
+ for(int y=0;y<plan.height;y++)for(int x=0;x<plan.width;x++){Position p{origin.x+x,origin.y+y};if(state.machines.count(p))return false;auto i=state.energyLinks.find(p);if(i!=state.energyLinks.end()){
+  auto expected=planned.find(p);if(expected==planned.end()||i->second.size()!=expected->second.size())return false;
+  for(const auto& l:i->second){auto q=std::find_if(expected->second.begin(),expected->second.end(),[&](const auto& e){return e.medium==l.medium;});if(q==expected->second.end()||q->ports!=l.ports||q->rating!=l.rating||q->enabled!=l.enabled||l.tripped)return false;}
+ }}
+ for(int x=-28;!campus&&x<-27;x++)if(state.machines.count({x,1})||state.energyLinks.count({x,1}))return false;
  for(const auto& part:plan.parts)state.machines.emplace(Position{origin.x+part.at.x,origin.y+part.at.y},part.machine);
- for(const auto& node:plan.links)state.energyLinks[{origin.x+node.at.x,origin.y+node.at.y}].push_back(node.link);
- connectLabExport(state);
+ for(const auto& node:plan.links){auto& v=state.energyLinks[{origin.x+node.at.x,origin.y+node.at.y}];auto i=std::find_if(v.begin(),v.end(),[&](const auto& l){return l.medium==node.link.medium;});if(i==v.end())v.push_back(node.link);else if(!campus)i->ports|=node.link.ports;}
+ connectLabExport(state,campus);
  auto& pile=state.machines.at({origin.x+1,origin.y+1});pile.power.lab.fuel=60;pile.power.lab.armed=true;
  auto& star=state.machines.at({origin.x+1,origin.y+2});star.power.lab.fuel=30;star.power.lab.armed=true;
  auto& battery=state.machines.at({origin.x+2,origin.y});double startup=std::min(40.,state.electricity);state.electricity-=startup;battery.power.store[size_t(E::DC)]=startup;

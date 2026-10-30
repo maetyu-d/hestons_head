@@ -1,5 +1,25 @@
-AFTERTASTE / MOLECULAR WORKS 3.20.0
+AFTERTASTE / MOLECULAR WORKS 3.21.0
 Invent dishes on the actual factory floor / native C++17
+
+Compact power campus
+---------------------
+Power now frames a single 12 by 10 campus beside the factory. The solar bank and
+nuclear experiment bench sit together at the top, above close-set wind, steam
+and gas trains. The boiler feed pump sits beside the boiler; the condenser sits
+under the turbine; the exchanger, heat tank and cooler form an adjoining bench.
+The old scattered grid inlet sits with the reserve relay and export switchboard.
+All 44 existing devices are retained in roughly a quarter of their former area.
+Local stages dock by contact. Short square pipes close the water, exhaust and
+heat loops; an outside cable follows the campus edge into the factory corridor.
+Power shows every service, so support connections remain visible in that view.
+
+Save format 15 moves only the unchanged stock layout. It retains complete live
+machine state, food, fuel, charge, readings, input buffers and clock. The cooling
+plant's ports turn to receive heat directly from its neighbouring tank. Custom
+construction, altered routes or directions block automatic relocation. Custom
+plans and downstream factory/farm cables are retained. No new energy or fuel is
+granted. Lab and Solar still provide close views within the same workspace.
+
 
 Solar banks and docked generator trains
 ---------------------------------------
