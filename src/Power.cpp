@@ -11,16 +11,22 @@ size_t ix(E e){return size_t(e);}bool storage(K k){return k==K::BatteryRack||k==
 bool electric(E e){return e==E::AC||e==E::DC;}
 E storageMedium(K k){return k==K::BatteryRack?E::DC:k==K::Flywheel?E::Shaft:k==K::SteamAccumulator?E::Steam:k==K::GasHolder?E::Gas:E::Heat;}
 }
-bool isEnergyConduit(K k){return k>=K::PowerCable&&k<=K::CoolingPipe;}
-bool isEnergyMachine(K k){return k>=K::SolarPanel&&k<K::Count;}
+bool isEnergyConduit(K k){return (k>=K::PowerCable&&k<=K::CoolingPipe)||k==K::VacuumHose||k==K::InstrumentLead;}
+bool isEnergyMachine(K k){return k>=K::SolarPanel&&k<K::Count&&!isEnergyConduit(k);}
 bool acceptsEnergyFuel(K k){return k==K::Macerator||k==K::BiomassBoiler||k==K::AnaerobicDigester;}
-E conduitMedium(K k){return E(int(k)-int(K::PowerCable));}K energyConduit(E e){return K(int(K::PowerCable)+int(e));}
-std::string energyName(E e){static const std::array<const char*,EnergyCount> names={"AC electricity","DC electricity","shaft power","live steam","exhaust steam","raw biogas","clean gas","return water","recovered heat","cooling"};return names.at(ix(e));}
+E conduitMedium(K k){return k==K::VacuumHose?E::Vacuum:k==K::InstrumentLead?E::Instrument:E(int(k)-int(K::PowerCable));}K energyConduit(E e){return e==E::Vacuum?K::VacuumHose:e==E::Instrument?K::InstrumentLead:K(int(K::PowerCable)+int(e));}
+std::string energyName(E e){static const std::array<const char*,EnergyCount> names={"AC electricity","DC electricity","shaft power","live steam","exhaust steam","raw biogas","clean gas","return water","recovered heat","cooling","lab vacuum","instrument signal"};return names.at(ix(e));}
 double solarDaylight(int tick){return std::max(0.,std::sin((tick%360+60)*6.283185307/360))*farmSeasonDaylight(tick);}
 double windStrength(int tick){return clamp(.57+.23*std::sin(tick*.037)+.14*std::sin(tick*.113),.12,.97);}
 std::vector<EnergyPort> energyPorts(const Machine& m){
  std::vector<EnergyPort> p;auto add=[&](E medium,int d,bool output){p.push_back({medium,(d+m.dir)%4,output});};
  switch(m.kind){
+ case K::CuriosityPile:add(E::Heat,0,true);add(E::Cooling,1,false);add(E::Instrument,3,false);break;
+ case K::StarChamber:add(E::AC,2,false);add(E::Heat,0,true);add(E::Vacuum,3,false);add(E::Cooling,1,false);add(E::Instrument,3,false);break;
+ case K::LabVacuumPump:add(E::AC,2,false);add(E::Vacuum,0,true);break;
+ case K::QuenchBath:add(E::AC,2,false);add(E::Cooling,0,true);break;
+ case K::Calorimeter:add(E::Heat,2,false);add(E::DC,0,true);add(E::Cooling,1,false);break;
+ case K::ExperimentConsole:add(E::AC,2,false);add(E::Instrument,0,true);break;
  case K::SolarPanel:add(E::DC,0,true);break;
  case K::WindRotor:add(E::Shaft,0,true);break;
  case K::Gearbox:add(E::Shaft,2,false);add(E::Shaft,0,true);break;
@@ -74,13 +80,24 @@ std::vector<MachineSpec> energyMachineSpecs(){return {
  {K::PowerRelay,"Reserve relay","RL","Starts connected automatic engines below its low battery threshold and stops them above its high threshold.","#b5975c",45,0,0,0},
  {K::GridInlet,"Metered grid inlet","GI","Optional imported AC with a per-tick limit. Draws only from the delivered electricity reserve; economy charges actual imports.","#a7a38b",40,0,0,0},
  {K::HeatTank,"Insulated heat tank","HTK","Stores recovered heat with standing losses, separating generation from later heating demand.","#b58669",75,0,0,0},
- {K::CoolingPlant,"Recovery cooling plant","CP","Uses AC electricity and optional recovered heat to supply a connected cooling circuit.","#6aa7bc",115,0,0,0}};}
+ {K::CoolingPlant,"Recovery cooling plant","CP","Uses AC electricity and optional recovered heat to supply a connected cooling circuit.","#6aa7bc",115,0,0,0},
+ {K::CuriosityPile,"Sealed curiosity pile","NU","A tabletop nuclear experiment in a shielded bell jar. A finite fictional oddium cartridge releases heat; a wired console and quench circuit keep it stable. Scram stops excitation, with residual heat left to cool.","#8caa64",180,0,0,0},
+ {K::StarChamber,"Jam-jar star chamber","STAR","A fictional pulsed nuclear bench. Consumes AC excitation and sealed cartridge charge. Vacuum, resonance tuning and cooling determine heat yield; poor tuning can cost more electricity than the calorimeter recovers.","#ac80b5",210,0,0,0},
+ {K::LabVacuumPump,"Vacuum bench and cold trap","VAC","An oil pump and glass trap maintain an actual routed vacuum supply. The chamber loses vacuum when the hose or pump is isolated.","#97a6b3",70,0,0,0},
+ {K::QuenchBath,"Recirculating quench bath","QB","A transparent cooling bath with immersed coils. Uses AC and a little supplied water to remove heat from experiments and the calorimeter.","#6db8c7",90,0,0,0},
+ {K::Calorimeter,"Twin-bulb calorimeter","CAL","Measures incoming experimental heat and converts part into DC. A cold reference improves conversion; the remaining heat is accounted as loss. Connect DC to a battery or inverter.","#ce9f67",130,0,0,0},
+ {K::ExperimentConsole,"Experiment recorder","SCOPE","A wired oscilloscope and chart recorder. Powers experiment interlocks and logs heat, electrical draw, recovered DC and stability every 24 ticks. Change one setting and compare measured runs.","#8baf9a",85,0,0,0},
+ {K::VacuumHose,"Glass vacuum line","VH","Square glass service tubing for the vacuum pump and star chamber. Crosses electrical circuits without joining them.","#9e8db7",4,0,0,0},
+ {K::InstrumentLead,"Instrument lead","SIG","Routes the recorder's interlock signal to experimental chambers. An open lead disarms excitation rather than silently continuing.","#b58eaa",3,0,0,0}};}
 void initialisePowerDevice(Machine& m){
  auto& p=m.power;p=PowerState{};p.rate=12;p.capacity=120;
- switch(m.kind){case K::SolarPanel:p.rate=22;break;case K::WindRotor:p.rate=32;break;case K::Alternator:p.rate=30;break;case K::BiomassBoiler:p.rate=5;p.capacity=180;m.temperature=160;break;case K::SteamAccumulator:p.capacity=80;p.rate=10;break;case K::SteamTurbine:p.rate=5;break;case K::PowerCondenser:p.rate=6;break;case K::FeedPump:p.rate=4;p.capacity=12;break;case K::AnaerobicDigester:p.rate=8;p.capacity=120;m.temperature=38;break;case K::GasEngine:p.rate=5;p.capacity=100;break;case K::BatteryRack:p.capacity=800;p.rate=24;break;case K::Flywheel:p.capacity=100;p.rate=35;break;case K::GasHolder:p.capacity=180;p.rate=10;break;case K::Inverter:p.rate=40;break;case K::Switchboard:p.rate=100;p.capacity=100;break;case K::HeatTank:p.capacity=600;p.rate=35;break;case K::GridInlet:p.rate=30;break;case K::CoolingPlant:p.rate=8;break;default:break;}
+ switch(m.kind){case K::CuriosityPile:p.rate=60;p.capacity=180;p.throttle=.65;p.lab.tuning=.55;break;case K::StarChamber:p.rate=30;p.capacity=180;p.throttle=.65;p.lab.tuning=.65;m.duration=6;break;case K::LabVacuumPump:p.rate=4;break;case K::QuenchBath:p.rate=12;break;case K::Calorimeter:p.rate=100;p.capacity=250;break;case K::ExperimentConsole:p.rate=8;break;case K::SolarPanel:p.rate=22;break;case K::WindRotor:p.rate=32;break;case K::Alternator:p.rate=30;break;case K::BiomassBoiler:p.rate=5;p.capacity=180;m.temperature=160;break;case K::SteamAccumulator:p.capacity=80;p.rate=10;break;case K::SteamTurbine:p.rate=5;break;case K::PowerCondenser:p.rate=6;break;case K::FeedPump:p.rate=4;p.capacity=12;break;case K::AnaerobicDigester:p.rate=8;p.capacity=120;m.temperature=38;break;case K::GasEngine:p.rate=5;p.capacity=100;break;case K::BatteryRack:p.capacity=800;p.rate=24;break;case K::Flywheel:p.capacity=100;p.rate=35;break;case K::GasHolder:p.capacity=180;p.rate=10;break;case K::Inverter:p.rate=40;break;case K::Switchboard:p.rate=100;p.capacity=100;break;case K::HeatTank:p.capacity=600;p.rate=35;break;case K::GridInlet:p.rate=30;break;case K::CoolingPlant:p.rate=8;break;default:break;}
 }
-void clearPowerInventory(Machine& m){auto& p=m.power;p.store.fill(0);p.temperature=20;p.workCredit=p.rpm=p.flow=p.generated=p.delivered=p.demand=p.heat=0;p.voltage=1;p.tripped=false;p.history.clear();}
-bool validPowerState(const PowerState& p){for(double v:p.store)if(!std::isfinite(v)||v<0||v>1e9)return false;for(double v:{p.workCredit,p.rate,p.capacity,p.throttle,p.temperature,p.rpm,p.flow,p.generated,p.delivered,p.demand,p.voltage,p.heat,p.low,p.high})if(!std::isfinite(v)||v<0||v>1e9)return false;if(p.rate>1000||p.capacity>1e7||p.throttle>1||p.low>p.high||p.high>1||p.priority<0||p.priority>2||p.history.size()>80)return false;for(auto v:p.history)if(!std::isfinite(v)||v<0||v>1e9)return false;return true;}
+void clearPowerInventory(Machine& m){auto& p=m.power;p.store.fill(0);p.temperature=20;p.workCredit=p.rpm=p.flow=p.generated=p.delivered=p.demand=p.heat=0;p.voltage=1;p.tripped=false;p.history.clear();double tuning=p.lab.tuning;p.lab=NuclearState{};p.lab.tuning=tuning;}
+bool validPowerState(const PowerState& p){for(double v:p.store)if(!std::isfinite(v)||v<0||v>1e9)return false;for(double v:{p.workCredit,p.rate,p.capacity,p.throttle,p.temperature,p.rpm,p.flow,p.generated,p.delivered,p.demand,p.voltage,p.heat,p.low,p.high})if(!std::isfinite(v)||v<0||v>1e9)return false;for(double v:{p.lab.fuel,p.lab.spent,p.lab.tuning,p.lab.flux,p.lab.vacuum,p.lab.stability,p.lab.cooling,p.lab.heatTotal,p.lab.inputTotal,p.lab.dcTotal,p.lab.lastHeat,p.lab.lastInput,p.lab.lastDC})if(!std::isfinite(v)||v<0||v>1e12)return false;
+ if(p.lab.tuning>1||p.lab.flux>1||p.lab.vacuum>1||p.lab.stability>1||p.lab.cooling>1||p.lab.fuel>100||p.lab.pulse<0||p.lab.pulse>1000000||p.lab.sampleTicks<0||p.lab.sampleTicks>=24||p.lab.trials.size()>16)return false;
+ for(const auto& t:p.lab.trials){if(t.settings.size()>240||t.tick<0||t.stability<0||t.stability>1)return false;for(double v:{t.heat,t.draw,t.dc,t.stability})if(!std::isfinite(v)||v<0||v>1e12)return false;}
+ if(p.rate>1000||p.capacity>1e7||p.throttle>1||p.low>p.high||p.high>1||p.priority<0||p.priority>2||p.history.size()>80)return false;for(auto v:p.history)if(!std::isfinite(v)||v<0||v>1e9)return false;return true;}
 bool validPowerLink(const PowerLink& p){return p.ports>=0&&p.ports<=15&&int(p.medium)>=0&&int(p.medium)<int(E::Count)&&std::isfinite(p.rating)&&p.rating>=1&&p.rating<=1000&&std::isfinite(p.flow)&&p.flow>=0&&p.flow<1e9&&std::isfinite(p.heat)&&p.heat>=0&&p.heat<=10&&std::isfinite(p.overload)&&p.overload>=0&&p.overload<1e9&&p.dir>=0&&p.dir<4;}
 std::string powerContents(const Machine& m){std::string s;for(size_t n=0;n<EnergyCount;n++)if(m.power.store[n]>.01){if(!s.empty())s+=" / ";s+=energyName(E(n))+" "+roundTo(m.power.store[n],1);}return s.empty()?"No stored energy or working fluid":s;}
 
@@ -143,6 +160,8 @@ public:
   if(early){double got=take(p,E::DC,std::min(limit,std::max(0.,s.capacity-s.store[ix(E::AC)])/ .94),true);put(m,E::AC,got*.94);f.grid.loss+=got*.06;s.flow=got;m.status=got>eps?"DC to AC / "+roundTo(got*.94,1):"Waiting for DC or shaft generation";}
   else if(total(E::DC)<1){double got=take(p,E::AC,std::min(limit,std::max(0.,s.capacity-s.store[ix(E::DC)])),true,true);put(m,E::DC,got*.91);f.grid.loss+=got*.09;if(got>eps)m.status="AC surplus to DC / "+roundTo(got*.91,1);}
  }
+ void nuclearBench();
+ void recordLabTrials();
  void generate(){
   for(auto& [p,m]:f.machines)if(isEnergyMachine(m.kind)){auto& s=m.power;s.temperature=std::max(20.,s.temperature-(s.temperature-20)*.01);if(!m.enabled||s.tripped){m.status=s.tripped?"Breaker tripped / reset after cooling":"Isolated / disabled";continue;}
    if(m.kind==K::PowerRelay){double charge=0,capacity=0;std::set<Position> banks;for(const auto& [q,inverter]:f.machines)if(inverter.kind==K::Inverter&&inverter.enabled&&connected(p,q,E::AC))for(const auto& [r,bank]:f.machines)if(bank.kind==K::BatteryRack&&bank.enabled&&connected(q,r,E::DC)&&banks.insert(r).second){charge+=bank.power.store[ix(E::DC)];capacity+=bank.power.capacity;}double soc=capacity>0?charge/capacity:0;if(soc<s.low)s.armed=true;else if(soc>s.high)s.armed=false;for(auto& [q,engine]:f.machines)if((engine.kind==K::GasEngine||engine.kind==K::BiomassBoiler)&&engine.automatic&&connected(p,q,E::AC))engine.power.armed=s.armed;m.status=std::string(s.armed?"Reserve requested":"Reserve stopped")+" / battery "+roundTo(soc*100,0)+"%";}
@@ -168,6 +187,7 @@ public:
   }
   for(auto& [p,m]:f.machines)if(m.enabled&&!m.power.tripped&&m.kind==K::Alternator){auto& s=m.power;double amount=take(p,E::Shaft,std::min(s.rate*s.throttle,(s.capacity-s.store[ix(E::AC)])/.90),true);double efficiency=.90*clamp(lastShaftRPM/1800,.1,1.);put(m,E::AC,amount*efficiency);s.generated=amount*efficiency;s.rpm=amount>eps?lastShaftRPM:0;f.grid.generated+=s.generated;f.grid.loss+=amount*(1-efficiency);m.status="Alternator AC / "+roundTo(s.generated,1)+" / "+roundTo(s.rpm,0)+" rpm";}
   for(auto& [p,m]:f.machines)if(m.enabled&&!m.power.tripped&&m.kind==K::Inverter)inverter(p,m,true);
+  nuclearBench();
   for(auto& [p,m]:f.machines)if(m.enabled&&!m.power.tripped){auto& s=m.power;if(m.kind==K::HeatExchanger){double amount=take(p,E::Heat,std::min(s.rate,s.capacity-s.store[ix(E::Heat)]),true,true);put(m,E::Heat,amount*.9);s.flow=amount;m.status="Recovered heat available / "+roundTo(s.store[ix(E::Heat)],1);}if(m.kind==K::CoolingPlant){double amount=take(p,E::AC,std::min(s.rate,(s.capacity-s.store[ix(E::Cooling)])/2),true);double heat=take(p,E::Heat,amount,true);put(m,E::Cooling,amount*2+heat*.4);s.flow=amount;m.status="Cooling produced / "+roundTo(amount*2+heat*.4,1);}}
  }
  void allocate(){
@@ -183,13 +203,70 @@ public:
   // of the process; their energy is still consumed from actual connected stores.
  }
  void settle(){
+  recordLabTrials();
   for(auto& [p,m]:f.machines)if(m.enabled&&storage(m.kind)){E e=storageMedium(m.kind);double room=std::max(0.,m.power.capacity-m.power.store[ix(e)]),eff=e==E::DC?.94:.98;double amount=take(p,e,std::min(m.power.rate,room/eff),true,true);put(m,e,amount*eff);if(electric(e))f.grid.loss+=amount*(1-eff);m.status="Stored "+roundTo(m.power.store[ix(e)],1)+" / "+roundTo(m.power.capacity,0)+" / rate "+roundTo(m.power.rate,0);}
   for(auto& [p,m]:f.machines)if(m.enabled&&m.kind==K::Inverter)inverter(p,m,false);
   for(auto& [p,m]:f.machines)if(m.enabled&&m.kind==K::HeatTank&&m.forward){double released=std::max(0.,m.power.store[ix(E::Heat)]-m.power.capacity*.7);released=std::min(released,m.power.rate);m.power.store[ix(E::Heat)]-=released;if(released>0)m.status="Heat bypass / vented "+roundTo(released,1);}
   for(auto& [p,links]:f.energyLinks)for(auto& link:links){double stress=std::max(link.flow/link.rating,link.overload);link.heat=clamp(link.heat+std::max(0.,stress-.9)*.08-.025,0,2);if(electric(link.medium)&&link.heat>=1)link.tripped=true;}
-  for(auto& [p,m]:f.machines){if(storage(m.kind))f.grid.stored+=m.power.store[ix(storageMedium(m.kind))];if(isEnergyMachine(m.kind)){m.power.history.push_back(m.power.generated>0?m.power.generated:m.power.delivered>0?m.power.delivered:m.power.flow);if(m.power.history.size()>80)m.power.history.erase(m.power.history.begin());if(m.kind==K::Switchboard){double load=0;for(int d=0;d<4;d++)if(auto link=f.energyLink(nextPosition(p,d),E::AC))load=std::max(load,link->flow);m.power.flow=load;m.power.heat=clamp(m.power.heat+std::max(0.,load/m.power.rate-.9)*.08-.02,0,2);if(m.power.heat>=1)m.power.tripped=true;m.status=m.power.tripped?"Breaker tripped":m.enabled?"AC bus / "+roundTo(load,1)+" / rating "+roundTo(m.power.rate,0):"Breaker open";}}}
+  for(auto& [p,m]:f.machines){if(storage(m.kind))f.grid.stored+=m.power.store[ix(storageMedium(m.kind))];if(isEnergyMachine(m.kind)){m.power.history.push_back(m.kind==K::ExperimentConsole?m.power.lab.stability*100:m.power.generated>0?m.power.generated:m.power.delivered>0?m.power.delivered:m.power.flow);if(m.power.history.size()>80)m.power.history.erase(m.power.history.begin());if(m.kind==K::Switchboard){double load=0;for(int d=0;d<4;d++)if(auto link=f.energyLink(nextPosition(p,d),E::AC))load=std::max(load,link->flow);m.power.flow=load;m.power.heat=clamp(m.power.heat+std::max(0.,load/m.power.rate-.9)*.08-.02,0,2);if(m.power.heat>=1)m.power.tripped=true;m.status=m.power.tripped?"Breaker tripped":m.enabled?"AC bus / "+roundTo(load,1)+" / rating "+roundTo(m.power.rate,0):"Breaker open";}}}
  }
 };
+// All nuclear quantities are deliberately fictional laboratory units. This is
+// an experimental game loop, not a model of a real reactor or isotope process.
+void PowerRuntime::nuclearBench(){
+ for(auto& [p,m]:f.machines){auto& s=m.power;auto& l=s.lab;
+  if(m.kind==K::ExperimentConsole||m.kind==K::LabVacuumPump||m.kind==K::QuenchBath){
+   E medium=m.kind==K::ExperimentConsole?E::Instrument:m.kind==K::LabVacuumPump?E::Vacuum:E::Cooling;
+   s.store[ix(medium)]=0;
+   if(!m.enabled||s.tripped)continue;
+   double draw=m.kind==K::ExperimentConsole?.18:m.kind==K::LabVacuumPump?.4:.35;
+   if(m.kind==K::QuenchBath&&f.water<.02){m.status="Quench bath needs supplied water";continue;}
+   double got=take(p,E::AC,draw);
+   if(got<=eps){m.status="Bench supply missing / connect AC";continue;}
+   if(m.kind==K::QuenchBath){f.water-=.02;f.waterUsed+=.02;}
+   put(m,medium,s.rate*s.throttle);s.flow=s.rate*s.throttle;l.inputTotal+=got;
+   m.status=m.kind==K::ExperimentConsole?"Recording / interlock lead live":m.kind==K::LabVacuumPump?"Evacuating / cold trap active":"Quench circulation / cold reference live";
+  }
+ }
+ for(auto& [p,m]:f.machines)if(m.kind==K::CuriosityPile||m.kind==K::StarChamber){auto& s=m.power;auto& l=s.lab;
+  l.cooling=0;double cold=0;if(m.enabled&&!s.tripped){cold=take(p,E::Cooling,m.kind==K::CuriosityPile?1.2:.8,true);l.cooling=std::min(1.,cold/(m.kind==K::CuriosityPile?1.2:.8));}
+  s.temperature=std::max(20.,s.temperature-cold*4);
+  if(m.kind==K::StarChamber){double vacuum=m.enabled&&!s.tripped?take(p,E::Vacuum,.8,true):0;l.vacuum=clamp(l.vacuum+(vacuum>=.75?.14:-.18),0,1);}else l.vacuum=1;
+  bool running=m.enabled&&!s.tripped&&l.armed&&l.fuel>eps;double signal=running?take(p,E::Instrument,.1):0;
+  if(running&&signal<=eps){l.armed=false;running=false;m.status="Interlock open / recorder signal missing";}
+  double draw=0;if(running&&m.kind==K::StarChamber){draw=take(p,E::AC,1.2+s.throttle*2.5);if(draw<=eps){running=false;m.status="Excitation supply missing / no pulse";}}
+  l.inputTotal+=draw;
+  double tuning=clamp(1.-std::abs(l.tuning-labTuningTarget(m.kind))*2.8,.08,1.);
+  l.stability=clamp(tuning*(.25+.75*l.cooling)*l.vacuum*(1.-std::max(0.,s.temperature-65)/90),0,1);
+  double target=running?s.throttle*l.stability:0;l.flux+=(target-l.flux)*.22;l.flux=clamp(l.flux,0,1);
+  double heat=0;
+  if(m.kind==K::StarChamber){l.pulse=(l.pulse+1)%std::max(2,m.duration);if(running&&l.pulse==0&&l.vacuum>.45)heat=s.rate*l.flux*std::max(2,m.duration);}
+  else if(l.fuel>eps)heat=s.rate*l.flux;
+  heat=std::min({heat,l.fuel/.0025,std::max(0.,s.capacity-s.store[ix(E::Heat)])});
+  l.fuel=std::max(0.,l.fuel-heat*.0025);l.spent+=heat*.0025;l.heatTotal+=heat;put(m,E::Heat,heat);s.flow=heat;s.temperature+=heat*.08;
+  if(s.temperature>105){s.tripped=true;l.armed=false;m.status="SCRAM / jacket overheated / cool before reset";}
+  else if(!m.enabled||s.tripped){l.armed=false;m.status=s.tripped?"Interlock latched / cooling":"Bench isolated / residual heat decaying";}
+  else if(l.fuel<=eps){l.armed=false;m.status="Cartridge exhausted / change sealed specimen";}
+  else if(l.armed){m.status=m.kind==K::StarChamber?(l.vacuum<=.45?"Evacuating chamber / waiting for vacuum":heat>0?"PULSE / heat +"+roundTo(heat,1):"Charging electrodes / next pulse "+std::to_string(std::max(2,m.duration)-l.pulse)):"Cartridge excitation / heat +"+roundTo(heat,1);if(l.cooling<.4)m.status+=" / cooling weak";}
+  else if(signal>eps||m.status.find("Interlock open")==std::string::npos)m.status="Disarmed / jacket "+roundTo(s.temperature,0)+" C";
+ }
+ for(auto& [p,m]:f.machines)if(m.kind==K::Calorimeter&&m.enabled&&!m.power.tripped){auto& s=m.power;auto& l=s.lab;double cold=take(p,E::Cooling,.7,true);l.cooling=std::min(1.,cold/.7);double efficiency=.28+.34*l.cooling;double heat=take(p,E::Heat,std::min(s.rate*s.throttle,std::max(0.,s.capacity-s.store[ix(E::DC)])/efficiency),true);double dc=heat*efficiency;put(m,E::DC,dc);l.heatTotal+=heat;l.dcTotal+=dc;s.generated=dc;s.flow=heat;f.grid.generated+=dc;f.grid.loss+=heat-dc;m.status="Measured "+roundTo(heat,1)+" heat / "+roundTo(dc,1)+" DC / "+roundTo(efficiency*100,0)+"% recovery";}
+ for(auto& [p,m]:f.machines)if(m.kind==K::Inverter&&m.enabled&&!m.power.tripped)inverter(p,m,true);
+}
+void PowerRuntime::recordLabTrials(){
+ for(auto& [p,m]:f.machines)if(m.kind==K::ExperimentConsole&&m.enabled&&m.power.flow>0){auto& l=m.power.lab;double heat=0,input=0,dc=0,stability=0;int count=0;std::string settings;std::set<Position> converters;
+  for(const auto& [q,chamber]:f.machines)if((chamber.kind==K::CuriosityPile||chamber.kind==K::StarChamber)&&connected(p,q,E::Instrument)){
+   heat+=chamber.power.lab.heatTotal;input+=chamber.power.lab.inputTotal;stability+=chamber.power.lab.stability;count++;
+   if(count<=4){if(!settings.empty())settings+=" / ";settings+=(chamber.kind==K::CuriosityPile?"NU":"STAR")+std::string(" r")+roundTo(chamber.power.lab.tuning*100,0)+" d"+roundTo(chamber.power.throttle*100,0);if(chamber.kind==K::StarChamber)settings+=" p"+std::to_string(std::max(2,chamber.duration));}
+   for(const auto& [r,cal]:f.machines)if(cal.kind==K::Calorimeter&&connected(q,r,E::Heat))converters.insert(r);
+  }
+  for(auto q:converters)dc+=f.at(q)->power.lab.dcTotal;
+  for(const auto& [q,support]:f.machines)if((support.kind==K::LabVacuumPump||support.kind==K::QuenchBath||support.kind==K::ExperimentConsole)&&connected(p,q,E::AC))input+=support.power.lab.inputTotal;
+  l.heatTotal=heat;l.dcTotal=dc;l.stability=count?stability/count:0;
+  if(count&&++l.sampleTicks>=24){l.sampleTicks=0;l.trials.push_back({f.tick,std::max(0.,heat-l.lastHeat),std::max(0.,input-l.lastInput),std::max(0.,dc-l.lastDC),l.stability,settings});if(l.trials.size()>16)l.trials.erase(l.trials.begin());l.lastHeat=heat;l.lastInput=input;l.lastDC=dc;}
+ }
+}
+
 PowerLink* Factory::energyLink(Position p,E e){auto i=energyLinks.find(p);if(i==energyLinks.end())return nullptr;for(auto& link:i->second)if(link.medium==e)return &link;return nullptr;}
 const PowerLink* Factory::energyLink(Position p,E e)const{auto i=energyLinks.find(p);if(i==energyLinks.end())return nullptr;for(auto& link:i->second)if(link.medium==e)return &link;return nullptr;}
 bool Factory::buildEnergyLink(Position p,E e){if(energyLink(p,e))return false;if(std::abs(p.x)>1000000||std::abs(p.y)>1000000)return false;if(!sandbox&&cash<3){notice="Insufficient credits for conduit.";return false;}snapshot();PowerLink link;link.medium=e;energyLinks[p].push_back(link);if(!sandbox)cash-=3;dirty=true;notice=energyName(e)+" connected at "+positionName(p)+". Routes can share floor tiles with food equipment.";return true;}

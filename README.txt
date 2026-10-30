@@ -1,5 +1,42 @@
-AFTERTASTE / MOLECULAR WORKS 3.17.3
+AFTERTASTE / MOLECULAR WORKS 3.18.0
 Invent dishes on the actual factory floor / native C++17
+
+Curiosity laboratory / experimental nuclear power
+-------------------------------------------------
+Select Lab in the floor toolbar to focus the new bench west of the old power
+installation. A sealed curiosity pile and a jam-jar star chamber use fictional
+oddium cartridges. Bell jars, electrode cages, glass cold traps, an immersed-coil
+quench bath, twin-bulb calorimeters and an oscilloscope make each stage visible.
+All nuclear quantities are invented game units; tuning is an experimental
+puzzle. Existing solar, wind and residue generation remain available as support.
+
+Recorder -> instrument lead -> chamber interlock.
+Pump -> glass vacuum line -> star chamber.
+Water + AC -> quench bath -> chamber and calorimeter cold jackets.
+Cartridge -> experimental heat -> calorimeter -> DC -> inverter -> factory AC.
+
+Arm or scram each chamber, adjust resonance and drive, and vary star-chamber
+pulse timing. The star draws real excitation power. Tuning, vacuum and cooling
+change measured yield; a poor experiment can recover less DC than it spends.
+A disconnected recorder opens the interlock. Lost vacuum stops pulses. A hot
+jacket latches a scram. Scram removes drive while residual excitation decays.
+Disarm and cool before changing cartridges; each new 40-charge cartridge uses
+0.40 kg from the supplied chemical buffer. The quench bath uses supplied water;
+both relevant input delivery controls are available in the lab inspectors.
+
+The recorder saves up to 16 runs, each covering 24 powered ticks: heat produced,
+electrical draw, recovered DC, stability, and the actual resonance/drive/pulse
+settings. Net return includes chamber, vacuum pump, bath and recorder electricity;
+inverter and cable losses occur downstream. Compare runs after changing one
+setting. Switch other chambers off to investigate a single experiment.
+
+The reusable Curiosity laboratory plan keeps equipment, tuning, orientation and
+all material/service routes. It does not copy cartridge charge, stored energy,
+armed state or observations. Old saves receive a connected annex only where its
+site is vacant. Existing machines and food are retained; two demonstration
+cartridges are added, and up to 40 existing imported electricity units are moved
+into the lab battery for startup. Reloading cannot grant the samples again.
+
 
 Conduit appearance
 -------------------

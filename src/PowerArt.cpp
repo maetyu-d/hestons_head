@@ -1,7 +1,7 @@
 #include "PowerArt.h"
 #include <cmath>
 namespace aftertaste {
-Color energyColor(EnergyMedium e){static const std::array<Color,EnergyCount> c={Color{218,170,54,255},Color{66,166,158,255},Color{121,145,151,255},Color{213,119,75,255},Color{167,159,151,255},Color{154,127,74,255},Color{123,162,78,255},Color{64,151,192,255},Color{218,96,57,255},Color{75,190,218,255}};return c.at(size_t(e));}
+Color energyColor(EnergyMedium e){static const std::array<Color,EnergyCount> c={Color{218,170,54,255},Color{66,166,158,255},Color{121,145,151,255},Color{213,119,75,255},Color{167,159,151,255},Color{154,127,74,255},Color{123,162,78,255},Color{64,151,192,255},Color{218,96,57,255},Color{75,190,218,255},Color{155,140,181,255},Color{177,133,163,255}};return c.at(size_t(e));}
 namespace {
 struct Draw {Rectangle r;MachineAppearance a;Color ink={32,59,66,255},body={190,207,204,255},light={238,245,241,255},tone={202,163,66,255};float w;
  Draw(Rectangle bounds,MachineAppearance look):r(bounds),a(look){w=std::clamp(std::min(r.width,r.height)*.03f,1.f,2.1f);unsigned n=unsigned(std::stoul(machineSpec(a.kind).color.substr(1),nullptr,16));tone={static_cast<unsigned char>(n>>16),static_cast<unsigned char>(n>>8),static_cast<unsigned char>(n),255};if(a.monochrome){ink=BLACK;body={175,175,175,255};light=WHITE;tone={110,110,110,255};}}
@@ -16,6 +16,8 @@ struct Draw {Rectangle r;MachineAppearance a;Color ink={32,59,66,255},body={190,
 void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=MachineKind;Draw d(r,look);auto k=look.kind;
  if(isEnergyConduit(k)){auto col=look.monochrome?d.tone:energyColor(conduitMedium(k));d.line(.04f,.5f,.96f,.5f,d.ink,3);d.line(.04f,.5f,.96f,.5f,col,1.6f);if(k==K::DriveShaft){d.box(.18f,.36f,.15f,.28f,d.body);d.box(.66f,.36f,.15f,.28f,d.body);}else{d.circle(.25f,.5f,.065f,d.body);d.circle(.75f,.5f,.065f,d.body);}
   switch(k){
+   case K::VacuumHose:d.circle(.50f,.50f,.17f,d.light);d.line(.39f,.50f,.61f,.50f,d.tone,1.1f);break;
+   case K::InstrumentLead:for(int n=0;n<5;n++)d.line(.30f+n*.09f,.39f+(n%2)*.22f,.39f+n*.09f,.61f-(n%2)*.22f,d.tone,.7f);break;
    case K::PowerCable:for(int n=0;n<6;n++)d.line(.35f+n*.06f,.50f+std::sin(n*1.4f)*.12f,.41f+n*.06f,.50f+std::sin((n+1)*1.4f)*.12f,d.ink,.6f);break;
    case K::DCCable:d.line(.35f,.36f,.65f,.36f,d.ink,.8f);d.line(.41f,.65f,.59f,.65f,d.ink,.8f);break;
    case K::SteamPipe:for(float x:{.40f,.55f,.70f}){d.line(x,.46f,x-.04f,.28f,d.ink,.7f);d.line(x-.04f,.28f,x+.02f,.17f,d.ink,.7f);}break;
@@ -28,6 +30,38 @@ void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=Machin
    default:break;
   }return;}
  switch(k){
+ case K::CuriosityPile:
+  d.feet();d.box(.10f,.73f,.80f,.10f,d.body);d.box(.17f,.27f,.66f,.46f,d.body);
+  d.circle(.50f,.28f,.28f,d.light);d.box(.23f,.28f,.54f,.43f,d.light);
+  for(float x:{.18f,.74f})d.box(x,.33f,.08f,.36f,d.body);
+  d.box(.32f,.43f,.36f,.24f,d.ink);d.box(.44f,.45f,.12f,.19f,d.tone);
+  d.line(.50f,.10f,.50f,.42f,d.ink,1.2f);d.box(.36f,.09f,.28f,.07f,d.tone);
+  d.circle(.76f,.20f,.09f,d.light);d.line(.76f,.20f,.80f,.15f,d.ink,.7f);break;
+ case K::StarChamber:
+  d.feet();d.box(.13f,.76f,.74f,.08f,d.body);d.circle(.50f,.38f,.31f,d.light);d.box(.20f,.38f,.60f,.36f,d.light);
+  d.box(.17f,.69f,.66f,.08f,d.body);d.box(.13f,.31f,.09f,.29f,d.tone);d.box(.78f,.31f,.09f,.29f,d.tone);
+  d.line(.27f,.38f,.73f,.38f,d.ink,.6f);d.line(.34f,.27f,.34f,.63f,d.ink,.6f);d.line(.66f,.27f,.66f,.63f,d.ink,.6f);
+  d.circle(.50f,.44f,.15f,d.body);d.circle(.50f,.44f,.09f,d.light);d.box(.41f,.10f,.18f,.09f,d.body);break;
+ case K::LabVacuumPump:
+  d.feet();d.box(.12f,.65f,.77f,.16f,d.body);d.circle(.29f,.58f,.18f,d.tone);d.box(.19f,.47f,.29f,.20f,d.body);
+  for(float x:{.58f,.79f}){d.circle(x,.49f,.11f,d.light);d.box(x-.035f,.22f,.07f,.18f,d.light);d.line(x,.51f,x,.60f,d.tone,1.5f);}
+  d.line(.40f,.40f,.40f,.24f,d.ink,.8f);d.line(.40f,.24f,.80f,.24f,d.ink,.8f);d.circle(.20f,.26f,.08f,d.light);break;
+ case K::QuenchBath:
+  d.feet();d.box(.11f,.29f,.78f,.48f,d.light);d.box(.14f,.45f,.72f,.28f,d.tone);
+  for(int n=0;n<5;n++)d.line(.26f+n*.11f,.35f,.26f+n*.11f,.66f,d.ink,.9f);
+  d.box(.09f,.23f,.82f,.09f,d.body);d.box(.65f,.11f,.17f,.13f,d.body);d.line(.74f,.12f,.74f,.59f,d.ink,.8f);break;
+ case K::Calorimeter:
+  d.feet();d.box(.10f,.75f,.80f,.08f,d.body);
+  d.circle(.31f,.50f,.20f,d.light);d.circle(.71f,.50f,.20f,d.light);
+  d.box(.27f,.19f,.08f,.15f,d.light);d.box(.67f,.19f,.08f,.15f,d.light);
+  d.line(.31f,.27f,.71f,.27f,d.ink,.7f);d.line(.49f,.27f,.49f,.11f,d.ink,.7f);
+  d.box(.43f,.08f,.14f,.11f,d.tone);d.line(.31f,.70f,.31f,.75f,d.ink,.8f);d.line(.71f,.70f,.71f,.75f,d.ink,.8f);
+  d.line(.51f,.47f,.51f,.61f,d.tone,2);break;
+ case K::ExperimentConsole:
+  d.feet();d.box(.09f,.20f,.82f,.57f,d.body);d.box(.17f,.28f,.48f,.30f,d.ink);d.box(.71f,.28f,.13f,.30f,d.light);
+  d.circle(.26f,.67f,.045f,d.tone);d.circle(.42f,.67f,.045f,d.tone);d.box(.58f,.64f,.26f,.05f,d.ink);
+  for(float y:{.33f,.40f,.47f})d.line(.73f,y,.82f,y,d.tone,.6f);
+  d.line(.71f,.77f,.71f,.88f,d.ink,.7f);d.line(.71f,.88f,.88f,.88f,d.ink,.7f);break;
  case K::SolarPanel:d.line(.23f,.78f,.34f,.90f,d.ink,1.6f);d.line(.76f,.78f,.64f,.90f,d.ink,1.6f);d.box(.08f,.15f,.84f,.60f,d.tone);for(int n=1;n<4;n++)d.line(.08f+.21f*n,.15f,.08f+.21f*n,.75f,d.light,.5f);for(float y:{.35f,.55f})d.line(.08f,y,.92f,y,d.light,.5f);break;
  case K::WindRotor:d.box(.46f,.29f,.08f,.58f,d.body);d.box(.24f,.86f,.52f,.07f,d.ink);d.circle(.50f,.30f,.08f,d.tone);break;
  case K::Gearbox:d.feet();d.box(.13f,.30f,.74f,.48f,d.body);d.circle(.36f,.52f,.18f,d.light);d.circle(.68f,.52f,.12f,d.tone);break;
@@ -62,6 +96,18 @@ void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=Machin
 }
 void drawEnergyMechanism(Rectangle r,const MachineAppearance& look){using K=MachineKind;Draw d(r,look);float t=look.active?float(look.time):0;double fill=std::clamp(look.progress,0.,1.);
  switch(look.kind){
+ case K::CuriosityPile:{
+  float glow=float(look.labFlux);d.circle(.50f,.54f,.055f+glow*.03f,d.tone);
+  for(int n=0;n<3;n++){float y=.66f-float(std::fmod(t*.12+n*.22,1.))*.23f;d.circle(.31f+n*.18f,y,.012f+glow*.009f,d.tone);}
+  d.line(.50f,.16f,.50f,.39f-float(look.labFlux)*.17f,d.body,2);d.circle(.76f,.20f,.035f,look.labArmed?d.tone:d.body);break;}
+ case K::StarChamber:{
+  float glow=float(look.labFlux);d.circle(.50f,.44f,.04f+glow*.08f,d.tone);
+  for(int n=0;n<6;n++){float a=n*PI/3+t*.2f;d.line(.50f,.44f,.50f+std::cos(a)*(.07f+glow*.16f),.44f+std::sin(a)*(.07f+glow*.16f),d.tone,.6f);}
+  for(int n=0;n<3;n++)d.line(.24f,.64f+n*.035f,.24f+float(look.labVacuum)*.50f,.64f+n*.035f,d.tone,.5f);break;}
+ case K::LabVacuumPump:d.wheel(.29f,.58f,.09f,4);d.line(.20f,.26f,.20f+.04f*float(look.progress),.20f,d.ink,.7f);break;
+ case K::QuenchBath:for(int n=0;n<4;n++){float y=.68f-float(std::fmod(t*.15+n*.23,1.))*.20f;d.circle(.20f+n*.16f,y,.013f,d.light);}break;
+ case K::Calorimeter:d.line(.31f,.57f,.31f,.39f,d.tone,2);d.line(.71f,.57f,.71f,.50f-float(look.labCooling)*.10f,d.tone,2);d.circle(.31f,.59f,.055f,d.tone);d.circle(.71f,.59f,.055f,d.body);break;
+ case K::ExperimentConsole:for(int n=1;n<16;n++){float a=(n-1)/15.f,b=n/15.f;auto wave=[&](float x){return .43f+std::sin(x*13+t)*(.02f+float(look.labStability)*.07f);};d.line(.20f+a*.42f,wave(a),.20f+b*.42f,wave(b),d.tone,.6f);}break;
  case K::WindRotor:for(int n=0;n<3;n++){float angle=t*2+n*2*PI/3;d.line(.50f,.30f,.50f+std::cos(angle)*.33f,.30f+std::sin(angle)*.27f,d.ink,3);d.line(.50f,.30f,.50f+std::cos(angle)*.33f,.30f+std::sin(angle)*.27f,d.light,1.7f);}d.circle(.5f,.3f,.07f,d.tone);break;
  case K::Gearbox:d.wheel(.36f,.52f,.12f,5);d.wheel(.68f,.52f,.07f,4);break;
  case K::Alternator:d.wheel(.29f,.53f,.14f,4);break;

@@ -121,6 +121,7 @@ void Interface::drawFactory(){
  tool(42,"Plans",[this]{factoryOverlay=4;modalScroll=0;});tool(51,"Reclaim",[this]{factoryErasing=!factoryErasing;factoryStamp.reset();factoryCopying=false;},factoryErasing);
  tool(39,"Cell",[this]{factoryStamp=Factory::experimentBlueprint();factoryTab=0;factoryErasing=factoryCopying=false;factory.notice="Place a real experiment cell. Its two feeders dispense single batches and the tasting dock holds the result.";});
  tool(39,"Flow",[this]{floorFlow=!floorFlow;},floorFlow);
+ if(centreW>550)tool(36,"Lab",[this]{for(const auto& [p,m]:factory.machines)if(m.kind==MachineKind::CuriosityPile){selectMachine(p);factoryCamera={float(p.x-1),float(p.y+2)};factoryZoom=factoryZoomTarget=std::clamp(std::min(factoryView.width/(20.f*38),factoryView.height/(15.f*38)),.4f,1.7f);factoryZooming=false;return;}factory.notice="Choose the Curiosity laboratory process plan or build experimental apparatus from the library.";});
  if(centreW>490)tool(46,"Power",[this]{for(const auto& [p,m]:factory.machines)if(m.kind==MachineKind::Switchboard){selectMachine(p);factoryCamera={float(p.x-4),float(p.y+6)};factoryZoom=factoryZoomTarget=std::clamp(std::min(factoryView.width/(19.f*38),factoryView.height/(18.f*38)),.4f,1.6f);factoryZooming=false;return;}factory.notice="Build a generator, an inverter or alternator, and a connected AC route. Search the build library for equipment.";});
  drawFactoryMap();drawLibrary(library);drawInspector(inspectorRect);
  text(fit(factory.notice,sw-margin*2,11),margin,sh-21,11,fMuted);drawFactoryOverlay();drawTooltip();

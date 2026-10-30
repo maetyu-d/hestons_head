@@ -14,7 +14,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Position,x,y)
 Position nextPosition(Position p,int direction);
 std::string positionName(Position p);
 
-enum class MachineKind {Belt,Feeder,Mixer,Gel,Aerator,Chiller,Heater,Dryer,Cloche,Cycler,Dispatch,Bin,Doser,Homogenizer,Spherifier,SousVide,Fermenter,EnzymeReactor,Centrifuge,Filter,VacuumChamber,FreezeDryer,Extruder,Plater,Smoker,Mill,Binder,RecipeKitchen,GlassTube,GlassCoil,GlassValve,GlassBeaker,GlassFlask,GlassCondenser,Burette,GlassJunction,FractionatingStill,FractionatingColumn,FractionReceiver,LatticeReactor,Wall,UtilityLine,UtilityStation,PHProbe,TemperatureLogger,DropletViewer,AromaSensor,FieldBed,RaisedBed,HydroponicBed,SeedHopper,Fertigation,GrowLight,PollinatorHive,SoilProbe,Harvester,Washer,Grader,ColdStore,ProduceIntake,CompostBin,PowerCable,DCCable,DriveShaft,SteamPipe,ExhaustPipe,RawGasPipe,GasPipe,ReturnPipe,HeatPipe,CoolingPipe,SolarPanel,WindRotor,Gearbox,Alternator,BiomassBoiler,SteamAccumulator,SteamTurbine,PowerCondenser,FeedPump,HeatExchanger,Macerator,AnaerobicDigester,GasScrubber,GasHolder,GasEngine,BatteryRack,Flywheel,Inverter,Switchboard,PowerRelay,GridInlet,HeatTank,CoolingPlant,Count};
+enum class MachineKind {Belt,Feeder,Mixer,Gel,Aerator,Chiller,Heater,Dryer,Cloche,Cycler,Dispatch,Bin,Doser,Homogenizer,Spherifier,SousVide,Fermenter,EnzymeReactor,Centrifuge,Filter,VacuumChamber,FreezeDryer,Extruder,Plater,Smoker,Mill,Binder,RecipeKitchen,GlassTube,GlassCoil,GlassValve,GlassBeaker,GlassFlask,GlassCondenser,Burette,GlassJunction,FractionatingStill,FractionatingColumn,FractionReceiver,LatticeReactor,Wall,UtilityLine,UtilityStation,PHProbe,TemperatureLogger,DropletViewer,AromaSensor,FieldBed,RaisedBed,HydroponicBed,SeedHopper,Fertigation,GrowLight,PollinatorHive,SoilProbe,Harvester,Washer,Grader,ColdStore,ProduceIntake,CompostBin,PowerCable,DCCable,DriveShaft,SteamPipe,ExhaustPipe,RawGasPipe,GasPipe,ReturnPipe,HeatPipe,CoolingPipe,SolarPanel,WindRotor,Gearbox,Alternator,BiomassBoiler,SteamAccumulator,SteamTurbine,PowerCondenser,FeedPump,HeatExchanger,Macerator,AnaerobicDigester,GasScrubber,GasHolder,GasEngine,BatteryRack,Flywheel,Inverter,Switchboard,PowerRelay,GridInlet,HeatTank,CoolingPlant,CuriosityPile,StarChamber,LabVacuumPump,QuenchBath,Calorimeter,ExperimentConsole,VacuumHose,InstrumentLead,Count};
 enum class UtilityKind {Power,Heat,Cooling,Water,Vacuum,Count};
 enum class ServeStyle {OrderPass,ResearchTasting,ChilledPickup};
 std::string serveStyleName(ServeStyle style);
@@ -44,15 +44,24 @@ bool isMixingMachine(MachineKind kind);
 bool isDosingMachine(MachineKind kind);
 bool isTastingDock(MachineKind kind);
 bool isProcessingMachine(MachineKind kind);
-enum class EnergyMedium {AC,DC,Shaft,Steam,Exhaust,RawGas,Gas,Water,Heat,Cooling,Count};
+enum class EnergyMedium {AC,DC,Shaft,Steam,Exhaust,RawGas,Gas,Water,Heat,Cooling,Vacuum,Instrument,Count};
 constexpr size_t EnergyCount=size_t(EnergyMedium::Count);
+struct LabTrial {int tick=0;double heat=0,draw=0,dc=0,stability=0;std::string settings;};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(LabTrial,tick,heat,draw,dc,stability,settings)
+struct NuclearState {
+ double fuel=0,spent=0,tuning=.5,flux=0,vacuum=0,stability=0,cooling=0,heatTotal=0,inputTotal=0,dcTotal=0;
+ double lastHeat=0,lastInput=0,lastDC=0;int pulse=0,sampleTicks=0;bool armed=false;
+ std::vector<LabTrial> trials;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(NuclearState,fuel,spent,tuning,flux,vacuum,stability,cooling,heatTotal,inputTotal,dcTotal,lastHeat,lastInput,lastDC,pulse,sampleTicks,armed,trials)
 struct PowerState {
+ NuclearState lab;
  std::array<double,EnergyCount> store{};
  double workCredit=0;double rate=12,capacity=200,throttle=1,temperature=20,rpm=0,flow=0,generated=0,delivered=0,demand=0,voltage=1,heat=0,low=.25,high=.75;
  int priority=1;bool tripped=false,armed=true;
  std::vector<double> history;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(PowerState,store,workCredit,rate,capacity,throttle,temperature,rpm,flow,generated,delivered,demand,voltage,heat,low,high,priority,tripped,armed,history)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(PowerState,lab,store,workCredit,rate,capacity,throttle,temperature,rpm,flow,generated,delivered,demand,voltage,heat,low,high,priority,tripped,armed,history)
 struct PowerLink {int ports=15;EnergyMedium medium=EnergyMedium::AC;double rating=60,flow=0,heat=0,overload=0;int dir=0;bool enabled=true,tripped=false;};
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(PowerLink,medium,rating,flow,heat,overload,dir,enabled,tripped,ports)
 struct EnergyPort {EnergyMedium medium;int direction;bool output=false;};
@@ -152,6 +161,7 @@ public:
  static Blueprint marketGardenBlueprint();
  static Blueprint farmDeliveryBlueprint();
  static Blueprint powerDistrictBlueprint();
+ static Blueprint nuclearLabBlueprint();
  bool installPowerDistrict();
  bool buildEnergyLink(Position p,EnergyMedium medium);bool removeEnergyLink(Position p,EnergyMedium medium);bool configureEnergyLink(Position p,EnergyMedium medium,const std::string& setting);
  PowerLink* energyLink(Position p,EnergyMedium medium);const PowerLink* energyLink(Position p,EnergyMedium medium)const;

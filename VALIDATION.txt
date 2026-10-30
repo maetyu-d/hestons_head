@@ -1,3 +1,40 @@
+AFTERTASTE / MOLECULAR WORKS 3.18.0 - CURIOSITY LABORATORY
+30 October 2026 / macOS / Apple Silicon
+
+Six native laboratory machines, glass vacuum and instrument service routes,
+finite fictional sealed cartridges, tuned excitation, pulsed heat, actual AC
+costs, cooling and vacuum dependence, interlocks, calorimetry and DC recovery.
+Recorder runs retain measured heat, input electricity, DC, stability and settings.
+Save format 12 appends new machine and medium IDs; old energy arrays are padded.
+Reusable plans clear live fuel, charge, armed state and observations.
+
+Native application build/link: PASS.
+Nuclear laboratory suite with the user's version 11 factory: PASS (410 checks).
+Includes working coupled apparatus, physical service flows, positive recovery,
+negative electrical return when mistuned, finite charge, spent accounting,
+scram decay, vacuum loss, broken signal interlocks, overtemperature/reset latch,
+chemical input use, recorded settings, persistence and invalid-state rejection.
+All 244 original machine states are preserved during annex migration. Reload
+is stable and an occupied annex site prevents installation without overwrites.
+Physical power suite: PASS (41 checks, 720-tick demo: 19,132.8 generated,
+10,979 delivered, supply on all 720 ticks, 139 dishes served).
+Power routing suite: PASS (151 checks).
+Farm delivery: PASS (17 checks); visible farm flow: PASS (44 checks).
+Farm migration: PASS (version 5 and 6 fixtures).
+Native visual inspection: PASS, laboratory framing and 300% chamber close-up;
+animated bell jar and electrode cage, cartridge/interlock controls, actual
+vacuum and cooling readings, square routes and recorded return comparisons.
+
+Historical test status: factory_tests, floor_tests and glass_tests fail at the
+same assertions in both this release and an independently built 3.17.3 baseline:
+- starter factory must ship products
+- finished dish physically held at tasting dock
+- glass junction, heated flask and cooling condenser apply actual model operations
+These older food fixtures were not rewritten for the nuclear feature. No full
+historical-suite or sanitizer pass is claimed.
+
+Prior release validation
+------------------------
 AFTERTASTE / MOLECULAR WORKS 3.17.3 - PORT-ALIGNED CONDUITS
 30 October 2026 / macOS / Apple Silicon
 

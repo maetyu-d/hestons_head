@@ -10,7 +10,7 @@ struct MachineAppearance {
  double time=0;
  bool closed=false;
  UtilityKind utility=UtilityKind::Power;
- double progress=0;
+ double progress=0;double labFlux=0,labVacuum=0,labStability=0,labCooling=0;bool labArmed=false;
  bool cropPlanted=false;
  bool forwarding=false;std::string crop="tomato";double cropHealth=1,cropMoisture=.62;
 };
