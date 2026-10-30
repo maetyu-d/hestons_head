@@ -4,7 +4,7 @@
 #include "WaterWorks.h"
 #include <cmath>
 namespace aftertaste {
-Color energyColor(EnergyMedium e){static const std::array<Color,EnergyCount> c={Color{218,170,54,255},Color{66,166,158,255},Color{121,145,151,255},Color{213,119,75,255},Color{167,159,151,255},Color{154,127,74,255},Color{123,162,78,255},Color{64,151,192,255},Color{218,96,57,255},Color{75,190,218,255},Color{155,140,181,255},Color{177,133,163,255},Color{117,155,155,255},Color{98,182,178,255},Color{105,191,214,255},Color{37,159,201,255},Color{148,139,114,255},Color{188,146,87,255}};return c.at(size_t(e));}
+Color energyColor(EnergyMedium e){static const std::array<Color,EnergyCount> c={Color{243,187,24,255},Color{221,143,20,255},Color{121,145,151,255},Color{213,119,75,255},Color{167,159,151,255},Color{154,127,74,255},Color{123,162,78,255},Color{37,127,196,255},Color{218,96,57,255},Color{64,165,224,255},Color{155,140,181,255},Color{177,133,163,255},Color{52,126,190,255},Color{49,139,214,255},Color{64,162,229,255},Color{22,124,209,255},Color{81,120,157,255},Color{54,94,170,255}};return c.at(size_t(e));}
 namespace {
 struct Draw {Rectangle r;MachineAppearance a;Color ink={32,59,66,255},body={190,207,204,255},light={238,245,241,255},tone={202,163,66,255};float w;
  Draw(Rectangle bounds,MachineAppearance look):r(bounds),a(look){w=std::clamp(std::min(r.width,r.height)*.03f,1.f,2.1f);unsigned n=unsigned(std::stoul(machineSpec(a.kind).color.substr(1),nullptr,16));tone={static_cast<unsigned char>(n>>16),static_cast<unsigned char>(n>>8),static_cast<unsigned char>(n),255};if(a.monochrome){ink=BLACK;body={175,175,175,255};light=WHITE;tone={110,110,110,255};}}
@@ -18,8 +18,8 @@ struct Draw {Rectangle r;MachineAppearance a;Color ink={32,59,66,255},body={190,
 }
 void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=MachineKind;Draw d(r,look);auto k=look.kind;if(k==K::RainCollector||k==K::WaterAnalyzer)d.a.direction=0;
  if(isEnergyConduit(k)){auto col=look.monochrome?d.tone:energyColor(conduitMedium(k));auto family=lineFamily(conduitMedium(k));
-  if(family==LineFamily::Water){d.line(.04f,.5f,.96f,.5f,d.ink,4);d.line(.04f,.5f,.96f,.5f,d.light,2.8f);d.line(.04f,.5f,.96f,.5f,col,1);for(float x:{.25f,.75f}){d.circle(x,.5f,.065f,d.light);d.circle(x,.5f,.027f,col);}}
-  else if(family==LineFamily::Electricity){d.line(.04f,.5f,.96f,.5f,d.ink,1.7f);d.line(.04f,.5f,.96f,.5f,col,.65f);for(float x:{.25f,.75f}){d.box(x-.025f,.445f,.05f,.11f,d.ink);d.line(x,.46f,x,.54f,col,.7f);}}
+  if(family==LineFamily::Water){d.line(.04f,.5f,.96f,.5f,d.ink,4);d.line(.04f,.5f,.96f,.5f,col,2.8f);d.line(.04f,.5f,.96f,.5f,d.light,.65f);for(float x:{.25f,.75f}){d.circle(x,.5f,.065f,d.light);d.circle(x,.5f,.027f,col);}}
+  else if(family==LineFamily::Electricity){d.line(.04f,.5f,.96f,.5f,d.ink,2.1f);d.line(.04f,.5f,.96f,.5f,col,1.45f);for(float x:{.25f,.75f}){d.box(x-.025f,.445f,.05f,.11f,col);d.line(x,.46f,x,.54f,col,.7f);}}
   else{d.line(.04f,.5f,.96f,.5f,d.ink,3);d.line(.04f,.5f,.96f,.5f,col,1.6f);}
   if(k==K::DriveShaft){d.box(.18f,.36f,.15f,.28f,d.body);d.box(.66f,.36f,.15f,.28f,d.body);}else if(family==LineFamily::Service){d.circle(.25f,.5f,.065f,d.body);d.circle(.75f,.5f,.065f,d.body);}
   switch(k){
@@ -55,8 +55,8 @@ void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=Machin
   }
   Draw ports(r,look);
   if(k==K::ReagentAnalyzer)ports.line(.88f,.5f,.99f,.5f,d.ink,1.2f);
-  Color glassCollar=look.monochrome?d.ink:Color{146,86,155,255};
-  auto glassPort=[&](float x,float y,bool vertical,bool side){ports.box(x,y,vertical?.12f:.08f,vertical?.08f:.12f,d.light);Color collar=side&&!look.monochrome?Color{201,111,65,255}:glassCollar;if(vertical){ports.line(x,y+.015f,x+.12f,y+.015f,collar,.65f);ports.line(x,y+.065f,x+.12f,y+.065f,collar,.65f);}else{ports.line(x+.015f,y,x+.015f,y+.12f,collar,.65f);ports.line(x+.065f,y,x+.065f,y+.12f,collar,.65f);}};
+  Color glassCollar=look.monochrome?d.ink:Color{158,57,216,255};
+  auto glassPort=[&](float x,float y,bool vertical,bool side){ports.box(x,y,vertical?.12f:.08f,vertical?.08f:.12f,look.monochrome?d.light:Color{231,208,248,255});Color collar=glassCollar;if(vertical){ports.line(x,y+.015f,x+.12f,y+.015f,collar,.65f);ports.line(x,y+.065f,x+.12f,y+.065f,collar,.65f);}else{ports.line(x+.015f,y,x+.015f,y+.12f,collar,.65f);ports.line(x+.065f,y,x+.065f,y+.12f,collar,.65f);}if(side&&!look.monochrome)ports.line(x+.045f,y+.04f,x+.075f,y+.04f,Color{201,111,65,255},.8f);};
   if(k!=K::MineralHopper&&k!=K::ReagentAnalyzer)glassPort(.01f,.44f,false,false);
   if(k!=K::ReagentRecovery&&k!=K::ReagentIntake&&k!=K::ReagentAnalyzer)glassPort(.91f,.44f,false,false);
   if(hasSideOutlet(k))glassPort(.44f,.91f,true,true);

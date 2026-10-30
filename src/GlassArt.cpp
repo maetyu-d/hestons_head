@@ -19,11 +19,11 @@ Vector2 glassPoint(const std::vector<Vector2>& p,float fraction){
  for(size_t n=1;n<p.size();n++){float span=length(p[n-1],p[n]);if(target<=span||n+1==p.size()){float t=span>0?std::clamp(target/span,0.f,1.f):0;return {p[n-1].x+(p[n].x-p[n-1].x)*t,p[n-1].y+(p[n].y-p[n-1].y)*t};}target-=span;}return p.back();
 }
 void drawGlassWall(const std::vector<Vector2>& p,float diameter,bool ghost,bool mono,bool chemical){
- if(p.size()<2)return;float opacity=ghost?.40f:1.f;Color wall=mono?Color{88,88,88,255}:chemical?Color{139,85,151,255}:Color{86,142,157,255},wash=mono?Color{180,180,180,255}:chemical?Color{240,218,242,255}:Color{192,235,239,255};
- for(size_t n=1;n<p.size();n++)DrawLineEx(p[n-1],p[n],diameter,Fade(wash,.18f*opacity));
+ if(p.size()<2)return;float opacity=ghost?.40f:1.f;Color wall=mono?Color{88,88,88,255}:chemical?Color{158,57,216,255}:Color{86,142,157,255},wash=mono?Color{180,180,180,255}:chemical?Color{215,170,245,255}:Color{192,235,239,255};
+ for(size_t n=1;n<p.size();n++)DrawLineEx(p[n-1],p[n],diameter,Fade(wash,(chemical?.30f:.18f)*opacity));
  std::vector<Vector2> left,right,shine;
  for(size_t n=0;n<p.size();n++){auto a=p[n?n-1:n],b=p[n+1<p.size()?n+1:n];float len=length(a,b);Vector2 normal=len>.001f?Vector2{-(b.y-a.y)/len,(b.x-a.x)/len}:Vector2{0,1};left.push_back({p[n].x+normal.x*diameter*.5f,p[n].y+normal.y*diameter*.5f});right.push_back({p[n].x-normal.x*diameter*.5f,p[n].y-normal.y*diameter*.5f});shine.push_back({p[n].x+normal.x*diameter*.30f,p[n].y+normal.y*diameter*.30f});}
- float stroke=std::clamp(diameter*.10f,.8f,1.8f);for(size_t n=1;n<p.size();n++){DrawLineEx(left[n-1],left[n],stroke,Fade(wall,.9f*opacity));DrawLineEx(right[n-1],right[n],stroke,Fade(wall,.75f*opacity));DrawLineEx(shine[n-1],shine[n],stroke,Fade(WHITE,.95f*opacity));}
+ float stroke=std::clamp(diameter*(chemical?.16f:.10f),chemical?1.15f:.8f,chemical?2.2f:1.8f);for(size_t n=1;n<p.size();n++){DrawLineEx(left[n-1],left[n],stroke,Fade(wall,.9f*opacity));DrawLineEx(right[n-1],right[n],stroke,Fade(wall,.75f*opacity));DrawLineEx(shine[n-1],shine[n],stroke,Fade(WHITE,.95f*opacity));}
  if(chemical)for(float t:{.12f,.88f}){auto c=glassPoint(p,t),q=glassPoint(p,std::min(1.f,t+.01f));float len=length(c,q);if(len>.001f){Vector2 normal{-(q.y-c.y)/len*diameter*.58f,(q.x-c.x)/len*diameter*.58f};DrawLineEx({c.x-normal.x,c.y-normal.y},{c.x+normal.x,c.y+normal.y},stroke,Fade(wall,opacity));}}
  for(size_t n:{size_t(0),p.size()-1}){auto a=p[n? n-1:n],b=p[n+1<p.size()?n+1:n];float len=length(a,b);if(len<.001f)continue;Vector2 v={-(b.y-a.y)/len*diameter*.6f,(b.x-a.x)/len*diameter*.6f};DrawLineEx({p[n].x-v.x,p[n].y-v.y},{p[n].x+v.x,p[n].y+v.y},stroke*2,Fade(wall,.8f*opacity));DrawLineEx({p[n].x-v.x*.72f,p[n].y-v.y*.72f},{p[n].x+v.x*.72f,p[n].y+v.y*.72f},stroke,Fade(WHITE,opacity));}
 }
