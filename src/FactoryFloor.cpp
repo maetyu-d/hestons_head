@@ -64,6 +64,13 @@ Blueprint Factory::marketGardenBlueprint(){
  }
  return b;
 }
+Blueprint Factory::farmDeliveryBlueprint(){
+ Blueprint b;b.name="Farm delivery conveyors";b.width=10;b.height=10;
+ auto belt=[&](Position p,int dir){Machine m;m.kind=MachineKind::Belt;m.dir=dir;m.duration=1;b.parts.push_back({p,m});};
+ for(int y=0;y<10;y++){belt({0,y},1);belt({9,y},y==9?2:1);}
+ for(int x=1;x<9;x++)belt({x,9},2);
+ return b;
+}
 const Batch* Factory::batchAt(Position p,int slot)const{
  auto m=at(p);if(!m)return nullptr;
  if(slot==1)return m->extra?&*m->extra:nullptr;if(slot==2)return m->sideOutput?&*m->sideOutput:nullptr;if(slot==3)return m->lastOutput?&*m->lastOutput:nullptr;

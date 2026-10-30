@@ -126,6 +126,7 @@ public:
  static Blueprint glassLabBlueprint();
  static Blueprint fractionalDistillationBlueprint();
  static Blueprint marketGardenBlueprint();
+ static Blueprint farmDeliveryBlueprint();
  std::optional<Blueprint> productionLine(uint64_t dish)const;
  bool setIngredient(Position p,const std::string& key);
  bool setRecipe(Position p,uint64_t dish);

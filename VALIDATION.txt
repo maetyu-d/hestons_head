@@ -1,3 +1,24 @@
+AFTERTASTE / MOLECULAR WORKS 3.16.0 - PHYSICAL FARM DELIVERY
+30 October 2026 / macOS / Apple Silicon
+
+Six farm outputs join two visible conveyor lines into the molecular factory.
+Produce intakes can store crops or forward the original harvested batch.
+Moving crop packets are larger at overview scale. Fresh demos start with
+staggered planted crops. Existing northern demos migrate atomically when their
+connection aisles are clear; straight wall crossings retain the factory zone.
+
+Native application build and link: PASS.
+Physical farm delivery suite: PASS (17 checks: all six crops reach factory,
+real adjacent transfers, batch identity and mass, no duplicate stock credits,
+blocked outputs, molecular processing, save migration, zoning preservation
+and protection of custom construction).
+Existing farm flow suite: PASS (44 checks).
+Existing farm relocation suite: PASS (save versions 5 and 6).
+Native saved-demo screenshot: PASS (physical conveyor connections and crop
+batches in real handling equipment). Full historical suite not run.
+
+Prior release validation
+------------------------
 AFTERTASTE / MOLECULAR WORKS 3.15.0 - VISIBLE FARM PRODUCTION
 29 October 2026 / macOS / Apple Silicon
 

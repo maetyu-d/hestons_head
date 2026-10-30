@@ -12,7 +12,7 @@ struct MachineAppearance {
  UtilityKind utility=UtilityKind::Power;
  double progress=0;
  bool cropPlanted=false;
- std::string crop="tomato";double cropHealth=1,cropMoisture=.62;
+ bool forwarding=false;std::string crop="tomato";double cropHealth=1,cropMoisture=.62;
 };
 void drawCropProduce(Rectangle bounds,const std::string& crop,double dirt=0,double freshness=1);
 // Scalable, text-free equipment drawings. Food is drawn between these two

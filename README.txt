@@ -1,4 +1,4 @@
-AFTERTASTE / MOLECULAR WORKS 3.15.0
+AFTERTASTE / MOLECULAR WORKS 3.16.0
 Invent dishes on the actual factory floor / native C++17
 
 Serving and feedback
@@ -38,6 +38,14 @@ temperature target.
 
 Floor farming
 -------------
+The demo's six farm outputs feed two physical conveyor lines into the molecular
+factory. Every crop keeps its original batch identity, mass, condition and bed
+provenance along that route. Produce intakes have Store crop and Send to factory
+modes; Send passes actual food onward without crediting shared stock. Blocked
+outlets hold the crop. The demo starts with staggered planted crops so deliveries
+begin promptly. Existing northern demo farms receive these connections when
+the aisles are clear; straight conveyor openings retain the factory zoning.
+
 Farming shares the factory floor and simulation clock. The Flow overlay shows
 seed planting, nutrient delivery, working grow lights and pollination along
 their actual bed connections. Growing crops use their variety colour, growth

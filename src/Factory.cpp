@@ -101,7 +101,7 @@ const std::array<MachineSpec,61>& machineSpecs(){
  {MachineKind::Washer,"Produce washer","PW","Washes soil from harvested crops. Consumes process water; washing removes dirt and a little soluble aroma.","#57a9c5",45,3,1,.08},
  {MachineKind::Grader,"Produce grader","PG","Sorts a crop batch by condition and evens out quality. Damaged or stressed produce yields a lower grade.","#bd9a55",42,2,.5,0},
  {MachineKind::ColdStore,"Cold store","CS","Rapidly chills produce and slows freshness loss before intake. Freshness decays while batches wait on the floor.","#508fbd",55,3,2,.02},
- {MachineKind::ProduceIntake,"Produce intake","PI","Accepts a named crop batch into the matching farm inventory. Feed that crop to ordinary factory feeders by selecting it in the pantry.","#4e9d79",40,1,0,0},
+ {MachineKind::ProduceIntake,"Produce intake","PI","Accepts a named crop batch into the matching farm inventory. Store named crops, or send the actual batch onward through conveyors into factory processes.","#4e9d79",40,1,0,0},
  {MachineKind::CompostBin,"Composter","CB","Breaks down an unwanted food batch into organic matter and nutrients for an adjacent bed. Compost also eases crop-rotation fatigue.","#8b7955",30,4,.5,.02}}};return specs;
 }
 const MachineSpec& machineSpec(MachineKind k){return machineSpecs().at(size_t(k));}
@@ -190,6 +190,20 @@ static constexpr Position northernFarmOrigin{-7,-12};
 static bool northernFarmAt(const std::map<Position,Machine>& machines){
  for(int i=0;i<6;i++){int x=(i%2)*9,y=2+(i/2)*3;auto bed=machines.find({northernFarmOrigin.x+x+1,northernFarmOrigin.y+y}),intake=machines.find({northernFarmOrigin.x+x+7,northernFarmOrigin.y+y});if(bed==machines.end()||!isFarmBed(bed->second.kind)||intake==machines.end()||intake->second.kind!=MachineKind::ProduceIntake)return false;}return true;
 }
+static bool connectNorthernFarmDelivery(std::map<Position,Machine>& machines){
+ if(!northernFarmAt(machines))return false;auto entry=machines.find({1,0});if(entry==machines.end()||entry->second.kind!=MachineKind::Belt||entry->second.dir!=0)return false;
+ const auto plan=Factory::farmDeliveryBlueprint();
+ // Only occupy the demo's clear aisles. A conveyor can replace a straight
+ // wall segment because it seals that opening under the existing zoning rule.
+ for(const auto& part:plan.parts){Position p{1+part.at.x,-10+part.at.y};auto existing=machines.find(p);if(existing==machines.end())continue;
+  const auto& m=existing->second;if(m.kind==MachineKind::Belt&&m.dir==part.machine.dir)continue;
+  if(m.kind!=MachineKind::Wall||m.item||m.extra||m.sideOutput)return false;
+  bool straight=false;for(int d=0;d<2;d++){auto a=machines.find(nextPosition(p,d)),b=machines.find(nextPosition(p,d+2));if(a!=machines.end()&&b!=machines.end()&&a->second.kind==MachineKind::Wall&&b->second.kind==MachineKind::Wall)straight=true;}if(!straight)return false;
+ }
+ bool changed=false;for(const auto& part:plan.parts){Position p{1+part.at.x,-10+part.at.y};auto existing=machines.find(p);if(existing==machines.end()){machines.emplace(p,part.machine);changed=true;}else if(existing->second.kind==MachineKind::Wall){existing->second=part.machine;changed=true;}}
+ for(int i=0;i<6;i++){Position p{northernFarmOrigin.x+(i%2)*9+7,northernFarmOrigin.y+2+(i/2)*3};auto& intake=machines.at(p);if(!intake.forward||intake.dir!=0){intake.forward=true;intake.automatic=false;intake.dir=0;intake.ready=bool(intake.item);changed=true;}}
+ return changed;
+}
 static bool migrateLegacyStarterGarden(std::map<Position,Machine>& machines){
  const std::vector<std::pair<Position,MachineKind>> legacy={
   {{0,1},MachineKind::SeedHopper},{{1,1},MachineKind::RaisedBed},{{2,1},MachineKind::Harvester},{{3,1},MachineKind::Belt},{{4,1},MachineKind::Washer},{{5,1},MachineKind::Grader},{{6,1},MachineKind::ColdStore},{{7,1},MachineKind::ProduceIntake},
@@ -242,6 +256,11 @@ void Factory::reset(){
  auto distillation=fractionalDistillationBlueprint();for(const auto& part:distillation.parts)machines.emplace(Position{-7+part.at.x,9+part.at.y},part.machine);blueprints.push_back(distillation);
  auto garden=marketGardenBlueprint();for(const auto& part:garden.parts)machines.emplace(Position{northernFarmOrigin.x+part.at.x,northernFarmOrigin.y+part.at.y},part.machine);blueprints.push_back(garden);
  expandedStarterDemo=interconnectStarterDemo(machines);if(expandedStarterDemo){blueprints.push_back(starterDemoBlueprint(machines));dispense({-7,6});dispense({-5,4});}
+ connectNorthernFarmDelivery(machines);blueprints.push_back(farmDeliveryBlueprint());
+ // Stagger real planted crops in a fresh demo so its delivery lines begin
+ // producing promptly while other beds show earlier growth stages.
+ const std::array<double,6> demoGrowth={.99,.94,.82,.73,.98,.61};for(int i=0;i<6;i++){Position p{northernFarmOrigin.x+(i%2)*9+1,northernFarmOrigin.y+2+(i/2)*3};auto& bed=machines.at(p);if(seedStock[bed.ingredient]>0){seedStock[bed.ingredient]--;plantFarmCrop(bed,bed.ingredient);bed.farmGrowth=demoGrowth[size_t(i)];}}
+
  history.clear();dirty=false;notice="A six-crop northern farm feeds its own harvest, washing, grading and cold-storage lines. Rotate crop families to protect soil health; seasonal light and temperature change outdoor growth.";
 }
 void Factory::snapshot(){history.push_back(static_cast<const FactoryState&>(*this));size_t limit=machines.size()>2000?8:40;while(history.size()>limit)history.pop_front();}
@@ -524,7 +543,7 @@ void Factory::step(){
    for(auto& part:m.item->food.parts){part.food.c[Reducing]*=1.+quality*.12;part.food.c[Acid]*=1.+(1.-quality)*.3;for(size_t a=0;a<part.food.aroma.size();a++)part.food.aroma[a]*=.75+quality*.4;}
    visit(*m.item,bedPos);visit(*m.item,pos);m.item->matter=projectCell(m.item->food);m.ready=true;m.progress=0;bed->farmLastCrop=bed->ingredient;bed->farmPlanted=false;bed->farmGrowth=0;bed->farmAge=0;bed->farmN=std::max(bed->farmN,.28);m.status="Harvested "+ingredient(bed->ingredient).name+" / "+std::to_string(int(grams))+" g / grade "+(quality>.8?"A":quality>.55?"B":"C");powerUsed+=machineSpec(m.kind).power;energy+=machineSpec(m.kind).power;electricity=std::max(0.,electricity-machineSpec(m.kind).power);waterUsed+=machineSpec(m.kind).water;water=std::max(0.,water-machineSpec(m.kind).water);continue;
   }
-  if(m.kind==MachineKind::ProduceIntake){if(!m.item){m.status="Awaiting washed crop batch";continue;}auto key=batchCropKey(*m.item);if(key.empty()){m.status="Needs a named produce crop";continue;}double mass=analyse(m.item->food).mass,kg=std::max(0.,mass/1000.),old=farmInventory[key],oldQ=farmQuality.count(key)?farmQuality[key]:.7;double quality=clamp(m.item->cropQuality*m.item->cropFreshness*(1.-m.item->cropDirt*.18),0,1);farmInventory[key]+=kg;farmProduce+=kg;farmQuality[key]=farmInventory[key]>0?(old*oldQ+kg*quality)/farmInventory[key]:quality;stock[key]+=kg*10;auto name=ingredient(key).name;m.ingredient=key;m.lastOutput=m.item;m.item.reset();m.progress=0;m.ready=false;m.status="Stored "+name+" / +"+roundTo(kg,2)+" kg / grade "+(quality>.8?"A":quality>.55?"B":"C");continue;}
+  if(m.kind==MachineKind::ProduceIntake){if(!m.item){m.status="Awaiting washed crop batch";continue;}auto key=batchCropKey(*m.item);if(key.empty()){m.status="Needs a named produce crop";continue;}m.ingredient=key;if(m.forward){m.ready=true;m.status="Crop queued / send to factory";continue;}double mass=analyse(m.item->food).mass,kg=std::max(0.,mass/1000.),old=farmInventory[key],oldQ=farmQuality.count(key)?farmQuality[key]:.7;double quality=clamp(m.item->cropQuality*m.item->cropFreshness*(1.-m.item->cropDirt*.18),0,1);farmInventory[key]+=kg;farmProduce+=kg;farmQuality[key]=farmInventory[key]>0?(old*oldQ+kg*quality)/farmInventory[key]:quality;stock[key]+=kg*10;auto name=ingredient(key).name;m.ingredient=key;m.lastOutput=m.item;m.item.reset();m.progress=0;m.ready=false;m.status="Stored "+name+" / +"+roundTo(kg,2)+" kg / grade "+(quality>.8?"A":quality>.55?"B":"C");continue;}
   if(m.kind==MachineKind::CompostBin){if(!m.item){m.status="Ready for food leftovers";continue;}Machine* bed=nullptr;for(int d=0;d<4&&!bed;d++){auto nearby=at(nextPosition(pos,d));if(nearby&&isFarmBed(nearby->kind))bed=nearby;}if(!bed){m.status="Connect compost to a grow bed";continue;}if(m.progress==0&&water<machineSpec(m.kind).water){m.status="Water input empty";continue;}if(!sandbox&&powerUsed+machineSpec(m.kind).power>powerCapacity){m.status="Power limited";continue;}if(electricity<machineSpec(m.kind).power){m.status="Electricity input empty";continue;}auto missing=consumeUtilities(pos,m);if(!missing.empty()){m.status=missing;continue;}chemistryStep(*m.item,m,true);m.progress++;powerUsed+=machineSpec(m.kind).power;energy+=machineSpec(m.kind).power;electricity=std::max(0.,electricity-machineSpec(m.kind).power);if(m.progress>=m.duration){bed->farmOrganic=std::min(1.,bed->farmOrganic+.18);bed->farmN=std::min(1.,bed->farmN+.10);bed->farmP=std::min(1.,bed->farmP+.06);bed->farmK=std::min(1.,bed->farmK+.10);bed->farmRotationStress=std::max(0.,bed->farmRotationStress-.18);m.item.reset();m.progress=0;m.ready=false;m.status="Compost returned nutrients and eased rotation pressure";}else m.status="Composting / "+std::to_string(m.progress)+" / "+std::to_string(m.duration);continue;}
   if(m.kind==MachineKind::RecipeKitchen){if(m.item||dish(m.recipe)){auto missing=consumeUtilities(pos,m);if(!missing.empty()){m.status=missing;continue;}}kitchenStep(m);if(m.item)visit(*m.item,pos);continue;}
   if(m.kind==MachineKind::Feeder&&m.automatic&&!m.item&&m.cooldown==0){auto missing=missingInputSupply(m.ingredient,m.dose);if(!sandbox&&stock[m.ingredient]<m.dose/100)m.status="Pantry empty";else if(!missing.empty())m.status=missing+" supply empty";else{m.item=makeBatch(m.ingredient,m.dose);visit(*m.item,pos);if(!sandbox)stock[m.ingredient]-=m.dose/100;consumeInputSupply(m.ingredient,m.dose);m.ready=true;m.cooldown=4;}}
@@ -698,7 +717,7 @@ static bool validMachine(const Machine& m){
 }
 bool Factory::save()const{
  if(storageFile.empty())return true;
- try{std::error_code ec;std::filesystem::create_directories(storageFile.parent_path(),ec);if(ec)return false;auto temp=storageFile;temp+=".tmp";std::ofstream out(temp,std::ios::binary|std::ios::trunc);out<<json{{"version",7},{"factory",static_cast<const FactoryState&>(*this)}}.dump();out.close();if(!out)return false;std::filesystem::rename(temp,storageFile,ec);
+ try{std::error_code ec;std::filesystem::create_directories(storageFile.parent_path(),ec);if(ec)return false;auto temp=storageFile;temp+=".tmp";std::ofstream out(temp,std::ios::binary|std::ios::trunc);out<<json{{"version",8},{"factory",static_cast<const FactoryState&>(*this)}}.dump();out.close();if(!out)return false;std::filesystem::rename(temp,storageFile,ec);
 #ifdef _WIN32
  if(ec){std::filesystem::remove(storageFile,ec);ec.clear();std::filesystem::rename(temp,storageFile,ec);}
 #endif
@@ -706,7 +725,7 @@ bool Factory::save()const{
 }
 bool Factory::load(){
  if(storageFile.empty()||!std::filesystem::exists(storageFile))return true;
- try{if(std::filesystem::file_size(storageFile)>64*1024*1024)return false;std::ifstream input(storageFile);json j;input>>j;int version=j.at("version");if(version<1||version>7)return false;auto state=j.at("factory").get<FactoryState>();
+ try{if(std::filesystem::file_size(storageFile)>64*1024*1024)return false;std::ifstream input(storageFile);json j;input>>j;int version=j.at("version");if(version<1||version>8)return false;auto state=j.at("factory").get<FactoryState>();
   if(version==1){
    auto upgrade=[&](Batch& b){b.food={};for(auto& z:b.matter.stack)if(z.kind=="food")addIngredient(b.food,z.k,100,state.nextComponent++,state.nextOperation++);b.matter=projectCell(b.food);};
    for(auto& [p,m]:state.machines){m.temperature=20+m.temperature*40;m.dose=ingredient(m.ingredient).dose;if(m.item)upgrade(*m.item);if(m.extra)upgrade(*m.extra);}for(auto& bp:state.blueprints)for(auto& part:bp.parts){part.machine.temperature=20+part.machine.temperature*40;part.machine.dose=ingredient(part.machine.ingredient).dose;}
@@ -715,7 +734,7 @@ bool Factory::load(){
   if(version<3){for(auto& [pos,m]:state.machines)for(auto b:{m.item?&*m.item:nullptr,m.extra?&*m.extra:nullptr,m.sideOutput?&*m.sideOutput:nullptr})if(b&&b->route.empty())visit(*b,pos);
    if(!state.bench.batch.parts.empty()){Position p={7,2};while(state.machines.count(p)&&p.x<999999)p.x++;if(state.machines.count(p))return false;Machine dock=device(MachineKind::Dispatch);dock.automatic=false;Batch b;b.id=state.nextId++;b.food=state.bench.batch;b.matter=projectCell(b.food);visit(b,p);dock.item=b;dock.status="Recovered previous draft";state.machines.emplace(p,dock);state.bench=DishBench{};recovered=true;}
   }
-  bool expandedOnLoad=false,demoInputsSeeded=false;
+  bool expandedOnLoad=false,demoInputsSeeded=false,farmDeliveryConnected=false;
   if(matchesStarterDemo(state.machines,false)){
    auto distillation=fractionalDistillationBlueprint();for(const auto& part:distillation.parts)state.machines.emplace(Position{-7+part.at.x,9+part.at.y},part.machine);
    if(std::none_of(state.blueprints.begin(),state.blueprints.end(),[](const Blueprint& bp){return bp.name=="Fractional distillation train";}))state.blueprints.push_back(distillation);
@@ -728,6 +747,7 @@ bool Factory::load(){
   if(matchesStarterDemo(state.machines,true,true,false)){upgradeStarterLattice(state.machines);refreshExperimentBlueprint(state.blueprints);expandedOnLoad=true;}
   for(auto& i:pantry())if(!state.stock.count(i.key))state.stock[i.key]=40;for(const auto& crop:farmCropKeys())if(!state.seedStock.count(crop))state.seedStock[crop]=12;
   if(version<7){auto garden=marketGardenBlueprint();auto plan=std::find_if(state.blueprints.begin(),state.blueprints.end(),[](const Blueprint& bp){return bp.name=="Market garden / harvest to intake"||bp.name=="Northern market farm / crop rotation";});if(plan==state.blueprints.end())state.blueprints.push_back(garden);else *plan=garden;bool installed=migrateLegacyStarterGarden(state.machines);if(!installed&&matchesStarterDemo(state.machines,true,true,true)){bool free=true;for(const auto& part:garden.parts)if(state.machines.count({northernFarmOrigin.x+part.at.x,northernFarmOrigin.y+part.at.y})){free=false;break;}if(free)for(const auto& part:garden.parts)state.machines.emplace(Position{northernFarmOrigin.x+part.at.x,northernFarmOrigin.y+part.at.y},part.machine);installed=free;}if(installed)expandedOnLoad=true;}
+  if(version<8){farmDeliveryConnected=connectNorthernFarmDelivery(state.machines);expandedOnLoad|=farmDeliveryConnected;if(std::none_of(state.blueprints.begin(),state.blueprints.end(),[](const Blueprint& bp){return bp.name=="Farm delivery conveyors";}))state.blueprints.push_back(farmDeliveryBlueprint());}
   bool showExpandedDemo=matchesStarterDemo(state.machines,true,true,true)||northernFarmAt(state.machines);
   if(matchesStarterDemo(state.machines,true,true,true)){auto plan=std::find_if(state.blueprints.begin(),state.blueprints.end(),[](const Blueprint& bp){return bp.name=="Interconnected demo factory";});if(plan==state.blueprints.end()){state.blueprints.push_back(starterDemoBlueprint(state.machines));expandedOnLoad=true;}else if(expandedOnLoad)*plan=starterDemoBlueprint(state.machines);}
   bool noStarterFood=state.tick==0&&state.rawUsed==0&&state.shipped==0&&state.wasted==0&&state.shipments.empty()&&state.dishbook.empty()&&std::all_of(state.machines.begin(),state.machines.end(),[](const auto& entry){const auto& m=entry.second;return !m.item&&!m.extra&&!m.sideOutput&&!m.lastOutput;});
@@ -748,7 +768,7 @@ bool Factory::load(){
   for(auto& [k,v]:state.stock)if(!data()["FOOD"].contains(k)||!std::isfinite(v)||v<0||v>100000000)return false;for(auto& k:data()["SETS"]["food"])if(!state.stock.count(k.get<std::string>()))return false;
   for(auto& [k,p]:state.products)if(k.size()>1000||p.name.size()>2000||p.phase.size()>30||p.count<0||!std::isfinite(p.best)||p.best<0||p.best>100||!std::isfinite(p.totalQuality)||!std::isfinite(p.totalValue))return false;
   for(const auto& [key,kg]:state.farmInventory)if(!std::isfinite(kg)||kg<0||kg>1e8||ingredient(key).category!="Produce")return false;for(const auto& [key,q]:state.farmQuality)if(!std::isfinite(q)||q<0||q>1||ingredient(key).category!="Produce")return false;for(const auto& [key,count]:state.seedStock)if(count<0||count>1000000||ingredient(key).category!="Produce")return false;
-  static_cast<FactoryState&>(*this)=std::move(state);history.clear();running=false;dirty=version<7||expandedOnLoad;expandedStarterDemo=showExpandedDemo;notice=version==1?"Older factory migrated. Layout, stocks and records retained; in-flight ingredients rebuilt for the expanded chemistry. Factory paused.":"Workspace loaded exactly as saved. Paused for inspection.";if(demoInputsSeeded)notice="Starter demo staged with real tomato and olive-oil batches. Press Space to route them through the molecular lattice reactor.";else if(expandedOnLoad)notice="Workspace upgraded with the northern six-crop farm. Existing batches, crops and routes were preserved.";if(recovered)notice="Previous draft recovered in a holding tasting dock near 7, 2. All new experiments use machines on the floor.";return true;
+  static_cast<FactoryState&>(*this)=std::move(state);history.clear();running=false;dirty=version<8||expandedOnLoad;expandedStarterDemo=showExpandedDemo;notice=version==1?"Older factory migrated. Layout, stocks and records retained; in-flight ingredients rebuilt for the expanded chemistry. Factory paused.":"Workspace loaded exactly as saved. Paused for inspection.";if(demoInputsSeeded)notice="Starter demo staged with real tomato and olive-oil batches. Press Space to route them through the molecular lattice reactor.";else if(expandedOnLoad)notice="Workspace upgraded with the northern six-crop farm. Existing batches, crops and routes were preserved.";if(farmDeliveryConnected)notice="Northern farm connected to the factory by two real conveyor lines. Produce intakes now send harvested batches onward; crops, food and factory zoning are preserved.";if(recovered)notice="Previous draft recovered in a holding tasting dock near 7, 2. All new experiments use machines on the floor.";return true;
  }catch(const std::exception&){notice="Could not read this factory save. The current factory was preserved.";return false;}
 }
 } // namespace aftertaste

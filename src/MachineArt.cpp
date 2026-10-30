@@ -329,7 +329,7 @@ void drawMachineMechanism(Rectangle bounds,const MachineAppearance& look){
  case MachineKind::Washer:{float a=look.active?t*2:0;d.line(.33f,.50f,.69f,.50f,d.edge,1.1f);for(int n=0;n<3;n++){float angle=a+n*2*PI/3;d.line(.51f,.53f,.51f+std::cos(angle)*.14f,.53f+std::sin(angle)*.13f,d.cold,1.2f);}for(float x:{.23f,.50f,.77f}){d.line(x,.18f,x,.26f,d.cold,.8f);d.oval(x,.28f,.018f,.025f,d.cold,false);}break;}
  case MachineKind::Grader:for(float x:{.20f,.38f,.58f,.78f})d.line(x,.38f,x,.62f,d.paint,.8f);d.line(.14f,.72f,.88f,.72f,d.edge,1);break;
  case MachineKind::ColdStore:d.snow(.76f,.38f,.07f);d.snow(.76f,.62f,.07f);d.line(.22f,.73f,.58f,.73f,d.cold,.8f);break;
- case MachineKind::ProduceIntake:for(float x:{.29f,.43f,.57f,.71f}){d.box(x-.035f,.38f,.07f,.06f,d.paint,false);d.box(x-.035f,.51f,.07f,.06f,d.paint,false);d.box(x-.035f,.63f,.07f,.06f,d.paint,false);}break;
+ case MachineKind::ProduceIntake:if(look.forwarding){d.line(.24f,.52f,.77f,.52f,d.paint,1.8f);d.line(.77f,.52f,.61f,.40f,d.paint,1.8f);d.line(.77f,.52f,.61f,.64f,d.paint,1.8f);}else for(float x:{.29f,.43f,.57f,.71f}){d.box(x-.035f,.38f,.07f,.06f,d.paint,false);d.box(x-.035f,.51f,.07f,.06f,d.paint,false);d.box(x-.035f,.63f,.07f,.06f,d.paint,false);}break;
  case MachineKind::CompostBin:{float angle=look.active?t*2:0;for(int n=0;n<3;n++){float a=angle+n*2*PI/3;d.line(.50f,.52f,.50f+std::cos(a)*.14f,.52f+std::sin(a)*.11f,d.paint,1.3f);}d.oval(.50f,.52f,.035f,.035f,d.edge,false);break;}
  case MachineKind::Wall:break;
  case MachineKind::RecipeKitchen:d.line(.30f,.49f,.70f,.49f,d.steel);d.line(.30f,.67f,.70f,.67f,d.steel);break;
