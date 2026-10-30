@@ -53,8 +53,8 @@ struct PowerState {
  std::vector<double> history;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(PowerState,store,workCredit,rate,capacity,throttle,temperature,rpm,flow,generated,delivered,demand,voltage,heat,low,high,priority,tripped,armed,history)
-struct PowerLink {EnergyMedium medium=EnergyMedium::AC;double rating=60,flow=0,heat=0,overload=0;int dir=0;bool enabled=true,tripped=false;};
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(PowerLink,medium,rating,flow,heat,overload,dir,enabled,tripped)
+struct PowerLink {int ports=15;EnergyMedium medium=EnergyMedium::AC;double rating=60,flow=0,heat=0,overload=0;int dir=0;bool enabled=true,tripped=false;};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(PowerLink,medium,rating,flow,heat,overload,dir,enabled,tripped,ports)
 struct EnergyPort {EnergyMedium medium;int direction;bool output=false;};
 struct PowerTotals {double generated=0,requested=0,delivered=0,loss=0,stored=0,recoveredHeat=0,ventedMass=0;bool active=false;};
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(PowerTotals,generated,requested,delivered,loss,stored,recoveredHeat,ventedMass,active)

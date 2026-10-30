@@ -1,5 +1,23 @@
-AFTERTASTE / MOLECULAR WORKS 3.17.0
+AFTERTASTE / MOLECULAR WORKS 3.17.1
 Invent dishes on the actual factory floor / native C++17
+
+Clear service routing
+----------------------
+The demo uses a single AC collector in the western yard, with short generator
+and auxiliary branches. One service corridor runs beside the farm and kitchen;
+row branches replace the earlier mesh of individual risers. Steam, gas, water,
+heat and cooling have deliberate routes. Parallel runs remain separate unless
+they share an intended junction; process-plan rotation retains those connections.
+
+Select power equipment or a conduit to emphasise its services and dim the rest.
+Routes / all services in the inspector restores the complete utility drawing.
+Thinner lines meet the actual coloured terminals, elbows are rounded and only
+real junctions have dots. Flow pulses remain tied to actual material transfers.
+
+Version 9 demos with their original generated wiring receive the cleaner routes
+on load. Equipment positions, settings, food, crops, energy stores and the clock
+remain unchanged. Custom cables, ratings, isolation settings and changed device
+directions are preserved instead of being replaced automatically.
 
 Electricity production
 ----------------------

@@ -27,7 +27,7 @@ private:
  std::string tooltip,librarySearch,sourceIngredient="tomato",doseText="100.00",dishName="Untitled dish",planName;
  int editFocus=0,batchSlot=0,componentIndex=0,latticeSelected=-1,planRenameIndex=-1;
  FloorTelemetry floorTelemetry;
- bool floorFlow=true,energyLinkSelected=false;EnergyMedium selectedEnergyMedium=EnergyMedium::AC;
+ bool floorFlow=true,energyRoutesAll=false,energyLinkSelected=false;EnergyMedium selectedEnergyMedium=EnergyMedium::AC;
  bool initialFraming=true,sourceBrushConfigured=false;
  uint64_t referenceRecipe=0;
  double sourceDose=100;

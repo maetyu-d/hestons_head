@@ -81,7 +81,7 @@ void initialisePowerDevice(Machine& m){
 }
 void clearPowerInventory(Machine& m){auto& p=m.power;p.store.fill(0);p.temperature=20;p.workCredit=p.rpm=p.flow=p.generated=p.delivered=p.demand=p.heat=0;p.voltage=1;p.tripped=false;p.history.clear();}
 bool validPowerState(const PowerState& p){for(double v:p.store)if(!std::isfinite(v)||v<0||v>1e9)return false;for(double v:{p.workCredit,p.rate,p.capacity,p.throttle,p.temperature,p.rpm,p.flow,p.generated,p.delivered,p.demand,p.voltage,p.heat,p.low,p.high})if(!std::isfinite(v)||v<0||v>1e9)return false;if(p.rate>1000||p.capacity>1e7||p.throttle>1||p.low>p.high||p.high>1||p.priority<0||p.priority>2||p.history.size()>80)return false;for(auto v:p.history)if(!std::isfinite(v)||v<0||v>1e9)return false;return true;}
-bool validPowerLink(const PowerLink& p){return int(p.medium)>=0&&int(p.medium)<int(E::Count)&&std::isfinite(p.rating)&&p.rating>=1&&p.rating<=1000&&std::isfinite(p.flow)&&p.flow>=0&&p.flow<1e9&&std::isfinite(p.heat)&&p.heat>=0&&p.heat<=10&&std::isfinite(p.overload)&&p.overload>=0&&p.overload<1e9&&p.dir>=0&&p.dir<4;}
+bool validPowerLink(const PowerLink& p){return p.ports>=0&&p.ports<=15&&int(p.medium)>=0&&int(p.medium)<int(E::Count)&&std::isfinite(p.rating)&&p.rating>=1&&p.rating<=1000&&std::isfinite(p.flow)&&p.flow>=0&&p.flow<1e9&&std::isfinite(p.heat)&&p.heat>=0&&p.heat<=10&&std::isfinite(p.overload)&&p.overload>=0&&p.overload<1e9&&p.dir>=0&&p.dir<4;}
 std::string powerContents(const Machine& m){std::string s;for(size_t n=0;n<EnergyCount;n++)if(m.power.store[n]>.01){if(!s.empty())s+=" / ";s+=energyName(E(n))+" "+roundTo(m.power.store[n],1);}return s.empty()?"No stored energy or working fluid":s;}
 
 class PowerRuntime {
@@ -91,13 +91,13 @@ public:
  struct Budget {std::map<std::pair<Position,E>,double> balance,loads,used;};
  double lastShaftRPM=0;Factory& f;std::array<Graph,EnergyCount> graphs;std::map<Position,std::vector<Transfer>> allocations;std::map<Position,double> remaining;std::map<std::pair<Position,E>,double> spent;
  explicit PowerRuntime(Factory& factory):f(factory){
-  for(auto& [p,links]:f.energyLinks)for(auto& link:links){link.flow=link.overload=0;if(link.enabled&&!link.tripped)graphs[ix(link.medium)].ports[p]=15;}
+  for(auto& [p,links]:f.energyLinks)for(auto& link:links){link.flow=link.overload=0;if(link.enabled&&!link.tripped)graphs[ix(link.medium)].ports[p]=link.ports;}
   for(auto& [p,m]:f.machines){m.power.flow=m.power.generated=m.power.delivered=m.power.demand=0;m.power.voltage=0;if(!isEnergyMachine(m.kind)||!m.enabled||m.power.tripped)continue;std::array<int,EnergyCount> masks{};for(auto port:energyPorts(m))masks[ix(port.medium)]|=1<<port.direction;for(size_t n=0;n<EnergyCount;n++)if(masks[n])graphs[n].ports[p]=masks[n];}
   for(const auto& [p,m]:f.machines)if(m.kind==K::Switchboard&&(!m.enabled||m.power.tripped))graphs[ix(E::AC)].ports.erase(p);
   for(auto& graph:graphs){std::set<Position> unseen;for(auto& [p,mask]:graph.ports)unseen.insert(p);int id=0;while(!unseen.empty()){auto first=*unseen.begin();std::vector<Position> open{first};unseen.erase(first);graph.component[first]=id;for(size_t n=0;n<open.size();n++)for(int d=0;d<4;d++){Position q=nextPosition(open[n],d);auto other=graph.ports.find(q);if(other==graph.ports.end()||!(graph.ports[open[n]]&(1<<d))||!(other->second&(1<<((d+2)%4))))continue;if(unseen.erase(q)){open.push_back(q);graph.component[q]=id;}}id++;}}
  }
  bool connected(Position a,Position b,E e)const{auto& c=graphs[ix(e)].component;auto x=c.find(a),y=c.find(b);return x!=c.end()&&y!=c.end()&&x->second==y->second;}
- Position tap(Position p,E e)const{auto& g=graphs[ix(e)];if(g.ports.count(p))return p;for(int d=0;d<4;d++){auto q=nextPosition(p,d);if(g.ports.count(q))return q;}return {1000001,1000001};}
+ Position tap(Position p,E e)const{auto& g=graphs[ix(e)];if(g.ports.count(p))return p;for(int d=0;d<4;d++){auto q=nextPosition(p,d);auto node=g.ports.find(q);if(node!=g.ports.end()&&(node->second&(1<<((d+2)%4))))return q;}return {1000001,1000001};}
  bool output(const Machine& m,E e)const{for(auto p:energyPorts(m))if(p.medium==e&&p.output)return true;return false;}
  Budget budget()const{Budget b;for(auto& [p,m]:f.machines)if(isEnergyMachine(m.kind)&&m.enabled&&!m.power.tripped)for(size_t n=0;n<EnergyCount;n++)if(output(m,E(n))){b.balance[{p,E(n)}]=m.power.store[n];auto i=spent.find({p,E(n)});b.used[{p,E(n)}]=i==spent.end()?0:i->second;}for(auto& [p,links]:f.energyLinks)for(auto& link:links)b.loads[{p,link.medium}]=link.flow;return b;}
  std::vector<Transfer> plan(Position sink,E e,double wanted,Budget& b,bool skipStorage=false){

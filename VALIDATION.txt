@@ -1,3 +1,32 @@
+AFTERTASTE / MOLECULAR WORKS 3.17.1 - CLEAR SERVICE ROUTING
+30 October 2026 / macOS / Apple Silicon
+
+The automatic demo mesh is replaced by an AC collector, short equipment taps,
+a western service corridor and grouped row branches. Typed pipe routes are
+explicit. Cable port masks keep adjacent parallel runs electrically separate.
+Selecting equipment emphasises its services; the inspector can show all routes.
+Lines meet actual terminals, both axes separate media, and real junctions have
+dots. Existing default version 9 routes migrate without changing live material,
+settings, resource stores, crop growth, building positions or simulation time.
+Custom wiring and ratings remain intact.
+
+Native build/link: PASS.
+Power layout regression: PASS (400 checks using the saved version 9 factory).
+Extra vertical AC cable cells outside the one distribution trunk: 211 -> 0.
+Tests cover farm supply, breaker isolation without bypasses, bounded plans,
+rotating cable ports, preservation of all 244 machines and their live contents,
+unchanged resources and time, custom wiring protection and exact reload.
+Physical power regression: PASS (41 checks). The 720-tick demo supplied loads
+on every tick and served 139 dishes with the new route topology.
+Farm delivery: PASS (17 checks). Farm flow: PASS (44 checks).
+Farm relocation: PASS (versions 5 and 6).
+Native UI inspection: PASS (focused AC drawing, all-services control, clear
+collector and row branches, terminal connections and preserved saved factory).
+The full historical suite and sanitizer suite were not rerun for this layout
+release; the preceding electricity release records its own sanitizer results.
+
+Prior release validation
+------------------------
 AFTERTASTE / MOLECULAR WORKS 3.17.0 - PHYSICAL ELECTRICITY PRODUCTION
 30 October 2026 / macOS / Apple Silicon
 

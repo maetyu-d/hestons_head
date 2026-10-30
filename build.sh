@@ -11,6 +11,7 @@ elif [ -x "$cmake_dir/ctest" ]; then
 else
   ./build/aftertaste_tests
   ./build/power_tests
+  ./build/power_layout_tests
   ./build/farm_delivery_tests
   ./build/farm_flow_tests
   ./build/farm_migration_tests
