@@ -1,5 +1,7 @@
 #include "PowerArt.h"
 #include "ReagentWorks.h"
+#include "RouteArt.h"
+#include "WaterWorks.h"
 #include <cmath>
 namespace aftertaste {
 Color energyColor(EnergyMedium e){static const std::array<Color,EnergyCount> c={Color{218,170,54,255},Color{66,166,158,255},Color{121,145,151,255},Color{213,119,75,255},Color{167,159,151,255},Color{154,127,74,255},Color{123,162,78,255},Color{64,151,192,255},Color{218,96,57,255},Color{75,190,218,255},Color{155,140,181,255},Color{177,133,163,255},Color{117,155,155,255},Color{98,182,178,255},Color{105,191,214,255},Color{37,159,201,255},Color{148,139,114,255},Color{188,146,87,255}};return c.at(size_t(e));}
@@ -15,7 +17,11 @@ struct Draw {Rectangle r;MachineAppearance a;Color ink={32,59,66,255},body={190,
 };
 }
 void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=MachineKind;Draw d(r,look);auto k=look.kind;if(k==K::RainCollector||k==K::WaterAnalyzer)d.a.direction=0;
- if(isEnergyConduit(k)){auto col=look.monochrome?d.tone:energyColor(conduitMedium(k));d.line(.04f,.5f,.96f,.5f,d.ink,3);d.line(.04f,.5f,.96f,.5f,col,1.6f);if(k==K::DriveShaft){d.box(.18f,.36f,.15f,.28f,d.body);d.box(.66f,.36f,.15f,.28f,d.body);}else{d.circle(.25f,.5f,.065f,d.body);d.circle(.75f,.5f,.065f,d.body);}
+ if(isEnergyConduit(k)){auto col=look.monochrome?d.tone:energyColor(conduitMedium(k));auto family=lineFamily(conduitMedium(k));
+  if(family==LineFamily::Water){d.line(.04f,.5f,.96f,.5f,d.ink,4);d.line(.04f,.5f,.96f,.5f,d.light,2.8f);d.line(.04f,.5f,.96f,.5f,col,1);for(float x:{.25f,.75f}){d.circle(x,.5f,.065f,d.light);d.circle(x,.5f,.027f,col);}}
+  else if(family==LineFamily::Electricity){d.line(.04f,.5f,.96f,.5f,d.ink,1.7f);d.line(.04f,.5f,.96f,.5f,col,.65f);for(float x:{.25f,.75f}){d.box(x-.025f,.445f,.05f,.11f,d.ink);d.line(x,.46f,x,.54f,col,.7f);}}
+  else{d.line(.04f,.5f,.96f,.5f,d.ink,3);d.line(.04f,.5f,.96f,.5f,col,1.6f);}
+  if(k==K::DriveShaft){d.box(.18f,.36f,.15f,.28f,d.body);d.box(.66f,.36f,.15f,.28f,d.body);}else if(family==LineFamily::Service){d.circle(.25f,.5f,.065f,d.body);d.circle(.75f,.5f,.065f,d.body);}
   switch(k){
    case K::VacuumHose:d.circle(.50f,.50f,.17f,d.light);d.line(.39f,.50f,.61f,.50f,d.tone,1.1f);break;
    case K::InstrumentLead:for(int n=0;n<5;n++)d.line(.30f+n*.09f,.39f+(n%2)*.22f,.39f+n*.09f,.61f-(n%2)*.22f,d.tone,.7f);break;
@@ -49,9 +55,11 @@ void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=Machin
   }
   Draw ports(r,look);
   if(k==K::ReagentAnalyzer)ports.line(.88f,.5f,.99f,.5f,d.ink,1.2f);
-  if(k!=K::MineralHopper&&k!=K::ReagentAnalyzer)ports.box(.01f,.45f,.08f,.10f,Color{40,170,190,255});
-  if(k!=K::ReagentRecovery&&k!=K::ReagentIntake&&k!=K::ReagentAnalyzer)ports.box(.91f,.45f,.08f,.10f,d.ink);
-  if(hasSideOutlet(k))ports.box(.45f,.91f,.10f,.08f,Color{226,113,61,255});
+  Color glassCollar=look.monochrome?d.ink:Color{146,86,155,255};
+  auto glassPort=[&](float x,float y,bool vertical,bool side){ports.box(x,y,vertical?.12f:.08f,vertical?.08f:.12f,d.light);Color collar=side&&!look.monochrome?Color{201,111,65,255}:glassCollar;if(vertical){ports.line(x,y+.015f,x+.12f,y+.015f,collar,.65f);ports.line(x,y+.065f,x+.12f,y+.065f,collar,.65f);}else{ports.line(x+.015f,y,x+.015f,y+.12f,collar,.65f);ports.line(x+.065f,y,x+.065f,y+.12f,collar,.65f);}};
+  if(k!=K::MineralHopper&&k!=K::ReagentAnalyzer)glassPort(.01f,.44f,false,false);
+  if(k!=K::ReagentRecovery&&k!=K::ReagentIntake&&k!=K::ReagentAnalyzer)glassPort(.91f,.44f,false,false);
+  if(hasSideOutlet(k))glassPort(.44f,.91f,true,true);
   // Separate gold AC tap, away from food and side-fraction couplings.
   d.box(.10f,.84f,.07f,.07f,energyColor(EnergyMedium::AC));
   return;
@@ -125,7 +133,8 @@ void drawEnergyHousing(Rectangle r,const MachineAppearance& look){using K=Machin
  default:break;}
  Machine portMachine;portMachine.kind=k;portMachine.dir=(k==K::RainCollector||k==K::WaterAnalyzer)?look.direction:0;
  auto ports=energyPorts(portMachine);for(size_t n=0;n<ports.size();n++){auto port=ports[n];float shift=0;for(size_t j=0;j<ports.size();j++)if(j!=n&&ports[j].direction==port.direction)shift=(j<n?.07f:-.07f);float px=port.direction==0?.96f:port.direction==2?.04f:.5f+shift,py=port.direction==1?.96f:port.direction==3?.04f:.5f+shift;
-  Color c=look.monochrome?d.tone:energyColor(port.medium);d.box(px-.035f,py-.035f,.07f,.07f,c);
+  if(lineFamily(port.medium)==LineFamily::Electricity&&(isWaterMachine(k))){if(port.direction%2==0)py=.82f;else px=.82f;}
+  Color c=look.monochrome?d.tone:energyColor(port.medium);if(lineFamily(port.medium)==LineFamily::Water){d.circle(px,py,.046f,d.light);d.circle(px,py,.021f,c);}else d.box(px-.035f,py-.035f,.07f,.07f,c);
   float dx=port.direction==0?1:port.direction==2?-1:0,dy=port.direction==1?1:port.direction==3?-1:0;float sign=port.output?1.f:-1.f;float ex=px+dx*.025f*sign,ey=py+dy*.025f*sign;
   d.line(ex-dx*.025f*sign-dy*.02f,ey-dy*.025f*sign+dx*.02f,ex,ey,d.ink,.5f);d.line(ex-dx*.025f*sign+dy*.02f,ey-dy*.025f*sign-dx*.02f,ex,ey,d.ink,.5f);
  }

@@ -1,3 +1,27 @@
+AFTERTASTE / MOLECULAR WORKS 3.24.1 - DISTINCT PIPE AND CABLE FAMILIES
+30 October 2026 / macOS / Apple Silicon
+
+Native renderer differentiates broad flanged water pipes, clear chemical glass
+with twin violet collars, and thin square insulated electricity trays. Round
+water ports and square electricity plugs match those families. Chemical side
+ports retain amber collars. Dotted assay leads are separate from material.
+Contact electricity is offset below lab material paths; inactive possible bench
+services do not generate phantom pipes. Generic material-link rendering now
+uses the actual material capabilities of utility and reagent apparatus.
+Connected glass inherits chemical styling even when empty. Live motions remain
+based on actual transfer telemetry. A drawn key explains the three silhouettes.
+
+Native inspection: PASS in Water, Chem and Power frames. Round pipe flanges,
+clear glass/side streams, square electrical export, separated bench contacts
+and the visual key were checked while paused. Complete saved JSON remains
+identical: version 18, tick 11985, 334 machines and all input supplies.
+Native application compile/link: PASS. The change is confined to rendering,
+framing and documentation; factory simulation and save format 18 are retained.
+No new simulation tests were added for this visual change. The immediately
+preceding chemical, water, power and farm results are recorded below.
+
+Prior release validation
+------------------------
 AFTERTASTE / MOLECULAR WORKS 3.24.0 - REAGENT LABORATORY
 30 October 2026 / macOS / Apple Silicon
 

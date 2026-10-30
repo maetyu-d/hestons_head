@@ -3,6 +3,7 @@
 #include "Power.h"
 #include "WaterWorks.h"
 #include "PowerArt.h"
+#include "RouteArt.h"
 #include <algorithm>
 #include <cmath>
 namespace aftertaste {
@@ -13,19 +14,12 @@ Vector2 wirePoint(const std::vector<Vector2>& path,float fraction){
  for(size_t n=1;n<path.size();n++){float segment=wireLength(path[n-1],path[n]);if(distance<=segment&&segment>.001f){float t=distance/segment;return {path[n-1].x+(path[n].x-path[n-1].x)*t,path[n-1].y+(path[n].y-path[n-1].y)*t};}distance-=segment;}
  return path.back();
 }
-void squareWireStroke(const std::vector<Vector2>& path,float width,Color color,float from=0,float to=1){
- float length=0;for(size_t n=1;n<path.size();n++)length+=wireLength(path[n-1],path[n]);float start=from*length,end=to*length,at=0;
- for(size_t n=1;n<path.size();n++){Vector2 a=path[n-1],b=path[n];float segment=wireLength(a,b);if(segment>.001f){float low=std::max(0.f,start-at),high=std::min(segment,end-at);if(high>low){Vector2 p{a.x+(b.x-a.x)*low/segment,a.y+(b.y-a.y)*low/segment},q{a.x+(b.x-a.x)*high/segment,a.y+(b.y-a.y)*high/segment};DrawLineEx(p,q,width,color);}}at+=segment;
-  if(n+1<path.size()&&at>start&&at<end)DrawRectangleRec({b.x-width*.5f,b.y-width*.5f,width,width},color);
- }
-}
+
 }
 void Interface::drawEnergyRoutes(){
  const float tile=38*factoryZoom;if(tile<8)return;
  const double clock=factory.tick+(factory.running?factoryAccumulator/.55:0);
  using E=EnergyMedium;using Key=std::pair<Position,E>;
- const Color floor{224,234,232,255};
- auto blend=[](Color a,Color b,float t){return Color{static_cast<unsigned char>(a.r+(b.r-a.r)*t),static_cast<unsigned char>(a.g+(b.g-a.g)*t),static_cast<unsigned char>(a.b+(b.b-a.b)*t),255};};
  std::set<E> focused;bool equipmentFocus=false;
  if(energyLinkSelected){focused.insert(selectedEnergyMedium);equipmentFocus=true;}
  else if(auto m=factory.at(factorySelected);m&&isEnergyMachine(m->kind)){for(auto port:energyPorts(*m))focused.insert(port.medium);equipmentFocus=true;}
@@ -36,6 +30,7 @@ void Interface::drawEnergyRoutes(){
   Machine unrotated;unrotated.kind=m->kind;auto ports=energyPorts(unrotated);
   for(size_t n=0;n<ports.size();n++){auto port=ports[n];if(port.medium!=medium||(port.direction+m->dir)%4!=side)continue;float shift=0;for(size_t j=0;j<ports.size();j++)if(j!=n&&ports[j].direction==port.direction)shift=j<n?.07f:-.07f;
    float u=port.direction==0?.96f:port.direction==2?.04f:.5f+shift,v=port.direction==1?.96f:port.direction==3?.04f:.5f+shift;
+   if(lineFamily(medium)==LineFamily::Electricity&&(isReagentMachine(m->kind)||isWaterMachine(m->kind))){if(port.direction%2==0)v=.82f;else u=.82f;}
    for(int turn=0;turn<m->dir;turn++){float old=u;u=1-v;v=old;}auto r=factoryTile(p);float pad=std::max(1.f,tile*.065f);return Vector2{r.x+pad+u*(tile-2*pad),r.y+pad+v*(tile-2*pad)};
   }return {};
  };
@@ -68,43 +63,53 @@ void Interface::drawEnergyRoutes(){
    else if(medium==E::AC){auto consumer=factory.at(q);if(consumer&&!isEnergyMachine(consumer->kind)&&machineSpec(consumer->kind).power>0&&!factory.energyLink(q,medium)){auto r=factoryTile(q);rail.degree++;edges.push_back({pathBetween(rail.point,{r.x+tile*.5f,r.y+tile*.5f},d,p),medium,rail.link,false,true,rail.link->dir==d?rail.link->flow:0});}}
   }
  }
- for(const auto& [p,m]:factory.machines)if(isEnergyMachine(m.kind))for(auto port:energyPorts(m)){if(!visible(port.medium)||(port.direction!=0&&port.direction!=1))continue;Position q=nextPosition(p,port.direction);auto a=terminal(p,port.medium,port.direction),b=terminal(q,port.medium,(port.direction+2)%4);if(a&&b){double flow=factory.powerContactFlow(p,q,port.medium);edges.push_back({pathBetween(*a,*b,port.direction,p),port.medium,nullptr,flow<0,true,std::abs(flow)});}}
- auto width=[&](E medium){return std::clamp(.95f+tile*.021f,1.25f,medium==E::Shaft?3.f:2.65f);};
- auto accent=[&](E medium){Color c=energyColor(medium);return blend(c,Color{100,125,123,255},.42f);};
- // Cable tray, pale inset, restrained conductor. Opaque colours keep joints even
- // instead of darkening every point where separate line fragments overlap.
- for(int pass=0;pass<3;pass++){
-  for(const auto& edge:edges){float w=width(edge.medium);bool enabled=!edge.link||edge.link->enabled;Color outer=blend(floor,Color{77,108,112,255},equipmentFocus?.65f:.43f),inset{235,242,238,255},core=blend(floor,accent(edge.medium),equipmentFocus?.9f:.60f);if(!enabled)core=blend(floor,Color{125,143,139,255},.6f);if(edge.link&&edge.link->tripped)core=Color{199,104,81,255};
-   squareWireStroke(edge.path,pass==0?w:pass==1?std::max(.7f,w-1.f):std::max(.6f,w*.26f),pass==0?outer:pass==1?inset:core);
-  }
-  for(const auto& [key,rail]:rails)if(rail.degree>=2){float w=width(key.second),size=rail.degree>2?w+1.7f:w;Color color=pass==0?blend(floor,Color{77,108,112,255},equipmentFocus?.65f:.43f):pass==1?Color{235,242,238,255}:blend(floor,accent(key.second),equipmentFocus?.9f:.60f);if(pass==1)size=std::max(.7f,size-1.f);if(pass==2)size=rail.degree>2?std::max(1.f,w*.55f):std::max(.6f,w*.26f);DrawRectangleRec({rail.point.x-size*.5f,rail.point.y-size*.5f,size,size},color);}
+ for(const auto& [p,m]:factory.machines)if(isEnergyMachine(m.kind))for(auto port:energyPorts(m)){if(!visible(port.medium)||(port.direction!=0&&port.direction!=1))continue;Position q=nextPosition(p,port.direction);auto a=terminal(p,port.medium,port.direction),b=terminal(q,port.medium,(port.direction+2)%4);if(a&&b){auto other=factory.at(q);if(other&&isContactService(port.medium)&&powerContactSupports(m.kind,other->kind,port.medium))continue;double flow=factory.powerContactFlow(p,q,port.medium);edges.push_back({pathBetween(*a,*b,port.direction,p),port.medium,nullptr,flow<0,true,std::abs(flow)});}}
+ // Water is heavy, round-coupled pipework. Electrical trays remain thin,
+ // square and insulated. Draw the cables last, with an air gap at crossings.
+ for(int layer=0;layer<2;layer++)for(const auto& edge:edges){
+  if((lineFamily(edge.medium)==LineFamily::Electricity)!=(layer==1))continue;
+  drawInfrastructureRoute(edge.path,edge.medium,tile,!edge.link||edge.link->enabled,edge.link&&edge.link->tripped,equipmentFocus);
  }
- for(const auto& edge:edges){float w=width(edge.medium);
-  if(edge.boot&&tile>=26){Vector2 end=edge.path.back(),prior=edge.path[edge.path.size()-2];float length=wireLength(prior,end),extent=std::min(length,std::clamp(tile*.06f,2.f,5.f));if(length>.001f){Vector2 start{end.x+(prior.x-end.x)*extent/length,end.y+(prior.y-end.y)*extent/length};squareWireStroke({start,end},w+1,Color{93,124,126,255});squareWireStroke({start,end},std::max(.8f,w-.4f),accent(edge.medium));}}
-  if(edge.medium==E::Shaft&&tile>=38){auto mid=wirePoint(edge.path,.5f),ahead=wirePoint(edge.path,.51f);bool horizontal=std::abs(ahead.x-mid.x)>=std::abs(ahead.y-mid.y);Rectangle collar{mid.x-(horizontal?1.1f:w),mid.y-(horizontal?w:1.1f),horizontal?2.2f:w*2,horizontal?w*2:2.2f};DrawRectangleRec(collar,Color{120,146,146,255});}
-  if(floorFlow&&(!edge.link||(edge.link->enabled&&!edge.link->tripped))&&edge.flow>.001){auto path=edge.path;if(edge.reverse)std::reverse(path.begin(),path.end());float phase=float(std::fmod(clock*(.6+std::min(1.,edge.flow/(edge.link?edge.link->rating:40.))),1.));squareWireStroke(path,std::max(.8f,w*.42f),blend(accent(edge.medium),Color{255,238,183,255},.55f),std::max(0.f,phase-.12f),phase);}
+ for(const auto& [key,rail]:rails)if(rail.degree>2)drawInfrastructureJunction(rail.point,key.second,tile);
+ for(const auto& edge:edges){
+  if(edge.path.size()<2)continue;
+  if(edge.boot){auto end=edge.path.back(),before=edge.path[edge.path.size()-2];drawInfrastructureFitting(end,{end.x-before.x,end.y-before.y},edge.medium,tile,!edge.link||edge.link->enabled);}
+  else if(tile>=32){auto mid=wirePoint(edge.path,.5f),ahead=wirePoint(edge.path,.51f);drawInfrastructureFitting(mid,{ahead.x-mid.x,ahead.y-mid.y},edge.medium,tile,!edge.link||edge.link->enabled);}
+  if(floorFlow&&(!edge.link||(edge.link->enabled&&!edge.link->tripped))&&edge.flow>.001){float phase=float(std::fmod(clock*(.6+std::min(1.,edge.flow/(edge.link?edge.link->rating:40.))),1.));drawInfrastructureFlow(edge.path,edge.medium,tile,phase,edge.reverse);}
  }
- // A short docking cassette marks each shared chassis edge, rather than
- // drawing a service network across the apparatus. Pins pulse on real transfer.
+ // Bench electricity is a small square plug below the material path. Working
+ // water has round flanges; unused possible services do not become phantom pipes.
  for(const auto& [p,m]:factory.machines)if(isEnergyMachine(m.kind))for(int d:{0,1}){
   Position q=nextPosition(p,d);auto other=factory.at(q);if(!other||!isEnergyMachine(other->kind))continue;
-  std::vector<E> pins;for(size_t n=0;n<EnergyCount;n++)if(powerContactSupports(m.kind,other->kind,E(n))&&visible(E(n)))pins.push_back(E(n));if(pins.empty())continue;
-  auto r=factoryTile(p);Vector2 center{r.x+(d==0?tile:tile*.5f),r.y+(d==1?tile:tile*.5f)};
-  float span=std::clamp(tile*.22f,3.f,17.f),height=std::clamp(tile*.25f,4.f,22.f);bool live=m.enabled&&!m.power.tripped&&other->enabled&&!other->power.tripped;
-  Rectangle dock{center.x-(d==0?span:height)*.5f,center.y-(d==0?height:span)*.5f,d==0?span:height,d==0?height:span};DrawRectangleRec(dock,live?Color{185,205,201,255}:Color{213,220,215,255});DrawRectangleLinesEx(dock,std::max(.6f,tile*.009f),Color{83,117,119,255});
-  for(size_t n=0;n<pins.size();n++){float offset=(float(n)+.5f)/pins.size()*height-height*.5f;Vector2 a{center.x+(d==0?-span*.36f:offset),center.y+(d==1?-span*.36f:offset)},b{center.x+(d==0?span*.36f:offset),center.y+(d==1?span*.36f:offset)};double flow=live?factory.powerContactFlow(p,q,pins[n]):0;Color color=blend(floor,energyColor(pins[n]),live?.78f:.25f);DrawLineEx(a,b,std::max(.6f,height/(pins.size()*2.5f)),color);
-   if(floorFlow&&std::abs(flow)>.001&&tile>=32){float phase=float(std::fmod(clock*1.4,1.));if(flow<0)phase=1-phase;Vector2 dot{a.x+(b.x-a.x)*phase,a.y+(b.y-a.y)*phase};DrawRectangleRec({dot.x-1,dot.y-1,2,2},Color{255,247,210,255});}
+  std::vector<E> pins;for(size_t n=0;n<EnergyCount;n++){
+   E medium=E(n);if(!powerContactSupports(m.kind,other->kind,medium)||!visible(medium))continue;
+   bool needed=medium==E::AC||std::abs(factory.powerContactFlow(p,q,medium))>.001;
+   for(const auto* device:std::array<const Machine*,2>{&m,other})for(auto port:energyPorts(*device))if(port.medium==medium)needed=true;
+   if(needed)pins.push_back(medium);
+  }
+  if(pins.empty())continue;
+  auto r=factoryTile(p);Vector2 edge{r.x+(d==0?tile:tile*.5f),r.y+(d==1?tile:tile*.5f)};
+  bool live=m.enabled&&!m.power.tripped&&other->enabled&&!other->power.tripped;
+  bool laboratory=isReagentMachine(m.kind)||isReagentMachine(other->kind)||isWaterMachine(m.kind)||isWaterMachine(other->kind);
+  float span=std::clamp(tile*.18f,3.f,15.f);
+  for(size_t n=0;n<pins.size();n++){
+   E medium=pins[n];float offset=laboratory&&lineFamily(medium)==LineFamily::Electricity?tile*.30f:(float(n)-(pins.size()-1)*.5f)*std::clamp(tile*.045f,1.7f,4.f);
+   Vector2 center{edge.x+(d==1?offset:0),edge.y+(d==0?offset:0)};
+   Vector2 a{center.x-(d==0?span*.5f:0),center.y-(d==1?span*.5f:0)},b{center.x+(d==0?span*.5f:0),center.y+(d==1?span*.5f:0)};
+   drawInfrastructureRoute({a,b},medium,tile,live,false,equipmentFocus);drawInfrastructureFitting(center,{b.x-a.x,b.y-a.y},medium,tile,live);
+   double flow=live?factory.powerContactFlow(p,q,medium):0;
+   if(floorFlow&&std::abs(flow)>.001){float phase=float(std::fmod(clock*1.4,1.));drawInfrastructureFlow({a,b},medium,tile,phase,flow<0);}
   }
  }
  for(const auto& [key,rail]:rails)if(rail.link->tripped||rail.link->heat>.65){DrawRectangleRec({rail.point.x-2,rail.point.y-2,4,4},Color{220,94,63,255});}
- if(equipmentFocus&&!energyRoutesAll){std::string label=focused.size()==1?upper(energyName(*focused.begin())):"SELECTED EQUIPMENT SERVICES";text(label+" / isolated service view",factoryView.x+10,factoryView.y+30,8.5f,Color{87,113,121,255},true);}
+ if(equipmentFocus&&!energyRoutesAll){std::string label=focused.size()==1?upper(energyName(*focused.begin())):"SELECTED EQUIPMENT SERVICES";text(label+" / service overlay",factoryView.x+10,factoryView.y+30,8.5f,Color{87,113,121,255},true);}
 }
 void Interface::drawPowerInspector(Rectangle r){
  const Color ink{23,48,57,255},muted{87,113,121,255},paper{237,243,241,255},line{199,215,216,255},orange{240,83,43,255},green{38,133,111,255};DrawRectangleRec(r,WHITE);DrawRectangleLinesEx(r,1,line);float x=r.x+12,y=r.y+12,w=r.width-24;auto m=factory.at(factorySelected);auto link=energyLinkSelected?factory.energyLink(factorySelected,selectedEnergyMedium):nullptr;
  text(link?upper(energyName(link->medium)):m?upper(machineSpec(m->kind).name):"POWER ENGINEERING",x,y,11,ink,true);y+=23;
  text("TILE "+positionName(factorySelected),x,y,9.5f,muted);y+=20;
  Rectangle art{x,y,w,160};DrawRectangleRounded(art,.08f,5,Color{245,248,246,255});MachineAppearance look;look.kind=link?energyConduit(link->medium):m?m->kind:MachineKind::PowerCable;look.direction=m?m->dir:0;look.active=factory.running&&(link?link->enabled&&!link->tripped&&link->flow>.001:m&&m->enabled&&!m->power.tripped&&(m->power.flow>.001||m->power.generated>.001||m->power.rpm>20||m->power.lab.flux>.01));look.closed=link?link->tripped:m&&!m->enabled;look.time=factory.tick+(factory.running?factoryAccumulator/.55:0);if(m){look.labFlux=m->power.lab.flux;look.labVacuum=m->power.lab.vacuum;look.labStability=m->power.lab.stability;look.labCooling=m->power.lab.cooling;look.labArmed=m->power.lab.armed;double stored=0;for(auto v:m->power.store)stored+=v;look.progress=stored/std::max(1.,m->power.capacity);if(isReagentMachine(m->kind)){look.active=factory.running&&m->enabled&&m->power.delivered>.001;look.reagentFill=m->item?std::min(1.,analyse(m->item->food).mass/100):m->reagentProcess.minerals/500;look.reagentPurity=m->item?reagentPurity(*m->item):1;look.reagentKey=m->item?m->item->reagent.key:m->ingredient;}if(isWaterMachine(m->kind)){auto q=waterSample(*m);if(q.volume>1e-8){look.waterDirt=q.solids/q.volume;look.waterSalt=q.salt/q.volume;look.waterBio=q.bio/q.volume;}}}else if(link)look.progress=link->flow/link->rating;
- drawMachineHousing({art.x+5,art.y+5,145,145},look);drawMachineMechanism({art.x+5,art.y+5,145,145},look);float tx=x+154,tw=w-160;if(tw>30){text(link?"LIVE CONDUIT":m&&isNuclearEquipment(m->kind)?"LAB APPARATUS":m&&isWaterMachine(m->kind)?"LIVE WATER":m&&isReagentMachine(m->kind)?"LIVE REAGENT":"LIVE POWER",tx,y+13,8.5f,muted,true);text(fit(link?(link->tripped?"TRIPPED":link->enabled?"CONNECTED":"ISOLATED"):m?m->status:"",tw,10,true),tx,y+34,10,link&&link->tripped?orange:green,true);text(m&&isReagentMachine(m->kind)?(m->item?roundTo(analyse(m->item->food).mass,1)+" g / LOT":"NO LOT"):link?roundTo(link->flow,1)+" / "+roundTo(link->rating,0):m?roundTo(m->kind==MachineKind::CuriosityPile||m->kind==MachineKind::StarChamber?m->power.flow:isWaterMachine(m->kind)?m->power.flow:m->power.generated,1)+(isWaterMachine(m->kind)?" L/TICK":m->kind==MachineKind::CuriosityPile||m->kind==MachineKind::StarChamber?" HEAT":" GEN"):"",tx,y+62,11,ink,true);text(m&&isReagentMachine(m->kind)?(m->item?roundTo(reagentPurity(*m->item)*100,1)+"% PURE":"AC "+roundTo(m->power.delivered,2)):link?"HEAT "+roundTo(link->heat*100,0)+"%":m?(m->kind==MachineKind::WaterOutlet?roundTo(m->waterProcess.delivered,1)+" L SUPPLIED":roundTo(m->power.delivered,1)+(isWaterMachine(m->kind)?" L OUT":" OUT")):"",tx,y+83,9,muted);}
+ drawMachineHousing({art.x+5,art.y+5,145,145},look);drawMachineMechanism({art.x+5,art.y+5,145,145},look);float tx=x+154,tw=w-160;if(tw>30){text(link?(lineFamily(link->medium)==LineFamily::Water?"WATER PIPE":lineFamily(link->medium)==LineFamily::Electricity?"ELECTRICITY CABLE":"SERVICE CONDUIT"):m&&isNuclearEquipment(m->kind)?"LAB APPARATUS":m&&isWaterMachine(m->kind)?"LIVE WATER":m&&isReagentMachine(m->kind)?"LIVE REAGENT":"LIVE POWER",tx,y+13,8.5f,muted,true);text(fit(link?(link->tripped?"TRIPPED":link->enabled?"CONNECTED":"ISOLATED"):m?m->status:"",tw,10,true),tx,y+34,10,link&&link->tripped?orange:green,true);text(m&&isReagentMachine(m->kind)?(m->item?roundTo(analyse(m->item->food).mass,1)+" g / LOT":"NO LOT"):link?roundTo(link->flow,1)+" / "+roundTo(link->rating,0):m?roundTo(m->kind==MachineKind::CuriosityPile||m->kind==MachineKind::StarChamber?m->power.flow:isWaterMachine(m->kind)?m->power.flow:m->power.generated,1)+(isWaterMachine(m->kind)?" L/TICK":m->kind==MachineKind::CuriosityPile||m->kind==MachineKind::StarChamber?" HEAT":" GEN"):"",tx,y+62,11,ink,true);text(m&&isReagentMachine(m->kind)?(m->item?roundTo(reagentPurity(*m->item)*100,1)+"% PURE":"AC "+roundTo(m->power.delivered,2)):link?"HEAT "+roundTo(link->heat*100,0)+"%":m?(m->kind==MachineKind::WaterOutlet?roundTo(m->waterProcess.delivered,1)+" L SUPPLIED":roundTo(m->power.delivered,1)+(isWaterMachine(m->kind)?" L OUT":" OUT")):"",tx,y+83,9,muted);}
  y+=170;
  inspectorBody={x,y,w,r.y+r.height-y-14};inspectorScroll=std::clamp(inspectorScroll,0.f,std::max(0.f,inspectorHeight-inspectorBody.height));beginClip(inspectorBody);y-=inspectorScroll;float start=y;
  button({x,y,w-4,27},energyRoutesAll?"Routes / all services":"Routes / selected services",[this]{energyRoutesAll=!energyRoutesAll;},energyRoutesAll,true,"Show all services, or isolate only the services connected to this equipment",{},10);y+=35;

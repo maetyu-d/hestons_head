@@ -1,5 +1,29 @@
-AFTERTASTE / MOLECULAR WORKS 3.24.0
+AFTERTASTE / MOLECULAR WORKS 3.24.1
 Invent dishes on the actual factory floor / native C++17
+
+Reading water, chemical and electricity routes
+----------------------------------------------
+Water uses broad blue pipework with round flanges, reflective interiors and
+measured moving droplets. Raw, clean, greywater and reject pipes keep their
+individual stream colours and independent connections. Boiler return water
+and cooling circuits share the pipe silhouette.
+
+Chemicals use clear glass with twin violet collars. The material inside keeps
+its actual ingredient colour. This applies to the reagent lab's main and side
+streams and to connected glass tubing, including empty tubing. Side outlets
+retain amber collars. Assay instruments use dotted measurement leads.
+
+Electricity uses slim dark insulated trays, gold AC or teal DC conductors,
+square clips and small plugs. All cable corners stay square. Crossings have
+an insulating gap; matching junctions have square connection boxes. Lab AC
+contact plugs sit below the glass material path. Water contacts are round.
+The floor key includes a drawn example of each family.
+
+Only real material ports draw material connections. Water/power apparatus and
+side receivers no longer display hypothetical food pipes between their bodies.
+The existing separately typed networks, process settings and save format 18
+continue to supply the same factory.
+
 
 Reagent laboratory / the fourth supply system
 ---------------------------------------------

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(Aftertaste VERSION 3.24.0 LANGUAGES C CXX)
+project(Aftertaste VERSION 3.24.1 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -20,13 +20,13 @@ if(AFTERTASTE_BUILD_APP)
   set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
   add_subdirectory(vendor/raylib EXCLUDE_FROM_ALL)
   if(APPLE)
-    add_executable(Aftertaste MACOSX_BUNDLE src/Main.cpp src/Interface.cpp src/FactoryInterface.cpp src/WorkspacePanels.cpp src/FloorRendering.cpp src/MachineArt.cpp src/PowerArt.cpp src/PowerInterface.cpp src/GlassArt.cpp)
+    add_executable(Aftertaste MACOSX_BUNDLE src/Main.cpp src/Interface.cpp src/FactoryInterface.cpp src/WorkspacePanels.cpp src/FloorRendering.cpp src/MachineArt.cpp src/PowerArt.cpp src/RouteArt.cpp src/PowerInterface.cpp src/GlassArt.cpp)
     set_target_properties(Aftertaste PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "Aftertaste"
       MACOSX_BUNDLE_GUI_IDENTIFIER "studio.aftertaste.reactor"
-      MACOSX_BUNDLE_BUNDLE_VERSION "3.24.0" MACOSX_BUNDLE_SHORT_VERSION_STRING "3.24.0"
+      MACOSX_BUNDLE_BUNDLE_VERSION "3.24.1" MACOSX_BUNDLE_SHORT_VERSION_STRING "3.24.1"
       MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in")
   else()
-    add_executable(Aftertaste src/Main.cpp src/Interface.cpp src/FactoryInterface.cpp src/WorkspacePanels.cpp src/FloorRendering.cpp src/MachineArt.cpp src/PowerArt.cpp src/PowerInterface.cpp src/GlassArt.cpp)
+    add_executable(Aftertaste src/Main.cpp src/Interface.cpp src/FactoryInterface.cpp src/WorkspacePanels.cpp src/FloorRendering.cpp src/MachineArt.cpp src/PowerArt.cpp src/RouteArt.cpp src/PowerInterface.cpp src/GlassArt.cpp)
   endif()
   target_link_libraries(Aftertaste PRIVATE aftertaste_core raylib)
   target_compile_options(Aftertaste PRIVATE -Wall -Wextra -Wpedantic)
