@@ -4,6 +4,28 @@
 #include <algorithm>
 #include <cmath>
 namespace aftertaste {
+namespace {
+std::vector<Vector2> squareWirePath(Vector2 start,Vector2 end,int direction){
+ std::vector<Vector2> path{start};
+ if(std::abs(start.x-end.x)>.001f&&std::abs(start.y-end.y)>.001f){
+  if(direction%2==0){float x=(start.x+end.x)*.5f;path.push_back({x,start.y});path.push_back({x,end.y});}
+  else{float y=(start.y+end.y)*.5f;path.push_back({start.x,y});path.push_back({end.x,y});}
+ }
+ path.push_back(end);return path;
+}
+float wireLength(Vector2 a,Vector2 b){return std::abs(b.x-a.x)+std::abs(b.y-a.y);}
+Vector2 wirePoint(const std::vector<Vector2>& path,float fraction){
+ float length=0;for(size_t n=1;n<path.size();n++)length+=wireLength(path[n-1],path[n]);float distance=std::clamp(fraction,0.f,1.f)*length;
+ for(size_t n=1;n<path.size();n++){float segment=wireLength(path[n-1],path[n]);if(distance<=segment&&segment>.001f){float t=distance/segment;return {path[n-1].x+(path[n].x-path[n-1].x)*t,path[n-1].y+(path[n].y-path[n-1].y)*t};}distance-=segment;}
+ return path.back();
+}
+void squareWireStroke(const std::vector<Vector2>& path,float width,Color color,float from=0,float to=1){
+ float length=0;for(size_t n=1;n<path.size();n++)length+=wireLength(path[n-1],path[n]);float start=from*length,end=to*length,at=0;
+ for(size_t n=1;n<path.size();n++){Vector2 a=path[n-1],b=path[n];float segment=wireLength(a,b);if(segment>.001f){float low=std::max(0.f,start-at),high=std::min(segment,end-at);if(high>low){Vector2 p{a.x+(b.x-a.x)*low/segment,a.y+(b.y-a.y)*low/segment},q{a.x+(b.x-a.x)*high/segment,a.y+(b.y-a.y)*high/segment};DrawLineEx(p,q,width,color);}}at+=segment;
+  if(n+1<path.size()&&at>start&&at<end)DrawRectangleRec({b.x-width*.5f,b.y-width*.5f,width,width},color);
+ }
+}
+}
 void Interface::drawEnergyRoutes(){
  const float tile=38*factoryZoom;if(tile<6)return;
  const double clock=factory.tick+(factory.running?factoryAccumulator/.55:0);
@@ -27,17 +49,17 @@ void Interface::drawEnergyRoutes(){
    for(int d=0;d<4;d++){if(!(link.ports&(1<<d)))continue;Position q=nextPosition(p,d);auto neighbor=factory.energyLink(q,link.medium);auto port=terminal(q,link.medium,(d+2)%4);
     if(port)ends.push_back({d,*port});else if(neighbor&&(neighbor->ports&(1<<((d+2)%4)))){auto nc=center(q,link.medium);ends.push_back({d,{(c.x+nc.x)*.5f,(c.y+nc.y)*.5f}});}else if(link.medium==EnergyMedium::AC){auto consumer=factory.at(q);if(consumer&&!isEnergyMachine(consumer->kind)&&machineSpec(consumer->kind).power>0&&!factory.energyLink(q,link.medium)){auto qr=factoryTile(q);ends.push_back({d,{qr.x+tile*.5f,qr.y+tile*.5f}});}}
    }
-   for(auto [d,end]:ends){DrawLineEx(c,end,thickness,Fade(color,alpha));if(link.medium==EnergyMedium::Shaft&&tile>=30&&!dimmed){auto delta=directions[d];Vector2 mid{(c.x+end.x)*.5f,(c.y+end.y)*.5f};DrawLineEx({mid.x-delta[1]*tile*.04f,mid.y+delta[0]*tile*.04f},{mid.x+delta[1]*tile*.04f,mid.y-delta[0]*tile*.04f},1,Fade(color,alpha));}}
-   // Small round elbows; only genuine three-way or four-way joins receive a junction dot.
-   if(ends.size()==2)DrawCircleV(c,thickness*.5f,Fade(color,alpha));
+   for(auto [d,end]:ends){auto path=squareWirePath(c,end,d);squareWireStroke(path,thickness,Fade(color,alpha));if(link.medium==EnergyMedium::Shaft&&tile>=30&&!dimmed){auto mid=wirePoint(path,.5f),ahead=wirePoint(path,.51f);bool horizontal=std::abs(ahead.x-mid.x)>=std::abs(ahead.y-mid.y);Vector2 delta=horizontal?Vector2{0,tile*.04f}:Vector2{tile*.04f,0};DrawLineEx({mid.x-delta.x,mid.y-delta.y},{mid.x+delta.x,mid.y+delta.y},1,Fade(color,alpha));}}
+   // Square elbows; only genuine three-way or four-way joins receive a junction dot.
+   if(ends.size()==2)DrawRectangleRec({c.x-thickness*.5f,c.y-thickness*.5f,thickness,thickness},Fade(color,alpha));
    if(ends.size()>2){DrawCircleV(c,thickness*1.4f,Fade(Color{244,248,245,255},alpha));DrawCircleV(c,thickness*.9f,Fade(color,alpha));}
    if(ends.empty())DrawCircleLines(int(c.x),int(c.y),std::max(1.5f,thickness),Fade(color,alpha));
-   if(floorFlow&&!dimmed&&link.enabled&&!link.tripped&&link.flow>.001){auto out=std::find_if(ends.begin(),ends.end(),[&](auto e){return e.first==link.dir;});if(out!=ends.end()){float phase=float(std::fmod(clock*(.6+std::min(1.,link.flow/link.rating)),1.));Vector2 a{c.x+(out->second.x-c.x)*std::max(0.f,phase-.23f),c.y+(out->second.y-c.y)*std::max(0.f,phase-.23f)},b{c.x+(out->second.x-c.x)*phase,c.y+(out->second.y-c.y)*phase};DrawLineEx(a,b,thickness+1,Fade(color,selected?1.f:.78f));}}
+   if(floorFlow&&!dimmed&&link.enabled&&!link.tripped&&link.flow>.001){auto out=std::find_if(ends.begin(),ends.end(),[&](auto e){return e.first==link.dir;});if(out!=ends.end()){float phase=float(std::fmod(clock*(.6+std::min(1.,link.flow/link.rating)),1.));auto path=squareWirePath(c,out->second,out->first);squareWireStroke(path,thickness+1,Fade(color,selected?1.f:.78f),std::max(0.f,phase-.23f),phase);}}
    if(link.tripped||link.heat>.65){DrawCircleV(c,std::max(2.f,tile*.045f),Color{235,83,49,255});if(tile>=40&&!dimmed)text(link.tripped?"TRIP":"HOT",c.x+3,c.y-9,7,Color{203,64,42,255},true);}
   }
  }
  // Directly adjoining terminals, such as relay and switchboard, also have real connections.
- for(const auto& [p,m]:factory.machines){if(!isEnergyMachine(m.kind))continue;for(auto port:energyPorts(m)){if(port.direction!=0&&port.direction!=1)continue;Position q=nextPosition(p,port.direction);auto a=terminal(p,port.medium,port.direction),b=terminal(q,port.medium,(port.direction+2)%4);if(a&&b){bool dimmed=!focused.empty()&&!focused.count(port.medium);DrawLineEx(*a,*b,std::max(1.f,tile*.027f),Fade(energyColor(port.medium),dimmed?.08f:.6f));}}}
+ for(const auto& [p,m]:factory.machines){if(!isEnergyMachine(m.kind))continue;for(auto port:energyPorts(m)){if(port.direction!=0&&port.direction!=1)continue;Position q=nextPosition(p,port.direction);auto a=terminal(p,port.medium,port.direction),b=terminal(q,port.medium,(port.direction+2)%4);if(a&&b){bool dimmed=!focused.empty()&&!focused.count(port.medium);squareWireStroke(squareWirePath(*a,*b,port.direction),std::max(1.f,tile*.027f),Fade(energyColor(port.medium),dimmed?.08f:.6f));}}}
  if(!focused.empty()){std::string label=focused.size()==1?upper(energyName(*focused.begin())):"SELECTED EQUIPMENT SERVICES";text(label+" / other services dimmed",factoryView.x+10,factoryView.y+30,8.5f,Color{87,113,121,255},true);}
 }
 void Interface::drawPowerInspector(Rectangle r){

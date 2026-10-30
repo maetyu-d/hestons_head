@@ -1,4 +1,4 @@
-AFTERTASTE / MOLECULAR WORKS 3.17.1
+AFTERTASTE / MOLECULAR WORKS 3.17.2
 Invent dishes on the actual factory floor / native C++17
 
 Clear service routing
@@ -11,7 +11,8 @@ they share an intended junction; process-plan rotation retains those connections
 
 Select power equipment or a conduit to emphasise its services and dim the rest.
 Routes / all services in the inspector restores the complete utility drawing.
-Thinner lines meet the actual coloured terminals, elbows are rounded and only
+Thinner lines meet the actual coloured terminals through square, right-angle
+bends. Flow pulses follow those same bends, and only
 real junctions have dots. Flow pulses remain tied to actual material transfers.
 
 Version 9 demos with their original generated wiring receive the cleaner routes
