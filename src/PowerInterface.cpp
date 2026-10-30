@@ -5,14 +5,6 @@
 #include <cmath>
 namespace aftertaste {
 namespace {
-std::vector<Vector2> squareWirePath(Vector2 start,Vector2 end,int direction){
- std::vector<Vector2> path{start};
- if(std::abs(start.x-end.x)>.001f&&std::abs(start.y-end.y)>.001f){
-  if(direction%2==0){float x=(start.x+end.x)*.5f;path.push_back({x,start.y});path.push_back({x,end.y});}
-  else{float y=(start.y+end.y)*.5f;path.push_back({start.x,y});path.push_back({end.x,y});}
- }
- path.push_back(end);return path;
-}
 float wireLength(Vector2 a,Vector2 b){return std::abs(b.x-a.x)+std::abs(b.y-a.y);}
 Vector2 wirePoint(const std::vector<Vector2>& path,float fraction){
  float length=0;for(size_t n=1;n<path.size();n++)length+=wireLength(path[n-1],path[n]);float distance=std::clamp(fraction,0.f,1.f)*length;
@@ -27,14 +19,17 @@ void squareWireStroke(const std::vector<Vector2>& path,float width,Color color,f
 }
 }
 void Interface::drawEnergyRoutes(){
- const float tile=38*factoryZoom;if(tile<6)return;
+ const float tile=38*factoryZoom;if(tile<8)return;
  const double clock=factory.tick+(factory.running?factoryAccumulator/.55:0);
- std::set<EnergyMedium> focused;
- if(!energyRoutesAll){if(energyLinkSelected)focused.insert(selectedEnergyMedium);else if(auto m=factory.at(factorySelected);m&&isEnergyMachine(m->kind))for(auto port:energyPorts(*m))focused.insert(port.medium);}
- // Offset both axes: parallel pipes stay separate on vertical as well as horizontal runs.
- const std::array<Vector2,EnergyCount> lanes={Vector2{-.12f,-.12f},{-.08f,-.08f},{0,0},{.04f,-.04f},{.08f,.08f},{-.04f,.12f},{.12f,-.08f},{-.12f,.12f},{.16f,0},{0,-.16f}};
- auto center=[&](Position p,EnergyMedium medium){auto r=factoryTile(p);auto lane=lanes[size_t(medium)];return Vector2{r.x+tile*(.5f+lane.x),r.y+tile*(.5f+lane.y)};};
- auto terminal=[&](Position p,EnergyMedium medium,int side)->std::optional<Vector2>{
+ using E=EnergyMedium;using Key=std::pair<Position,E>;
+ const Color floor{224,234,232,255};
+ auto blend=[](Color a,Color b,float t){return Color{static_cast<unsigned char>(a.r+(b.r-a.r)*t),static_cast<unsigned char>(a.g+(b.g-a.g)*t),static_cast<unsigned char>(a.b+(b.b-a.b)*t),255};};
+ std::set<E> focused;bool equipmentFocus=false;
+ if(energyLinkSelected){focused.insert(selectedEnergyMedium);equipmentFocus=true;}
+ else if(auto m=factory.at(factorySelected);m&&isEnergyMachine(m->kind)){for(auto port:energyPorts(*m))focused.insert(port.medium);equipmentFocus=true;}
+ if(!equipmentFocus)focused={E::AC,E::DC,E::Shaft};
+ auto visible=[&](E medium){return energyRoutesAll||focused.count(medium);};
+ auto terminal=[&](Position p,E medium,int side)->std::optional<Vector2>{
   auto m=factory.at(p);if(!m||!isEnergyMachine(m->kind))return {};
   Machine unrotated;unrotated.kind=m->kind;auto ports=energyPorts(unrotated);
   for(size_t n=0;n<ports.size();n++){auto port=ports[n];if(port.medium!=medium||(port.direction+m->dir)%4!=side)continue;float shift=0;for(size_t j=0;j<ports.size();j++)if(j!=n&&ports[j].direction==port.direction)shift=j<n?.07f:-.07f;
@@ -42,25 +37,53 @@ void Interface::drawEnergyRoutes(){
    for(int turn=0;turn<m->dir;turn++){float old=u;u=1-v;v=old;}auto r=factoryTile(p);float pad=std::max(1.f,tile*.065f);return Vector2{r.x+pad+u*(tile-2*pad),r.y+pad+v*(tile-2*pad)};
   }return {};
  };
- for(const auto& [p,links]:factory.energyLinks){auto full=factoryTile(p);if(!CheckCollisionRecs(full,factoryView))continue;
-  for(const auto& link:links){const bool selected=focused.count(link.medium),dimmed=!focused.empty()&&!selected;float alpha=dimmed?.08f:selected?.82f:floorFlow?.34f:.20f;if(!link.enabled||link.tripped)alpha*=.42f;
-   Color color=energyColor(link.medium);Vector2 c=center(p,link.medium);float thickness=std::clamp(tile*(selected?.041f:.026f),1.f,selected?3.2f:2.f);if(dimmed)thickness=std::max(.7f,thickness*.7f);
-   std::vector<std::pair<int,Vector2>> ends;
-   for(int d=0;d<4;d++){if(!(link.ports&(1<<d)))continue;Position q=nextPosition(p,d);auto neighbor=factory.energyLink(q,link.medium);auto port=terminal(q,link.medium,(d+2)%4);
-    if(port)ends.push_back({d,*port});else if(neighbor&&(neighbor->ports&(1<<((d+2)%4)))){auto nc=center(q,link.medium);ends.push_back({d,{(c.x+nc.x)*.5f,(c.y+nc.y)*.5f}});}else if(link.medium==EnergyMedium::AC){auto consumer=factory.at(q);if(consumer&&!isEnergyMachine(consumer->kind)&&machineSpec(consumer->kind).power>0&&!factory.energyLink(q,link.medium)){auto qr=factoryTile(q);ends.push_back({d,{qr.x+tile*.5f,qr.y+tile*.5f}});}}
+ struct Rail {Vector2 point;const PowerLink* link;int degree=0;};
+ std::map<Key,Rail> rails;
+ for(const auto& [p,links]:factory.energyLinks)for(const auto& link:links)if(visible(link.medium)){auto r=factoryTile(p);rails.emplace(Key{p,link.medium},Rail{{r.x+tile*.5f,r.y+tile*.5f},&link,0});}
+ // Align whole straight runs with their real terminal, rather than inserting a
+ // tiny dogleg at each machine. Horizontal and vertical rails solve independently.
+ const std::array<float,EnergyCount> lane={0,-.08f,0,.06f,-.06f,.10f,-.10f,.08f,-.08f,.12f};
+ for(int axis=0;axis<2;axis++){std::set<Key> seen;int mask=axis?10:5;
+  for(const auto& [key,rail]:rails){if(!(rail.link->ports&mask)||seen.count(key))continue;
+   std::vector<Key> group{key};seen.insert(key);bool shared=false;std::optional<float> anchor;
+   for(size_t n=0;n<group.size();n++){auto current=group[n];const auto& item=rails.at(current);
+    auto layers=factory.energyLinks.find(current.first);if(layers!=factory.energyLinks.end())for(const auto& other:layers->second)if(other.medium!=current.second&&visible(other.medium)&&(other.ports&mask))shared=true;
+    for(int d:axis?std::array<int,2>{1,3}:std::array<int,2>{0,2}){if(!(item.link->ports&(1<<d)))continue;Position q=nextPosition(current.first,d);auto port=terminal(q,current.second,(d+2)%4);if(port&&!anchor)anchor=axis?port->x:port->y;
+     Key next{q,current.second};auto neighbor=rails.find(next);if(neighbor!=rails.end()&&(neighbor->second.link->ports&(1<<((d+2)%4)))&&seen.insert(next).second)group.push_back(next);
+    }
    }
-   for(auto [d,end]:ends){auto path=squareWirePath(c,end,d);squareWireStroke(path,thickness,Fade(color,alpha));if(link.medium==EnergyMedium::Shaft&&tile>=30&&!dimmed){auto mid=wirePoint(path,.5f),ahead=wirePoint(path,.51f);bool horizontal=std::abs(ahead.x-mid.x)>=std::abs(ahead.y-mid.y);Vector2 delta=horizontal?Vector2{0,tile*.04f}:Vector2{tile*.04f,0};DrawLineEx({mid.x-delta.x,mid.y-delta.y},{mid.x+delta.x,mid.y+delta.y},1,Fade(color,alpha));}}
-   // Square elbows; only genuine three-way or four-way joins receive a junction dot.
-   if(ends.size()==2)DrawRectangleRec({c.x-thickness*.5f,c.y-thickness*.5f,thickness,thickness},Fade(color,alpha));
-   if(ends.size()>2){DrawCircleV(c,thickness*1.4f,Fade(Color{244,248,245,255},alpha));DrawCircleV(c,thickness*.9f,Fade(color,alpha));}
-   if(ends.empty())DrawCircleLines(int(c.x),int(c.y),std::max(1.5f,thickness),Fade(color,alpha));
-   if(floorFlow&&!dimmed&&link.enabled&&!link.tripped&&link.flow>.001){auto out=std::find_if(ends.begin(),ends.end(),[&](auto e){return e.first==link.dir;});if(out!=ends.end()){float phase=float(std::fmod(clock*(.6+std::min(1.,link.flow/link.rating)),1.));auto path=squareWirePath(c,out->second,out->first);squareWireStroke(path,thickness+1,Fade(color,selected?1.f:.78f),std::max(0.f,phase-.23f),phase);}}
-   if(link.tripped||link.heat>.65){DrawCircleV(c,std::max(2.f,tile*.045f),Color{235,83,49,255});if(tile>=40&&!dimmed)text(link.tripped?"TRIP":"HOT",c.x+3,c.y-9,7,Color{203,64,42,255},true);}
+   float coordinate=axis?rail.point.x:rail.point.y;coordinate+=shared?lane[size_t(key.second)]*tile:0;if(anchor)coordinate=*anchor;
+   for(auto member:group){if(axis)rails.at(member).point.x=coordinate;else rails.at(member).point.y=coordinate;}
   }
  }
- // Directly adjoining terminals, such as relay and switchboard, also have real connections.
- for(const auto& [p,m]:factory.machines){if(!isEnergyMachine(m.kind))continue;for(auto port:energyPorts(m)){if(port.direction!=0&&port.direction!=1)continue;Position q=nextPosition(p,port.direction);auto a=terminal(p,port.medium,port.direction),b=terminal(q,port.medium,(port.direction+2)%4);if(a&&b){bool dimmed=!focused.empty()&&!focused.count(port.medium);squareWireStroke(squareWirePath(*a,*b,port.direction),std::max(1.f,tile*.027f),Fade(energyColor(port.medium),dimmed?.08f:.6f));}}}
- if(!focused.empty()){std::string label=focused.size()==1?upper(energyName(*focused.begin())):"SELECTED EQUIPMENT SERVICES";text(label+" / other services dimmed",factoryView.x+10,factoryView.y+30,8.5f,Color{87,113,121,255},true);}
+ struct Edge {std::vector<Vector2> path;E medium;const PowerLink* link;bool reverse=false,boot=false;double flow=0;};
+ std::vector<Edge> edges;
+ auto pathBetween=[&](Vector2 a,Vector2 b,int d,Position p){if(a.x==b.x||a.y==b.y)return std::vector<Vector2>{a,b};auto r=factoryTile(p);if(d%2==0){float x=r.x+(d==0?tile:0);return std::vector<Vector2>{a,{x,a.y},{x,b.y},b};}float y=r.y+(d==1?tile:0);return std::vector<Vector2>{a,{a.x,y},{b.x,y},b};};
+ for(auto& [key,rail]:rails){Position p=key.first;E medium=key.second;
+  for(int d=0;d<4;d++){if(!(rail.link->ports&(1<<d)))continue;Position q=nextPosition(p,d);auto port=terminal(q,medium,(d+2)%4);Key other{q,medium};auto neighbor=rails.find(other);
+   if(port){rail.degree++;edges.push_back({pathBetween(rail.point,*port,d,p),medium,rail.link,false,true,rail.link->dir==d?rail.link->flow:0});}
+   else if(neighbor!=rails.end()&&(neighbor->second.link->ports&(1<<((d+2)%4)))){rail.degree++;if(q<p)continue;const PowerLink* flow=rail.link;bool reverse=false;double rate=rail.link->dir==d?rail.link->flow:0;if(neighbor->second.link->flow>0&&neighbor->second.link->dir==(d+2)%4){flow=neighbor->second.link;reverse=true;rate=flow->flow;}edges.push_back({pathBetween(rail.point,neighbor->second.point,d,p),medium,flow,reverse,false,rate});}
+   else if(medium==E::AC){auto consumer=factory.at(q);if(consumer&&!isEnergyMachine(consumer->kind)&&machineSpec(consumer->kind).power>0&&!factory.energyLink(q,medium)){auto r=factoryTile(q);rail.degree++;edges.push_back({pathBetween(rail.point,{r.x+tile*.5f,r.y+tile*.5f},d,p),medium,rail.link,false,true,rail.link->dir==d?rail.link->flow:0});}}
+  }
+ }
+ for(const auto& [p,m]:factory.machines)if(isEnergyMachine(m.kind))for(auto port:energyPorts(m)){if(!visible(port.medium)||(port.direction!=0&&port.direction!=1))continue;Position q=nextPosition(p,port.direction);auto a=terminal(p,port.medium,port.direction),b=terminal(q,port.medium,(port.direction+2)%4);if(a&&b)edges.push_back({pathBetween(*a,*b,port.direction,p),port.medium,nullptr,false,true});}
+ auto width=[&](E medium){return std::clamp(.95f+tile*.021f,1.25f,medium==E::Shaft?3.f:2.65f);};
+ auto accent=[&](E medium){Color c=energyColor(medium);return blend(c,Color{100,125,123,255},.42f);};
+ // Cable tray, pale inset, restrained conductor. Opaque colours keep joints even
+ // instead of darkening every point where separate line fragments overlap.
+ for(int pass=0;pass<3;pass++){
+  for(const auto& edge:edges){float w=width(edge.medium);bool enabled=!edge.link||edge.link->enabled;Color outer=blend(floor,Color{77,108,112,255},equipmentFocus?.65f:.43f),inset{235,242,238,255},core=blend(floor,accent(edge.medium),equipmentFocus?.9f:.60f);if(!enabled)core=blend(floor,Color{125,143,139,255},.6f);if(edge.link&&edge.link->tripped)core=Color{199,104,81,255};
+   squareWireStroke(edge.path,pass==0?w:pass==1?std::max(.7f,w-1.f):std::max(.6f,w*.26f),pass==0?outer:pass==1?inset:core);
+  }
+  for(const auto& [key,rail]:rails)if(rail.degree>=2){float w=width(key.second),size=rail.degree>2?w+1.7f:w;Color color=pass==0?blend(floor,Color{77,108,112,255},equipmentFocus?.65f:.43f):pass==1?Color{235,242,238,255}:blend(floor,accent(key.second),equipmentFocus?.9f:.60f);if(pass==1)size=std::max(.7f,size-1.f);if(pass==2)size=rail.degree>2?std::max(1.f,w*.55f):std::max(.6f,w*.26f);DrawRectangleRec({rail.point.x-size*.5f,rail.point.y-size*.5f,size,size},color);}
+ }
+ for(const auto& edge:edges){float w=width(edge.medium);
+  if(edge.boot&&tile>=26){Vector2 end=edge.path.back(),prior=edge.path[edge.path.size()-2];float length=wireLength(prior,end),extent=std::min(length,std::clamp(tile*.06f,2.f,5.f));if(length>.001f){Vector2 start{end.x+(prior.x-end.x)*extent/length,end.y+(prior.y-end.y)*extent/length};squareWireStroke({start,end},w+1,Color{93,124,126,255});squareWireStroke({start,end},std::max(.8f,w-.4f),accent(edge.medium));}}
+  if(edge.medium==E::Shaft&&tile>=38){auto mid=wirePoint(edge.path,.5f),ahead=wirePoint(edge.path,.51f);bool horizontal=std::abs(ahead.x-mid.x)>=std::abs(ahead.y-mid.y);Rectangle collar{mid.x-(horizontal?1.1f:w),mid.y-(horizontal?w:1.1f),horizontal?2.2f:w*2,horizontal?w*2:2.2f};DrawRectangleRec(collar,Color{120,146,146,255});}
+  if(floorFlow&&edge.link&&edge.link->enabled&&!edge.link->tripped&&edge.flow>.001){auto path=edge.path;if(edge.reverse)std::reverse(path.begin(),path.end());float phase=float(std::fmod(clock*(.6+std::min(1.,edge.flow/edge.link->rating)),1.));squareWireStroke(path,std::max(.8f,w*.42f),blend(accent(edge.medium),Color{255,238,183,255},.55f),std::max(0.f,phase-.12f),phase);}
+ }
+ for(const auto& [key,rail]:rails)if(rail.link->tripped||rail.link->heat>.65){DrawRectangleRec({rail.point.x-2,rail.point.y-2,4,4},Color{220,94,63,255});}
+ if(equipmentFocus&&!energyRoutesAll){std::string label=focused.size()==1?upper(energyName(*focused.begin())):"SELECTED EQUIPMENT SERVICES";text(label+" / isolated service view",factoryView.x+10,factoryView.y+30,8.5f,Color{87,113,121,255},true);}
 }
 void Interface::drawPowerInspector(Rectangle r){
  const Color ink{23,48,57,255},muted{87,113,121,255},paper{237,243,241,255},line{199,215,216,255},orange{240,83,43,255},green{38,133,111,255};DrawRectangleRec(r,WHITE);DrawRectangleLinesEx(r,1,line);float x=r.x+12,y=r.y+12,w=r.width-24;auto m=factory.at(factorySelected);auto link=energyLinkSelected?factory.energyLink(factorySelected,selectedEnergyMedium):nullptr;
@@ -70,7 +93,7 @@ void Interface::drawPowerInspector(Rectangle r){
  drawMachineHousing({art.x+5,art.y+5,145,145},look);drawMachineMechanism({art.x+5,art.y+5,145,145},look);float tx=x+154,tw=w-160;if(tw>30){text(link?"LIVE CONDUIT":"LIVE POWER",tx,y+13,8.5f,muted,true);text(fit(link?(link->tripped?"TRIPPED":link->enabled?"CONNECTED":"ISOLATED"):m?m->status:"",tw,10,true),tx,y+34,10,link&&link->tripped?orange:green,true);text(link?roundTo(link->flow,1)+" / "+roundTo(link->rating,0):m?roundTo(m->power.generated,1)+" GEN":"",tx,y+62,11,ink,true);text(link?"HEAT "+roundTo(link->heat*100,0)+"%":m?roundTo(m->power.delivered,1)+" OUT":"",tx,y+83,9,muted);}
  y+=170;
  inspectorBody={x,y,w,r.y+r.height-y-14};inspectorScroll=std::clamp(inspectorScroll,0.f,std::max(0.f,inspectorHeight-inspectorBody.height));beginClip(inspectorBody);y-=inspectorScroll;float start=y;
- button({x,y,w-4,27},energyRoutesAll?"Routes / all services":"Routes / focus this equipment",[this]{energyRoutesAll=!energyRoutesAll;},energyRoutesAll,true,"Show all service routes, or focus the selected equipment and dim the rest",{},10);y+=35;
+ button({x,y,w-4,27},energyRoutesAll?"Routes / all services":"Routes / selected services",[this]{energyRoutesAll=!energyRoutesAll;},energyRoutesAll,true,"Show all services, or isolate only the services connected to this equipment",{},10);y+=35;
  auto pair=[&](const std::string& label,const std::string& less,const std::string& more){text(label,x,y+7,10.5f,ink,true);button({x+w-58,y,24,27},"-",[this,less]{if(energyLinkSelected)factory.configureEnergyLink(factorySelected,selectedEnergyMedium,less);else factory.configure(factorySelected,less);},false,true,"Adjust this physical setting",{},12);button({x+w-29,y,24,27},"+",[this,more]{if(energyLinkSelected)factory.configureEnergyLink(factorySelected,selectedEnergyMedium,more);else factory.configure(factorySelected,more);},false,true,"Adjust this physical setting",{},12);y+=34;};
  if(link){button({x,y,w-4,28},"Layer / "+energyName(link->medium),[this]{auto i=factory.energyLinks.find(factorySelected);if(i==factory.energyLinks.end())return;for(size_t n=0;n<i->second.size();n++)if(i->second[n].medium==selectedEnergyMedium){selectedEnergyMedium=i->second[(n+1)%i->second.size()].medium;break;}},false,true,"Cycle conduits sharing this tile",{},10);y+=36;
   pair("Rating "+roundTo(link->rating,0),"rating-","rating+");float bw=(w-10)/2;button({x,y,bw,28},link->enabled?"Isolate":"Reconnect",[this]{factory.configureEnergyLink(factorySelected,selectedEnergyMedium,"enabled");},false,true,"Open or close this route",{},10);button({x+bw+5,y,bw,28},"Reset trip",[this]{factory.configureEnergyLink(factorySelected,selectedEnergyMedium,"reset");},false,link->tripped,"Reset after the conductor has cooled",{},10);y+=36;button({x,y,w-4,28},"Reclaim this conduit",[this]{factory.removeEnergyLink(factorySelected,selectedEnergyMedium);energyLinkSelected=false;},false,true,"Remove only this energy layer; floor machines remain in place",orange,10);y+=40;

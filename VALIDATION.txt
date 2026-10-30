@@ -1,3 +1,26 @@
+AFTERTASTE / MOLECULAR WORKS 3.17.3 - PORT-ALIGNED CONDUITS
+30 October 2026 / macOS / Apple Silicon
+
+Whole straight runs align with actual ports. Muted three-layer conduit casing,
+connector sleeves, square junction fittings and shaft couplers replace the
+bright schematic traces. Focused views hide unrelated services. The stock demo
+auxiliary cable is routed clear of the flywheel, with a protected version 10
+layout migration that preserves custom construction.
+
+Native application build/link: PASS.
+Power layout suite with the version 10 saved factory: PASS (402 checks).
+Checks include bus clearance, working farm supply, breaker isolation, exact
+preservation of all 244 machines and their live contents, unchanged resources
+and time, protection of custom ratings, plan rotation and stable reload.
+Physical power suite: PASS (41 checks, including a 720-tick production run).
+Native close-up inspection: PASS at 300% zoom, in focused and all-service modes;
+straight alternator connection, clear flywheel, no ghost service traces,
+aligned shaft and fluid connections, casing and connector sleeves.
+Farm delivery, visible farm flow and farm relocation regressions: PASS.
+The full historical and sanitizer suites were not rerun for this release.
+
+Prior release validation
+------------------------
 AFTERTASTE / MOLECULAR WORKS 3.17.2 - SQUARE WIRING
 30 October 2026 / macOS / Apple Silicon
 

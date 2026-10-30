@@ -23,7 +23,7 @@ static Blueprint legacyPowerDistrictBlueprint(){
 }
 // Keep the generator layout stable; route each service deliberately instead of
 // joining every terminal to a hub. One extra top row accommodates the import cable.
-Blueprint Factory::powerDistrictBlueprint(){
+static Blueprint routedPowerDistrictBlueprint(bool clearance){
  using E=EnergyMedium;auto b=legacyPowerDistrictBlueprint();b.links.clear();b.height=18;
  std::map<std::pair<Position,E>,PowerLink> links;
  auto node=[&](Position p,E medium)->PowerLink&{auto [i,inserted]=links.emplace(std::make_pair(p,medium),PowerLink{});if(inserted){i->second.medium=medium;i->second.rating=medium==E::AC?100:60;i->second.ports=0;}return i->second;};
@@ -34,7 +34,7 @@ Blueprint Factory::powerDistrictBlueprint(){
  run(E::AC,{{11,-1},{11,15}});run(E::AC,{{16,0},{16,-1},{11,-1}});
  run(E::AC,{{10,0},{11,0}});run(E::AC,{{12,2},{11,2}});run(E::AC,{{14,2},{17,2}});
  run(E::AC,{{6,3},{11,3}});run(E::AC,{{9,7},{11,7}});
- run(E::AC,{{2,6},{2,5},{11,5}});run(E::AC,{{2,9},{13,9},{13,10}});
+ int auxiliaryRow=clearance?4:5;run(E::AC,{{2,6},{2,auxiliaryRow},{11,auxiliaryRow}});run(E::AC,{{2,9},{13,9},{13,10}});
  run(E::AC,{{8,12},{11,12}});run(E::AC,{{2,15},{11,15}});
  // Short mechanical trains and direct steam/gas stages.
  run(E::Shaft,{{2,3},{2,3}});run(E::Shaft,{{4,3},{4,3}});
@@ -58,10 +58,11 @@ Blueprint Factory::powerDistrictBlueprint(){
  for(auto& [key,link]:links)b.links.push_back({{key.first.x,key.first.y+1},link});
  return b;
 }
+Blueprint Factory::powerDistrictBlueprint(){return routedPowerDistrictBlueprint(true);}
 namespace {
 using Routes=std::map<Position,std::vector<PowerLink>>;
-Routes demoRoutes(const FactoryState& state,bool legacy){
- using K=MachineKind;using E=EnergyMedium;Routes routes;auto b=legacy?legacyPowerDistrictBlueprint():Factory::powerDistrictBlueprint();Position origin=legacy?Position{-27,-1}:powerDistrictOrigin;
+Routes demoRoutes(const FactoryState& state,bool legacy,bool clearance=true){
+ using K=MachineKind;using E=EnergyMedium;Routes routes;auto b=legacy?legacyPowerDistrictBlueprint():routedPowerDistrictBlueprint(clearance);Position origin=legacy?Position{-27,-1}:powerDistrictOrigin;
  auto add=[&](Position p,E e,double rating=100,int ports=0)->PowerLink&{auto& v=routes[p];auto i=std::find_if(v.begin(),v.end(),[&](const auto& l){return l.medium==e;});if(i==v.end()){PowerLink l;l.medium=e;l.rating=rating;l.ports=ports;v.push_back(l);return v.back();}i->ports|=ports;return *i;};
  auto run=[&](Position p,Position end,E e){add(p,e,100,legacy?15:0);for(int n=0;n<3000&&p!=end;n++){int d=p.x!=end.x?(p.x<end.x?0:2):(p.y<end.y?1:3);Position q=nextPosition(p,d);add(p,e,100,legacy?15:0).ports|=1<<d;add(q,e,100,legacy?15:0).ports|=1<<((d+2)%4);p=q;}};
  for(const auto& node:b.links)add({origin.x+node.at.x,origin.y+node.at.y},node.link.medium,node.link.rating,node.link.ports);
@@ -78,9 +79,9 @@ bool sameRoutes(const Routes& a,const Routes& b){if(a.size()!=b.size())return fa
 bool tidyDefaultPowerRoutesIn(FactoryState& state){
  auto old=legacyPowerDistrictBlueprint();for(const auto& part:old.parts){auto i=state.machines.find({part.at.x-27,part.at.y-1});if(i==state.machines.end()||i->second.kind!=part.machine.kind||i->second.dir!=part.machine.dir)return false;}
  // A changed cable, rating, isolation or machine direction makes this a custom layout.
- if(!sameRoutes(demoRoutes(state,true),state.energyLinks))return false;
+ if(!sameRoutes(demoRoutes(state,true),state.energyLinks)&&!sameRoutes(demoRoutes(state,false,false),state.energyLinks))return false;
  state.energyLinks=demoRoutes(state,false);
- for(auto& plan:state.blueprints)if(plan.name==old.name&&plan.width==old.width&&plan.height==old.height)plan=Factory::powerDistrictBlueprint();
+ for(auto& plan:state.blueprints)if(plan.name==old.name&&plan.width==old.width&&(plan.height==old.height||plan.height==18))plan=Factory::powerDistrictBlueprint();
  return true;
 }
 bool installPowerDistrictIn(FactoryState& state){

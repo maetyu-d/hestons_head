@@ -1,5 +1,18 @@
-AFTERTASTE / MOLECULAR WORKS 3.17.2
+AFTERTASTE / MOLECULAR WORKS 3.17.3
 Invent dishes on the actual factory floor / native C++17
+
+Conduit appearance
+-------------------
+Straight cable runs align with their machine terminals along the whole run.
+Fixed offsets no longer create small staircase bends at the ends. Cables use
+muted casing, a pale inset and a restrained conductor, with short connector
+sleeves and square junction fittings. Live flow appears as small travelling
+packets inside the conduit. Shaft couplers remain distinct from electrical
+cables. Focused service views hide other networks completely; All services
+shows the complete installation. The demo's auxiliary bus clears the flywheel.
+Default version 10 demo wiring upgrades that one bus without moving machines
+or changing food, crops, settings, resource stores or time. Custom routes stay
+as built.
 
 Clear service routing
 ----------------------
@@ -9,7 +22,7 @@ row branches replace the earlier mesh of individual risers. Steam, gas, water,
 heat and cooling have deliberate routes. Parallel runs remain separate unless
 they share an intended junction; process-plan rotation retains those connections.
 
-Select power equipment or a conduit to emphasise its services and dim the rest.
+Select power equipment or a conduit to isolate its services and hide the rest.
 Routes / all services in the inspector restores the complete utility drawing.
 Thinner lines meet the actual coloured terminals through square, right-angle
 bends. Flow pulses follow those same bends, and only
