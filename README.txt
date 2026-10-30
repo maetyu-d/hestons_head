@@ -1,4 +1,4 @@
-AFTERTASTE / MOLECULAR WORKS 3.25.0
+AFTERTASTE / MOLECULAR WORKS 3.25.1
 Invent dishes on the actual factory floor / native C++17
 
 Bright primary palette
@@ -8,8 +8,8 @@ yellow and green machine paint, with violet for chemical details and cyan for
 glass and cold processes. Machine bodies and accents have stronger colour;
 metal, glass and shadows keep the actual material windows readable.
 
-Panels use clean white, the floor a light blue grid, factory zoning a light
-green tint, and text/outlines deep navy. Active controls are primary blue and
+Panels and the floor use white backgrounds with a quiet neutral grid. Factory
+zoning uses a green boundary instead of a floor tint. Text/outlines stay deep navy. Active controls are primary blue and
 main actions red. Ingredient chips, crop art, food mixtures, previews and the
 minimap share the same display palette. Dark food pigments retain a darker
 shade, and browning, scorching and crop damage remain visible.

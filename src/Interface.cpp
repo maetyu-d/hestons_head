@@ -5,7 +5,7 @@
 #include <sstream>
 namespace aftertaste {
 namespace {
-const Color paper={246,249,255,255},ink={22,41,75,255},line={183,205,236,255},white={255,255,255,255};
+const Color paper={255,255,255,255},ink={22,41,75,255},line={196,205,217,255},white={255,255,255,255};
 Color blend(Color a,Color b,double f){return {static_cast<unsigned char>(std::round(a.r*(1-f)+b.r*f)),static_cast<unsigned char>(std::round(a.g*(1-f)+b.g*f)),static_cast<unsigned char>(std::round(a.b*(1-f)+b.b*f)),255};}
 void border(Rectangle r,Color c,float thickness=1){DrawRectangleLinesEx(r,thickness,c);}
 std::string firstExisting(const std::vector<std::string>& paths){for(auto& path:paths)if(std::filesystem::exists(path))return path;return {};}

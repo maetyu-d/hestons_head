@@ -4,9 +4,9 @@
 #include <algorithm>
 #include <cmath>
 namespace aftertaste::theme {
-inline constexpr Color Ink{22,41,75,255},Muted{77,99,131,255},Paper{246,249,255,255},Line{183,205,236,255};
+inline constexpr Color Ink{22,41,75,255},Muted{77,99,131,255},Paper{255,255,255,255},Line{196,205,217,255};
 inline constexpr Color Red{240,43,43,255},Blue{26,99,235,255},Yellow{255,211,22,255},Green{13,183,76,255},Violet{146,53,226,255},Cyan{0,174,238,255},Pink{239,52,143,255};
-inline constexpr Color Floor{236,243,254,255},Grid{208,224,247,255},FactoryFloor{218,248,228,255};
+inline constexpr Color Floor{255,255,255,255},Grid{232,235,239,255},FactoryFloor{255,255,255,255};
 inline Color blend(Color a,Color b,float t){return {static_cast<unsigned char>(a.r+(b.r-a.r)*t),static_cast<unsigned char>(a.g+(b.g-a.g)*t),static_cast<unsigned char>(a.b+(b.b-a.b)*t),255};}
 // A small, high-chroma colour vocabulary is shared by chips, material and art.
 inline Color primary(Color c){

@@ -1,3 +1,12 @@
+AFTERTASTE 3.25.1 - WHITE BACKGROUND AND CLARITY
+White app, floor and preview backgrounds; quiet neutral grid and borders.
+Factory zoning is a green perimeter, leaving floor white. Neutral meter tracks
+remain visible; strong colour is reserved for equipment, materials and routes.
+Rendering only: simulation, resources and save format unchanged.
+Native compile/link passed without compiler warnings. White floor/panels,
+neutral grid, preview and route readability checked in the native app.
+Saved factory JSON exactly matches the pre-install snapshot, paused at tick 11985.
+
 AFTERTASTE / MOLECULAR WORKS 3.25.0 - BRIGHT PRIMARY GAME PALETTE
 30 October 2026 / macOS / Apple Silicon
 

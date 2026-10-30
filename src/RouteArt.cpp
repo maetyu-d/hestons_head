@@ -4,7 +4,7 @@
 #include <cmath>
 namespace aftertaste {
 namespace {
-const Color floorColor{236,243,254,255},cableJacket{126,87,13,255},pipeEdge{31,83,139,255},serviceEdge{55,73,77,255};
+const Color floorColor{255,255,255,255},cableJacket{126,87,13,255},pipeEdge{31,83,139,255},serviceEdge{55,73,77,255};
 Color blend(Color a,Color b,float t){return {static_cast<unsigned char>(a.r+(b.r-a.r)*t),static_cast<unsigned char>(a.g+(b.g-a.g)*t),static_cast<unsigned char>(a.b+(b.b-a.b)*t),255};}
 float length(Vector2 a,Vector2 b){return std::abs(b.x-a.x)+std::abs(b.y-a.y);}
 void stroke(const std::vector<Vector2>& p,float width,Color c){
