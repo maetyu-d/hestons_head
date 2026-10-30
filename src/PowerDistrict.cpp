@@ -58,11 +58,38 @@ static Blueprint routedPowerDistrictBlueprint(bool clearance){
  for(auto& [key,link]:links)b.links.push_back({{key.first.x,key.first.y+1},link});
  return b;
 }
-Blueprint Factory::powerDistrictBlueprint(){return routedPowerDistrictBlueprint(true);}
+static Blueprint dockedPowerDistrictBlueprint(){
+ using K=MachineKind;using E=EnergyMedium;auto b=routedPowerDistrictBlueprint(true);b.links.clear();
+ const std::map<size_t,Position> docks={{0,{1,1}},{1,{2,1}},{2,{1,2}},{3,{2,2}},{4,{3,2}},{5,{4,2}},{8,{2,4}},{9,{3,4}},{14,{3,8}},{15,{4,8}},{16,{5,8}},{17,{6,14}},{26,{3,14}},{27,{4,14}},{28,{5,14}},{29,{7,14}}};
+ for(auto [n,p]:docks)b.parts.at(n).at=p;
+ std::map<std::pair<Position,E>,PowerLink> links;
+ auto node=[&](Position p,E e)->PowerLink&{auto [i,inserted]=links.emplace(std::make_pair(p,e),PowerLink{});if(inserted){i->second.medium=e;i->second.rating=e==E::AC?100:60;i->second.ports=0;}return i->second;};
+ auto run=[&](E e,std::initializer_list<Position> points){auto i=points.begin();Position p=*i++;node(p,e);for(;i!=points.end();++i)while(p!=*i){int d=p.x!=i->x?(p.x<i->x?0:2):(p.y<i->y?1:3);auto q=nextPosition(p,d);node(p,e).ports|=1<<d;node(q,e).ports|=1<<((d+2)%4);p=q;}};
+ // The solar bank has no DC cabling. Mechanical/steam/gas trains dock at
+ // their actual process ports. Only outputs and separated fluid loops use lines.
+ run(E::AC,{{11,0},{11,16}});run(E::AC,{{16,1},{16,0},{11,0}});
+ run(E::AC,{{5,2},{11,2}});run(E::AC,{{12,3},{11,3}});run(E::AC,{{14,3},{17,3}});
+ run(E::AC,{{4,4},{11,4}});run(E::AC,{{6,8},{11,8}});
+ run(E::AC,{{2,7},{2,5},{11,5}});run(E::AC,{{2,10},{13,10},{13,11}});
+ run(E::AC,{{5,13},{11,13}});run(E::AC,{{2,16},{11,16}});
+ run(E::Exhaust,{{4,9},{4,10},{5,10},{5,11}});
+ run(E::Water,{{3,10},{7,10},{7,11}});run(E::Water,{{3,10},{3,11}});
+ run(E::Water,{{2,7},{3,7},{3,10}});run(E::Water,{{3,10},{3,13}});
+ run(E::Heat,{{1,12},{17,12}});run(E::Heat,{{2,9},{1,9},{1,12}});
+ run(E::Heat,{{6,12},{6,12}});run(E::Heat,{{9,11},{9,12}});
+ run(E::Heat,{{11,11},{11,12}});run(E::Heat,{{13,12},{13,10},{14,10}});
+ run(E::Heat,{{5,15},{9,15},{9,12}});run(E::Heat,{{2,13},{2,12}});
+ run(E::Cooling,{{15,11},{17,11}});
+ for(const auto& part:b.parts)for(auto port:energyPorts(part.machine)){auto i=links.find({nextPosition(part.at,port.direction),port.medium});if(i!=links.end())i->second.ports|=1<<((port.direction+2)%4);}
+ node({2,10},E::AC).ports|=8;node({2,16},E::AC).ports|=8;
+ node({17,3},E::AC).ports|=1;node({17,11},E::Cooling).ports|=1;node({17,12},E::Heat).ports|=1;
+ for(const auto& [key,link]:links)b.links.push_back({key.first,link});return b;
+}
+Blueprint Factory::powerDistrictBlueprint(){return dockedPowerDistrictBlueprint();}
 namespace {
 using Routes=std::map<Position,std::vector<PowerLink>>;
-Routes demoRoutes(const FactoryState& state,bool legacy,bool clearance=true){
- using K=MachineKind;using E=EnergyMedium;Routes routes;auto b=legacy?legacyPowerDistrictBlueprint():routedPowerDistrictBlueprint(clearance);Position origin=legacy?Position{-27,-1}:powerDistrictOrigin;
+Routes demoRoutes(const FactoryState& state,bool legacy,bool clearance=true,bool docked=true){
+ using K=MachineKind;using E=EnergyMedium;Routes routes;auto b=legacy?legacyPowerDistrictBlueprint():docked?dockedPowerDistrictBlueprint():routedPowerDistrictBlueprint(clearance);Position origin=legacy?Position{-27,-1}:powerDistrictOrigin;
  auto add=[&](Position p,E e,double rating=100,int ports=0)->PowerLink&{auto& v=routes[p];auto i=std::find_if(v.begin(),v.end(),[&](const auto& l){return l.medium==e;});if(i==v.end()){PowerLink l;l.medium=e;l.rating=rating;l.ports=ports;v.push_back(l);return v.back();}i->ports|=ports;return *i;};
  auto run=[&](Position p,Position end,E e){add(p,e,100,legacy?15:0);for(int n=0;n<3000&&p!=end;n++){int d=p.x!=end.x?(p.x<end.x?0:2):(p.y<end.y?1:3);Position q=nextPosition(p,d);add(p,e,100,legacy?15:0).ports|=1<<d;add(q,e,100,legacy?15:0).ports|=1<<((d+2)%4);p=q;}};
  for(const auto& node:b.links)add({origin.x+node.at.x,origin.y+node.at.y},node.link.medium,node.link.rating,node.link.ports);
@@ -79,9 +106,28 @@ bool sameRoutes(const Routes& a,const Routes& b){if(a.size()!=b.size())return fa
 bool tidyDefaultPowerRoutesIn(FactoryState& state){
  auto old=legacyPowerDistrictBlueprint();for(const auto& part:old.parts){auto i=state.machines.find({part.at.x-27,part.at.y-1});if(i==state.machines.end()||i->second.kind!=part.machine.kind||i->second.dir!=part.machine.dir)return false;}
  // A changed cable, rating, isolation or machine direction makes this a custom layout.
- if(!sameRoutes(demoRoutes(state,true),state.energyLinks)&&!sameRoutes(demoRoutes(state,false,false),state.energyLinks))return false;
- state.energyLinks=demoRoutes(state,false);
- for(auto& plan:state.blueprints)if(plan.name==old.name&&plan.width==old.width&&(plan.height==old.height||plan.height==18))plan=Factory::powerDistrictBlueprint();
+ if(!sameRoutes(demoRoutes(state,true),state.energyLinks)&&!sameRoutes(demoRoutes(state,false,false,false),state.energyLinks))return false;
+ state.energyLinks=demoRoutes(state,false,true,false);
+ for(auto& plan:state.blueprints)if(plan.name==old.name&&plan.width==old.width&&(plan.height==old.height||plan.height==18))plan=routedPowerDistrictBlueprint(true);
+ return true;
+}
+bool dockDefaultPowerDevicesIn(FactoryState& state){
+ using E=EnergyMedium;auto old=routedPowerDistrictBlueprint(true),next=dockedPowerDistrictBlueprint();std::set<Position> owned;
+ for(const auto& part:old.parts){Position p{powerDistrictOrigin.x+part.at.x,powerDistrictOrigin.y+part.at.y};auto m=state.machines.find(p);if(m==state.machines.end()||m->second.kind!=part.machine.kind||m->second.dir!=part.machine.dir)return false;owned.insert(p);}
+ auto worldRoutes=[&](const Blueprint& plan){Routes r;for(const auto& n:plan.links)r[{powerDistrictOrigin.x+n.at.x,powerDistrictOrigin.y+n.at.y}].push_back(n.link);
+  // The separate nuclear bench joins this collector through its existing cable.
+  auto lab=state.machines.find({nuclearLabOrigin.x+1,nuclearLabOrigin.y+1});if(lab!=state.machines.end()&&lab->second.kind==MachineKind::CuriosityPile)for(int x=-27;x<=-16;x++){
+   auto& v=r[{x,1}];auto i=std::find_if(v.begin(),v.end(),[](const auto& l){return l.medium==E::AC;});if(i==v.end()){PowerLink l;l.medium=E::AC;l.rating=100;l.ports=5;v.push_back(l);}else i->ports|=4;
+  }return r;};
+ auto expected=worldRoutes(old);Routes actual;
+ for(int y=0;y<old.height;y++)for(int x=0;x<old.width;x++){Position p{powerDistrictOrigin.x+x,powerDistrictOrigin.y+y};if(state.machines.count(p)&&!owned.count(p))return false;auto i=state.energyLinks.find(p);if(i!=state.energyLinks.end())actual.emplace(p,i->second);}
+ if(!sameRoutes(actual,expected))return false;
+ for(const auto& part:next.parts){Position p{powerDistrictOrigin.x+part.at.x,powerDistrictOrigin.y+part.at.y};if(state.machines.count(p)&&!owned.count(p))return false;}
+ std::vector<Machine> live;for(const auto& part:old.parts){Position p{powerDistrictOrigin.x+part.at.x,powerDistrictOrigin.y+part.at.y};live.push_back(state.machines.at(p));state.machines.erase(p);}
+ for(const auto& [p,links]:actual)state.energyLinks.erase(p);
+ for(size_t n=0;n<next.parts.size();n++)state.machines.emplace(Position{powerDistrictOrigin.x+next.parts[n].at.x,powerDistrictOrigin.y+next.parts[n].at.y},std::move(live[n]));
+ for(const auto& [p,links]:worldRoutes(next))state.energyLinks[p]=links;
+ for(auto& plan:state.blueprints)if(json(plan)==json(old))plan=next;
  return true;
 }
 bool installPowerDistrictIn(FactoryState& state){
@@ -91,7 +137,7 @@ bool installPowerDistrictIn(FactoryState& state){
  for(const auto& part:plan.parts)if(state.machines.count({origin.x+part.at.x,origin.y+part.at.y}))return false;
  for(const auto& part:plan.parts)state.machines.emplace(Position{origin.x+part.at.x,origin.y+part.at.y},part.machine);
  auto routes=demoRoutes(state,false);for(auto& [p,links]:routes)for(const auto& l:links){auto& existing=state.energyLinks[p];if(std::none_of(existing.begin(),existing.end(),[&](const auto& q){return q.medium==l.medium;}))existing.push_back(l);}
- auto& battery=state.machines.at({-20,-1});double reserve=std::min(250.,state.electricity);state.electricity-=reserve;battery.power.store[size_t(E::DC)]=reserve;state.grid.active=true;state.grid.stored=reserve;
+ auto& battery=state.machines.at({-25,0});double reserve=std::min(250.,state.electricity);state.electricity-=reserve;battery.power.store[size_t(E::DC)]=reserve;state.grid.active=true;state.grid.stored=reserve;
  if(std::none_of(state.blueprints.begin(),state.blueprints.end(),[&](const Blueprint& p){return p.name==plan.name;}))state.blueprints.push_back(std::move(plan));return true;
 }
 bool Factory::installPowerDistrict(){snapshot();bool changed=installPowerDistrictIn(*this);if(!changed){history.pop_back();notice="Power district already present or its western site is occupied. Use Plans to build another installation.";return false;}dirty=true;notice="Western power district installed. Actual generation now supplies connected factory and farm circuits.";return true;}

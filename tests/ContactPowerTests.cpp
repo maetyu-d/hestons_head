@@ -1,4 +1,4 @@
-#include "Power.h"
+#include "LegacyPowerSlots.h"
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -19,6 +19,7 @@ int main(int argc,char** argv){try{
  {auto f=empty();auto plan=Factory::rotatedBlueprint(Factory::nuclearLabBlueprint());require(f.stamp(plan,{0,0}),"rotate and stamp contact bench");for(auto& [p,m]:f.machines){if(m.kind==K::BatteryRack)m.power.store[size_t(E::DC)]=300;if(m.kind==K::CuriosityPile||m.kind==K::StarChamber){m.power.lab.fuel=60;m.power.lab.armed=true;}}advance(f,48);double output=0;for(const auto& [p,m]:f.machines)if(m.kind==K::Calorimeter)output+=m.power.lab.dcTotal;require(output>500,"rotated heat ports and shared services still generate actual DC");}
  {auto f=bench();for(auto& [p,m]:f.machines){m.power.store.fill(0);m.power.lab.fuel=0;m.power.lab.armed=false;}f.at({2,0})->power.store[size_t(E::DC)]=12;double loss=0;for(int n=0;n<200;n++){advance(f,1);loss+=f.grid.loss;}double remaining=0,spent=0;for(const auto& [p,m]:f.machines){remaining+=m.power.store[size_t(E::AC)]+m.power.store[size_t(E::DC)];if(m.kind==K::ExperimentConsole||m.kind==K::QuenchBath||m.kind==K::LabVacuumPump)spent+=m.power.lab.inputTotal;}require(spent>0&&remaining<1&&spent+remaining+loss<=12.000001,"contact backplane cannot amplify or indefinitely recycle a finite battery charge");}
  if(argc>1){std::ifstream in(argv[1]);json j;in>>j;auto before=j.at("factory").get<FactoryState>();Factory f;f.storageFile=argv[1];require(f.load(),"load supplied piped laboratory");const std::array<Position,10> old={Position{1,1},{4,1},{7,2},{10,4},{14,4},{1,6},{5,9},{10,9},{14,9},{17,3}};const auto plan=Factory::nuclearLabBlueprint();std::map<Position,Position> moved;for(size_t n=0;n<old.size();n++)moved[{old[n].x-47,old[n].y-2}]={nuclearLabOrigin.x+plan.parts[n].at.x,nuclearLabOrigin.y+plan.parts[n].at.y};
+ for(size_t n=0;n<legacyPowerSlots.size();n++)moved[{legacyPowerSlots[n].x-27,legacyPowerSlots[n].y-1}]={powerDistrictOrigin.x+Factory::powerDistrictBlueprint().parts[n].at.x,powerDistrictOrigin.y+Factory::powerDistrictBlueprint().parts[n].at.y};
  require(f.machines.size()==before.machines.size(),"compaction creates or deletes no equipment");for(const auto& [p,m]:before.machines){Position target=moved.count(p)?moved.at(p):p;require(f.at(target)&&json(*f.at(target))==json(m),"all machine settings, live material, fuel and observations survive relocation exactly");}
  require(f.tick==before.tick&&f.water==before.water&&f.chemicals==before.chemicals&&f.electricity==before.electricity&&f.stock==before.stock,"compaction does not spend resources or advance the clock");
  require(f.energyLink({-30,-2},E::AC)&&!f.energyLink({-37,1},E::Instrument),"old service loops are removed and the new single export is connected");

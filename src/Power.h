@@ -5,6 +5,8 @@ std::vector<MachineSpec> energyMachineSpecs();
 inline constexpr Position powerDistrictOrigin{-27,-2};
 bool installPowerDistrictIn(FactoryState& state);
 bool tidyDefaultPowerRoutesIn(FactoryState& state);
+bool dockDefaultPowerDevicesIn(FactoryState& state);
+bool powerContactSupports(MachineKind first,MachineKind second,EnergyMedium medium);
 inline constexpr Position nuclearLabOrigin{-35,-2};
 bool compactLegacyNuclearLabIn(FactoryState& state);
 bool isContactService(EnergyMedium medium);

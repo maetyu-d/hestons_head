@@ -14,6 +14,7 @@ E storageMedium(K k){return k==K::BatteryRack?E::DC:k==K::Flywheel?E::Shaft:k==K
 bool isEnergyConduit(K k){return (k>=K::PowerCable&&k<=K::CoolingPipe)||k==K::VacuumHose||k==K::InstrumentLead;}
 bool isEnergyMachine(K k){return k>=K::SolarPanel&&k<K::Count&&!isEnergyConduit(k);}
 bool isContactService(E e){return e==E::AC||e==E::DC||e==E::Cooling||e==E::Vacuum||e==E::Instrument;}
+bool powerContactSupports(K a,K b,E e){return isEnergyMachine(a)&&isEnergyMachine(b)&&isContactService(e)&&((a!=K::SolarPanel&&b!=K::SolarPanel)||e==E::DC);}
 bool acceptsEnergyFuel(K k){return k==K::Macerator||k==K::BiomassBoiler||k==K::AnaerobicDigester;}
 E conduitMedium(K k){return k==K::VacuumHose?E::Vacuum:k==K::InstrumentLead?E::Instrument:E(int(k)-int(K::PowerCable));}K energyConduit(E e){return e==E::Vacuum?K::VacuumHose:e==E::Instrument?K::InstrumentLead:K(int(K::PowerCable)+int(e));}
 std::string energyName(E e){static const std::array<const char*,EnergyCount> names={"AC electricity","DC electricity","shaft power","live steam","exhaust steam","raw biogas","clean gas","return water","recovered heat","cooling","lab vacuum","instrument signal"};return names.at(ix(e));}
@@ -50,7 +51,7 @@ std::vector<EnergyPort> energyPorts(const Machine& m){
 }
 std::vector<MachineSpec> energyMachineSpecs(){return {
  {K::PowerCable,"AC power cable","AC","Drag across the floor, beneath equipment. Connected generators and rated cables supply actual machine demand.","#d2a63f",3,0,0,0},
- {K::DCCable,"DC cable","DC","Connect solar panels, batteries and inverter DC terminals. Distinct from the AC factory circuit.","#52aaa2",3,0,0,0},
+ {K::DCCable,"DC cable","DC","Bridge gaps between solar banks, batteries and inverter DC terminals. Touching equipment connects directly; factory AC remains a separate circuit.","#52aaa2",3,0,0,0},
  {K::DriveShaft,"Drive shaft","SH","Carries actual rotational energy between rotors, engines, gearboxes, flywheels and alternators.","#809398",5,0,0,0},
  {K::SteamPipe,"Live steam pipe","ST","Carries boiler steam into accumulators and turbines. Exhaust uses a separate return pipe.","#d88055",4,0,0,0},
  {K::ExhaustPipe,"Exhaust steam pipe","EX","Returns low-energy turbine exhaust to a condenser. A blocked return stops the turbine.","#b5aaa3",4,0,0,0},
@@ -59,12 +60,12 @@ std::vector<MachineSpec> energyMachineSpecs(){return {
  {K::ReturnPipe,"Return water pipe","RW","Connects feed pumps and condensers to boilers. Recovered condensate reduces makeup-water demand.","#579ec4",4,0,0,0},
  {K::HeatPipe,"Heat recovery pipe","HR","Carries measured recovered heat to tanks, exchangers, digesters and factory heaters.","#d36445",4,0,0,0},
  {K::CoolingPipe,"Cooling circuit","CL","Connects a cooling plant to cold stores and chilling equipment.","#65bfd9",4,0,0,0},
- {K::SolarPanel,"Solar array","PV","Produces DC from the shared day and season. Nearby tall walls and boilers shade the array.","#526fa0",95,0,0,0},
+ {K::SolarPanel,"Solar array","PV","Shares DC through every touching panel edge. Build rows or blocks and dock a battery or inverter directly. Day, season and nearby tall obstructions affect generation.","#526fa0",95,0,0,0},
  {K::WindRotor,"Wind rotor","WT","Turns shared weather into shaft power. Exposure, gusts, throttle and braking change its output.","#97b9b8",110,0,0,0},
- {K::Gearbox,"Variable gearbox","GB","Transfers shaft energy with losses. Ratio trades rotational speed against torque.","#8d9fa1",48,0,0,0},
+ {K::Gearbox,"Variable gearbox","GB","Dock between a rotor and alternator on matching shaft ports, or bridge a gap with a shaft. Ratio trades rotational speed against torque.","#8d9fa1",48,0,0,0},
  {K::Alternator,"Alternator","AG","Converts connected shaft energy into AC electricity. Requires a real mechanical source.","#c8974b",85,0,0,0},
  {K::BiomassBoiler,"Biomass boiler","BB","Burns real organic food or residues. Wet fuel reduces heat yield; live steam needs return water and warm-up.","#ac6c49",140,0,0,0},
- {K::SteamAccumulator,"Steam accumulator","SA","Stores a finite steam reserve with a separate discharge-rate limit. Insulation limits standing loss.","#b58c6b",90,0,0,0},
+ {K::SteamAccumulator,"Steam accumulator","SA","Dock directly between boiler and turbine on matching steam ports. Stores a finite reserve with a separate discharge rate and insulation losses.","#b58c6b",90,0,0,0},
  {K::SteamTurbine,"Steam turbine","TU","Turns live steam into shaft power and equal-mass exhaust. Needs a clear exhaust route.","#8b9ba7",140,0,0,0},
  {K::PowerCondenser,"Return condenser","RC","Condenses turbine exhaust into reusable boiler water and recoverable low-grade heat.","#70acb7",85,0,0,0},
  {K::FeedPump,"Boiler feed pump","FP","Uses AC power to introduce makeup water. Stops filling once the connected return loop has sufficient water.","#5f9ab2",42,0,0,0},
@@ -74,8 +75,8 @@ std::vector<MachineSpec> energyMachineSpecs(){return {
  {K::GasScrubber,"Biogas scrubber","GS","Removes a measured fraction of raw gas as wet contaminants, supplying clean engine fuel. Uses return-loop water.","#9bad7c",65,0,0,0},
  {K::GasHolder,"Gas holder","GH","Stores actual clean fuel gas. The floating roof follows its stored mass.","#92aa6e",70,0,0,0},
  {K::GasEngine,"Gas engine","GE","Consumes clean gas, produces shaft power and useful heat. Starting requires a small AC reserve; a relay can dispatch it automatically.","#819588",125,0,0,0},
- {K::BatteryRack,"Battery rack","BT","Stores DC energy. Capacity, charging losses and a finite discharge rate all matter.","#5b8f96",100,0,0,0},
- {K::Flywheel,"Flywheel","FW","Stores rotational energy for short load changes. Standing friction and shaft rating limit its usefulness.","#839399",70,0,0,0},
+ {K::BatteryRack,"Battery rack","BT","Dock beside panels, other batteries or an inverter to share DC without local wiring. Capacity, charging losses and discharge rate remain finite.","#5b8f96",100,0,0,0},
+ {K::Flywheel,"Flywheel","FW","Dock between an engine and alternator on matching shaft ports. Stores rotational energy for load changes, with friction and a finite shaft rating.","#839399",70,0,0,0},
  {K::Inverter,"Bidirectional inverter","IV","Converts DC storage and solar output to AC, or charges batteries from an AC surplus. Conversion always loses energy.","#7b8eae",85,0,0,0},
  {K::Switchboard,"Switchboard","SB","Joins rated AC branches. Open its breaker to isolate the circuit; overload heat can trip it.","#ad9569",65,0,0,0},
  {K::PowerRelay,"Reserve relay","RL","Starts connected automatic engines below its low battery threshold and stops them above its high threshold.","#b5975c",45,0,0,0},
@@ -116,7 +117,7 @@ public:
   // on an occupied cardinal edge; cables still use the actual external ports.
   for(const auto& [p,m]:f.machines)if(isEnergyMachine(m.kind)&&m.enabled&&!m.power.tripped)for(int d=0;d<4;d++){
    auto neighbor=f.at(nextPosition(p,d));if(!neighbor||!isEnergyMachine(neighbor->kind)||!neighbor->enabled||neighbor->power.tripped)continue;
-   for(size_t n=0;n<EnergyCount;n++)if(isContactService(E(n))){graphs[n].ports[p]|=1<<d;graphs[n].contacts[p]|=1<<d;}
+   for(size_t n=0;n<EnergyCount;n++)if(powerContactSupports(m.kind,neighbor->kind,E(n))){graphs[n].ports[p]|=1<<d;graphs[n].contacts[p]|=1<<d;}
   }
   for(const auto& [p,m]:f.machines)if(m.kind==K::Switchboard&&(!m.enabled||m.power.tripped))graphs[ix(E::AC)].ports.erase(p);
   for(auto& graph:graphs){std::set<Position> unseen;for(auto& [p,mask]:graph.ports)unseen.insert(p);int id=0;while(!unseen.empty()){auto first=*unseen.begin();std::vector<Position> open{first};unseen.erase(first);graph.component[first]=id;for(size_t n=0;n<open.size();n++)for(int d=0;d<4;d++){Position q=nextPosition(open[n],d);auto other=graph.ports.find(q);if(other==graph.ports.end()||!(graph.ports[open[n]]&(1<<d))||!(other->second&(1<<((d+2)%4))))continue;if(unseen.erase(q)){open.push_back(q);graph.component[q]=id;}}id++;}}

@@ -1,5 +1,29 @@
-AFTERTASTE / MOLECULAR WORKS 3.19.0
+AFTERTASTE / MOLECULAR WORKS 3.20.0
 Invent dishes on the actual factory floor / native C++17
+
+Solar banks and docked generator trains
+---------------------------------------
+Use Solar in the floor toolbar to focus the array. Panels join on every touching
+cardinal edge and combine their DC output in rows or blocks, regardless of panel
+rotation. Dock battery racks and an inverter directly. Panel couplers carry DC
+only, so they do not accidentally bridge AC, cooling, vacuum or control services.
+A gap, isolated panel or diagonal placement breaks that connection.
+
+The demo solar bank now places its existing three panels, battery, inverter and
+reserve relay together. The wind rotor, gearbox and alternator form a direct
+shaft train. Boiler, steam accumulator, turbine and alternator dock directly;
+the gas scrubber, holder, engine, flywheel and alternator do the same. Output AC
+still travels by cable to the factory. Separated return-water, exhaust and heat
+recovery loops retain their typed pipes. Matching process couplings show actual
+flow pulses, just like the longer conduits.
+
+Version 13 stock yards are rearranged on load with every machine's settings,
+material, stored energy, wear and readings retained. No extra panels, fuel or
+charge are granted. Custom construction, routes, ratings, isolation or orientation
+prevent an automatic rearrangement. Stock construction plans are refreshed;
+custom plans remain as authored. Power frames the conventional yard, Lab frames
+the nuclear apparatus, and Solar frames the array within the same floor view.
+
 
 Docked power apparatus
 ----------------------

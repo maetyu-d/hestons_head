@@ -1,3 +1,31 @@
+AFTERTASTE / MOLECULAR WORKS 3.20.0 - SOLAR BANKS AND DOCKED GENERATORS
+30 October 2026 / macOS / Apple Silicon
+
+Panels join through every occupied cardinal edge, carrying DC only. The stock
+solar/storage/inverter bank, wind train, steam train and gas/flywheel train now
+dock directly. Factory AC export and separated fluid loops retain actual routes.
+Solar provides a close working view; Power selects the conventional yard.
+Typed direct process couplings display actual measured flow pulses.
+Save format 14 protects custom yards when rearranging the original stock layout.
+
+Native application build/link: PASS.
+Solar and yard docking suite with the user's version 13 save: PASS (410 checks).
+Includes a rotated six-panel block with combined output, actual DC contact flow,
+DC-only panel contacts, panel isolation, wire-free local generator stages,
+working wind/thermal/gas generation, retention of all 254 original machine states,
+unchanged input buffers/clock, stable reload, and custom construction/rating guards.
+Contact suite with the older version 12 save: PASS (282 checks).
+Nuclear laboratory suite: PASS (37 checks).
+Physical power suite: PASS (41 checks; 720-tick demo generated 20,885.2,
+delivered 10,979, supplied loads on all 720 ticks and served 139 dishes).
+Power layout suite: PASS (144 checks).
+Native visual inspection: PASS, touching panel block, direct battery/inverter
+connection, DC couplers and inspector guidance at 220% working zoom.
+The full historical, farm-specific and sanitizer suites were not rerun. Earlier
+historical food-fixture failures remain documented in prior release entries.
+
+Prior release validation
+------------------------
 AFTERTASTE / MOLECULAR WORKS 3.19.0 - CONTACT POWER BENCH
 30 October 2026 / macOS / Apple Silicon
 
