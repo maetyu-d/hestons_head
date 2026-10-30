@@ -1,3 +1,4 @@
+#include "Theme.h"
 #include "PowerArt.h"
 #include "ReagentWorks.h"
 #include "RouteArt.h"
@@ -6,8 +7,8 @@
 namespace aftertaste {
 Color energyColor(EnergyMedium e){static const std::array<Color,EnergyCount> c={Color{243,187,24,255},Color{221,143,20,255},Color{121,145,151,255},Color{213,119,75,255},Color{167,159,151,255},Color{154,127,74,255},Color{123,162,78,255},Color{37,127,196,255},Color{218,96,57,255},Color{64,165,224,255},Color{155,140,181,255},Color{177,133,163,255},Color{52,126,190,255},Color{49,139,214,255},Color{64,162,229,255},Color{22,124,209,255},Color{81,120,157,255},Color{54,94,170,255}};return c.at(size_t(e));}
 namespace {
-struct Draw {Rectangle r;MachineAppearance a;Color ink={32,59,66,255},body={190,207,204,255},light={238,245,241,255},tone={202,163,66,255};float w;
- Draw(Rectangle bounds,MachineAppearance look):r(bounds),a(look){w=std::clamp(std::min(r.width,r.height)*.03f,1.f,2.1f);unsigned n=unsigned(std::stoul(machineSpec(a.kind).color.substr(1),nullptr,16));tone={static_cast<unsigned char>(n>>16),static_cast<unsigned char>(n>>8),static_cast<unsigned char>(n),255};if(a.monochrome){ink=BLACK;body={175,175,175,255};light=WHITE;tone={110,110,110,255};}}
+struct Draw {Rectangle r;MachineAppearance a;Color ink={22,41,75,255},body={190,207,204,255},light={238,245,241,255},tone={202,163,66,255};float w;
+ Draw(Rectangle bounds,MachineAppearance look):r(bounds),a(look){w=std::clamp(std::min(r.width,r.height)*.03f,1.f,2.1f);tone=theme::machinePaint(a.kind);body=theme::blend(tone,WHITE,.38f);light={245,250,255,255};if(a.monochrome){ink=BLACK;body={175,175,175,255};light=WHITE;tone={110,110,110,255};}}
  Color c(Color col)const{return a.ghost?Fade(col,.45f):col;}Vector2 p(float x,float y)const{int d=a.direction%4;float u=x,v=y;if(d==1){x=1-v;y=u;}else if(d==2){x=1-u;y=1-v;}else if(d==3){x=v;y=1-u;}return {r.x+x*r.width,r.y+y*r.height};}
  void line(float x,float y,float xx,float yy,Color col,float weight=1){DrawLineEx(p(x,y),p(xx,yy),w*weight,c(col));}
  void box(float x,float y,float width,float height,Color col){auto a=p(x,y),b=p(x+width,y+height);Rectangle q{std::min(a.x,b.x),std::min(a.y,b.y),std::abs(a.x-b.x),std::abs(a.y-b.y)};DrawRectangleRec(q,c(col));DrawRectangleLinesEx(q,w,c(ink));}
@@ -144,7 +145,7 @@ void drawEnergyMechanism(Rectangle r,const MachineAppearance& look){
  if(isReagentMachine(look.kind)){
   Draw d(r,look);d.a.direction=0;
   if(look.reagentFill>0&&look.kind!=MachineKind::ReagentAnalyzer){
-   Color color=d.tone;if(!look.reagentKey.empty()){auto value=ingredient(look.reagentKey).color;unsigned n=unsigned(std::stoul(value.substr(1),nullptr,16));color={static_cast<unsigned char>(n>>16),static_cast<unsigned char>(n>>8),static_cast<unsigned char>(n),255};}
+   Color color=d.tone;if(!look.reagentKey.empty()){color=theme::pigment(ingredient(look.reagentKey).color);}
    float level=.12f+.20f*float(std::clamp(look.reagentFill,0.,1.));
    // A bounded liquid viewport exposes the live lot rather than a decorative fill.
    d.box(.36f,.64f-level,.28f,level,look.monochrome?d.body:Fade(color,.8f));

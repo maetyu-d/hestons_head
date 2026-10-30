@@ -1,5 +1,23 @@
-AFTERTASTE / MOLECULAR WORKS 3.24.2
+AFTERTASTE / MOLECULAR WORKS 3.25.0
 Invent dishes on the actual factory floor / native C++17
+
+Bright primary palette
+------------------------
+The whole game uses a brighter, smaller colour vocabulary: bold red, blue,
+yellow and green machine paint, with violet for chemical details and cyan for
+glass and cold processes. Machine bodies and accents have stronger colour;
+metal, glass and shadows keep the actual material windows readable.
+
+Panels use clean white, the floor a light blue grid, factory zoning a light
+green tint, and text/outlines deep navy. Active controls are primary blue and
+main actions red. Ingredient chips, crop art, food mixtures, previews and the
+minimap share the same display palette. Dark food pigments retain a darker
+shade, and browning, scorching and crop damage remain visible.
+
+Resource routing keeps its identities: water blue, chemicals violet and
+electricity yellow/gold. This is a display change; saved ingredients, machine
+settings, molecular state and all factory resources retain their exact values.
+
 
 Reading water, chemical and electricity routes
 ----------------------------------------------

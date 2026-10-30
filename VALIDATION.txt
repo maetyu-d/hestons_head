@@ -1,3 +1,18 @@
+AFTERTASTE / MOLECULAR WORKS 3.25.0 - BRIGHT PRIMARY GAME PALETTE
+30 October 2026 / macOS / Apple Silicon
+
+A shared rendering-only theme supplies stronger red/blue/yellow/green machine
+paint, clearer violet/cyan accents, coloured equipment bodies, bright crop and
+ingredient display pigments, matching previews/minimap, primary lattice cells,
+white-and-blue panels/floor, deep navy text and blue active controls. Ingredient
+chip and lattice text chooses a contrasting foreground. Chemical glass, blue
+water pipes and gold/amber electricity keep their established colour families.
+
+All simulation and data specifications remain unchanged. Save format 18 and
+the actual food compounds, resource amounts and process settings are retained.
+
+Prior release validation
+------------------------
 AFTERTASTE / MOLECULAR WORKS 3.24.2 - STRONG RESOURCE COLOURS
 30 October 2026 / macOS / Apple Silicon
 
@@ -829,3 +844,5 @@ resource or development checkout is required to run the native game.
 
 Chemistry uses stylised compound groups and accelerated ticks, rather than
 validated predictions or real preparation times.
+
+3.25.0 final checks: Native C++ app built and linked without compiler warnings. Installed and inspected in the native game: primary machine paint, ingredient chips, lattice preview, floor, controls and resource-route legend are readable. Factory remains paused at tick 11985; save JSON exactly matches the pre-install snapshot. Rendering-only change; no simulation tests added.

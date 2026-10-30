@@ -1,3 +1,4 @@
+#include "Theme.h"
 #include "ReagentWorks.h"
 #include "Interface.h"
 #include "rlgl.h"
@@ -9,7 +10,7 @@
 
 namespace aftertaste {
 namespace {
-const Color fPaper={237,243,241,255},fInk={23,48,57,255},fMuted={87,113,121,255},fLine={199,215,216,255},fOrange={240,83,43,255},fWhite={255,255,255,255};
+const Color fPaper={246,249,255,255},fInk={22,41,75,255},fMuted={77,99,131,255},fLine={183,205,236,255},fOrange={240,43,43,255},fWhite={255,255,255,255};
 void fborder(Rectangle r,Color c,float thickness=1){DrawRectangleLinesEx(r,thickness,c);}
 }
 Position Interface::factoryPosition(Vector2 point)const{float tile=38*factoryZoom;return {int(std::floor(factoryCamera.x+(point.x-factoryView.x-factoryView.width*.5f)/tile)),int(std::floor(factoryCamera.y+(point.y-factoryView.y-factoryView.height*.5f)/tile))};}
@@ -106,7 +107,7 @@ void Interface::drawFactory(){
  DrawRectangleRec({0,0,sw,3},fOrange);text("AFTERTASTE",margin,15,25,fInk,true);text("MOLECULAR WORKS",margin,45,10,fMuted,true);
  float x=sw<1000?210:238,y=14;
  auto command=[&](float w,const std::string& label,std::function<void()> action,bool active=false,Color fill=Color{0,0,0,0}){button({x,y,w,30},label,action,active,true,"",fill,11);x+=w+4;};
- command(58,factory.running?"Pause":"Run",[this]{factory.running=!factory.running;factoryAccumulator=0;},factory.running,factory.running?Color{35,130,107,255}:fOrange);
+ command(58,factory.running?"Pause":"Run",[this]{factory.running=!factory.running;factoryAccumulator=0;},factory.running,factory.running?Color{13,162,65,255}:fOrange);
  command(43,"Step",[this]{stepFactory();});command(37,std::to_string(factorySpeed)+"x",[this]{factorySpeed=factorySpeed==1?2:factorySpeed==2?4:1;});
  command(46,"Undo",[this]{factory.undo();floorTelemetry.clear();referenceRecipe=0;});command(43,"Save",[this]{saveFactoryCheckpoint();});command(43,"Load",[this]{loadFactoryCheckpoint();});command(41,"Help",[this]{factoryOverlay=1;modalScroll=0;});
  button({sw-margin-85,14,85,30},factory.sandbox?"Free build":"$"+roundTo(factory.cash,0),[this]{factory.toggleEconomy();},false,true,"Toggle the optional finite-resource economy. Every machine remains available.",{},10.5f);

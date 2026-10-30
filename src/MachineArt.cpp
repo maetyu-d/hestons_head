@@ -1,3 +1,4 @@
+#include "Theme.h"
 #include "MachineArt.h"
 #include "PowerArt.h"
 #include "GlassArt.h"
@@ -9,16 +10,16 @@
 
 namespace aftertaste {
 namespace {
-Color hex(const std::string& s){unsigned n=unsigned(std::stoul(s.substr(1),nullptr,16));return {static_cast<unsigned char>(n>>16),static_cast<unsigned char>(n>>8),static_cast<unsigned char>(n),255};}
-Color serviceColor(UtilityKind k){static const std::array<Color,5> colors={Color{66,153,203,255},Color{230,116,69,255},Color{64,166,211,255},Color{52,169,141,255},Color{150,117,188,255}};return colors.at(size_t(k));}
+Color hex(const std::string& s){return theme::pigment(s);}
+Color serviceColor(UtilityKind k){static const std::array<Color,5> colors={Color{26,99,235,255},Color{240,43,43,255},Color{0,174,238,255},Color{13,183,76,255},Color{146,53,226,255}};return colors.at(size_t(k));}
 Color mix(Color a,Color b,float t){return {static_cast<unsigned char>(a.r*(1-t)+b.r*t),static_cast<unsigned char>(a.g*(1-t)+b.g*t),static_cast<unsigned char>(a.b*(1-t)+b.b*t),255};}
 struct Art {
  Rectangle r;MachineAppearance a;Color edge,paint,pale,steel,glass,dark,hot,cold;float stroke;
  Art(Rectangle bounds,const MachineAppearance& look):r(bounds),a(look){
   if(a.kind==MachineKind::SeedHopper)a.direction=(a.direction+3)%4;
-  edge={32,59,66,255};paint=hex(machineSpec(a.kind).color);if(isUtilityEquipment(a.kind))paint=serviceColor(a.utility);pale=mix(paint,WHITE,.78f);steel={169,190,191,255};glass={229,243,240,255};dark={72,99,105,255};hot={234,112,65,255};cold={62,162,204,255};
+  edge={22,41,75,255};paint=theme::machinePaint(a.kind);if(isUtilityEquipment(a.kind))paint=serviceColor(a.utility);pale=mix(paint,WHITE,.40f);steel={174,197,228,255};glass={241,249,255,255};dark={46,70,111,255};hot=theme::Red;cold=theme::Blue;
   if(a.monochrome){edge=dark=BLACK;paint=steel={184,184,184,255};pale=glass=WHITE;hot=cold={100,100,100,255};}
-  if(isLabGlassware(a.kind)&&!a.monochrome)edge={68,122,137,255};
+  if(isLabGlassware(a.kind)&&!a.monochrome)edge={32,99,184,255};
   stroke=std::clamp(std::min(r.width,r.height)*.035f,1.f,2.3f);
  }
  Color color(Color c)const{return a.ghost?Fade(c,.45f):c;}
@@ -100,7 +101,7 @@ Rectangle machineFoodWindow(Rectangle bounds,MachineKind kind,int direction,int 
  if(slot==2)w={.42f,.77f,.22f,.14f};MachineAppearance look;look.kind=kind;look.direction=direction;return Art(bounds,look).rect(w.x,w.y,w.width,w.height);
 }
 void drawCropProduce(Rectangle bounds,const std::string& crop,double dirt,double freshness){
- MachineAppearance look;look.kind=MachineKind::Feeder;Art d(bounds,look);d.paint=mix(hex(ingredient(crop).color),Color{108,84,48,255},float((1-freshness)*.6));Color leaf=mix(Color{66,145,76,255},Color{135,109,55,255},float(1-freshness));
+ MachineAppearance look;look.kind=MachineKind::Feeder;Art d(bounds,look);d.paint=mix(hex(ingredient(crop).color),Color{108,84,48,255},float((1-freshness)*.6));Color leaf=mix(Color{13,183,76,255},Color{135,109,55,255},float(1-freshness));
  if(crop=="carrot"||crop=="beet"){
   if(crop=="carrot")d.polygon({{.24f,.36f},{.72f,.37f},{.44f,.94f}},d.paint);else d.oval(.48f,.60f,.29f,.27f,d.paint);
   for(float x:{.26f,.48f,.70f})d.line(.48f,.35f,x,.08f,leaf,1.3f);
@@ -304,7 +305,7 @@ void drawMachineMechanism(Rectangle bounds,const MachineAppearance& look){
    if(x<4&&y<4&&(x+y)%2==0)d.line(px,py,px+.09f,py+.055f,d.steel,.35f);
   }
   for(int y=0;y<5;y++)for(int x=0;x<5;x++){
-   float px=.32f+x*.09f,py=.415f+y*.055f;Color c=((x+y)%4==0)?d.paint:((x+y)%4==1)?d.cold:d.pale;d.oval(px,py,.018f,.018f,c);
+   float px=.32f+x*.09f,py=.415f+y*.055f;Color c=look.monochrome?d.paint:std::array<Color,4>{theme::Red,theme::Yellow,theme::Blue,theme::Green}[size_t((x+y)%4)];d.oval(px,py,.018f,.018f,c);
   }
   if(look.active){int cell=int(std::fmod(t*8,25));float x=.32f+(cell%5)*.09f,y=.415f+(cell/5)*.055f;float l=x-.03f,r=x+.03f,top=y-.023f,bottom=y+.023f;d.line(l,top,r,top,d.hot,.9f);d.line(r,top,r,bottom,d.hot,.9f);d.line(r,bottom,l,bottom,d.hot,.9f);d.line(l,bottom,l,top,d.hot,.9f);}
   break;
@@ -315,7 +316,7 @@ void drawMachineMechanism(Rectangle bounds,const MachineAppearance& look){
  case MachineKind::DropletViewer:for(int n=0;n<7;n++){float x=.28f+.13f*(n%4),y=.30f+.16f*(n/4);d.oval(x,y,.035f,.035f,n%2?d.cold:d.paint,false);}break;
  case MachineKind::AromaSensor:for(float k=0;k<3;k++){float spread=.04f+k*.06f;d.arc(.74f,.52f,spread,.13f+k*.04f,-PI*.36f,PI*.36f,d.paint,.7f);}break;
  case MachineKind::FieldBed:case MachineKind::RaisedBed:case MachineKind::HydroponicBed:{
-  Color leaf=mix(Color{61,145,79,255},Color{160,118,61,255},float(1-look.cropHealth));if(look.monochrome)leaf=d.paint;
+  Color leaf=mix(Color{13,183,76,255},Color{160,118,61,255},float(1-look.cropHealth));if(look.monochrome)leaf=d.paint;
   d.line(.17f,.76f,.17f+.66f*float(look.cropMoisture),.76f,d.cold,1.3f);
   if(look.cropPlanted){float growth=float(std::clamp(look.progress,0.,1.));
    for(int n=0;n<4;n++){float x=.23f+n*.18f,h=.05f+growth*.28f;

@@ -1,3 +1,4 @@
+#include "Theme.h"
 #include "ReagentWorks.h"
 #include "Interface.h"
 #include "MachineArt.h"
@@ -11,9 +12,9 @@
 
 namespace aftertaste {
 namespace {
-const Color paper={237,243,241,255},ink={23,48,57,255},muted={87,113,121,255},line={199,215,216,255},orange={240,83,43,255},white={255,255,255,255};
-Color pigment(const std::string& hex){if(hex.size()!=7)return ink;unsigned n=unsigned(std::stoul(hex.substr(1),nullptr,16));return {static_cast<unsigned char>(n>>16),static_cast<unsigned char>(n>>8),static_cast<unsigned char>(n),255};}
-Color utilityColor(UtilityKind k){static const std::array<Color,5> colors={Color{66,153,203,255},Color{230,116,69,255},Color{64,166,211,255},Color{52,169,141,255},Color{150,117,188,255}};return colors.at(size_t(k));}
+const Color paper={246,249,255,255},ink={22,41,75,255},muted={77,99,131,255},line={183,205,236,255},orange={240,43,43,255},white={255,255,255,255};
+Color pigment(const std::string& hex){return theme::pigment(hex);}
+Color utilityColor(UtilityKind k){static const std::array<Color,5> colors={Color{26,99,235,255},Color{240,43,43,255},Color{0,174,238,255},Color{13,183,76,255},Color{146,53,226,255}};return colors.at(size_t(k));}
 Color tint(Color a,Color b,float f){f=std::clamp(f,0.f,1.f);return {static_cast<unsigned char>(a.r*(1-f)+b.r*f),static_cast<unsigned char>(a.g*(1-f)+b.g*f),static_cast<unsigned char>(a.b*(1-f)+b.b*f),255};}
 Color foodColor(const MaterialView& v){double r=0,g=0,b=0,total=0;for(auto& [key,mass]:v.ingredients){auto c=pigment(ingredient(key).color);r+=c.r*mass;g+=c.g*mass;b+=c.b*mass;total+=mass;}if(total<=0)return muted;Color base={static_cast<unsigned char>(r/total),static_cast<unsigned char>(g/total),static_cast<unsigned char>(b/total),255};return tint(base,Color{91,51,31,255},float(std::clamp(v.metrics.brown*.6+v.metrics.scorch,0.,.9)));}
 Vector2 centre(Rectangle r){return {r.x+r.width*.5f,r.y+r.height*.5f};}
@@ -33,12 +34,12 @@ std::string stateLabel(const MaterialView& v){
 }
 // A small material chamber, entirely driven by the actual batch state.
 void material(Rectangle r,const MaterialView& v,double time,bool active){
- Color base=foodColor(v);DrawRectangleRounded(r,.3f,5,tint(base,white,.18f));
+ Color base=foodColor(v);DrawRectangleRounded(r,.3f,5,tint(base,white,.07f));
  if(v.cropIntact&&!v.ingredients.empty()){
   auto crop=std::max_element(v.ingredients.begin(),v.ingredients.end(),[](const auto& a,const auto& b){return a.second<b.second;})->first;
   DrawRectangleRounded(r,.3f,5,tint(base,white,.78f));int count=r.width>r.height*1.8f?3:r.width>r.height*1.35f?2:1;float unit=std::min(r.height*.95f,r.width/count);
   for(int n=0;n<count;n++){float x=r.x+(r.width-unit*count)*.5f+n*unit;drawCropProduce({x,r.y+(r.height-unit)*.5f,unit,unit},crop,v.cropDirt,v.cropFreshness);}
-  DrawRectangleRoundedLinesEx(r,.3f,5,1,v.metrics.temperature<=8?Color{48,146,201,255}:tint(base,ink,.35f));return;
+  DrawRectangleRoundedLinesEx(r,.3f,5,1,v.metrics.temperature<=8?Color{26,99,235,255}:tint(base,ink,.35f));return;
  }
  float radius=std::min(r.width,r.height)*.18f;
  if(v.components.size()>1){double total=std::max(.000001,v.metrics.mass);float x=r.x;for(size_t i=0;i<v.components.size();i++){float w=float(v.components[i].first/total)*r.width;DrawRectangleRec({x,r.y+1,std::max(1.f,w-1),r.height-2},tint(base,i%2?white:ink,i%2?.35f:.13f));x+=w;}}
@@ -50,7 +51,7 @@ void material(Rectangle r,const MaterialView& v,double time,bool active){
  if(v.air>.015){int count=std::clamp(int(v.air*20),1,13);for(int n=0;n<count;n++){float wobble=active?float(std::sin(time*2+n))*.03f:0;Vector2 at={r.x+r.width*(.12f+.76f*float((n*41+3)%101)/100),r.y+r.height*(.18f+.64f*float((n*73+10)%101)/100+wobble)};DrawCircleV(at,std::max(1.f,radius*(.45f+.5f*float(n%3)/2)),Fade(white,.85f));}}
  if(v.vapor){for(int n=0;n<5;n++){float rise=active?float(std::fmod(time*.18+n*.19,1.)):float(n)*.18f;Vector2 p={r.x+r.width*(.18f+.16f*(n%5)),r.y+r.height*(.82f-rise*.70f)};DrawCircleV(p,std::max(1.2f,radius*(.18f+.08f*(n%3))),Fade(white,.9f));}}
  if(v.metrics.ice>.015){int count=std::clamp(int(v.metrics.ice*12),1,9);for(int n=0;n<count;n++){Vector2 p={r.x+r.width*(.13f+.74f*float((n*31+11)%101)/100),r.y+r.height*(.19f+.62f*float((n*57+5)%101)/100)};float z=std::max(1.7f,radius);DrawLineEx({p.x-z,p.y},{p.x+z,p.y},1,white);DrawLineEx({p.x,p.y-z},{p.x,p.y+z},1,white);DrawLineEx({p.x-z*.7f,p.y-z*.7f},{p.x+z*.7f,p.y+z*.7f},1,white);}}
- Color edge=v.metrics.temperature<8?Color{48,146,201,255}:v.metrics.temperature>35?orange:tint(base,ink,.35f);DrawRectangleRoundedLinesEx(r,.3f,5,v.metrics.temperature<8||v.metrics.temperature>35?1.8f:1,edge);
+ Color edge=v.metrics.temperature<8?Color{26,99,235,255}:v.metrics.temperature>35?orange:tint(base,ink,.35f);DrawRectangleRoundedLinesEx(r,.3f,5,v.metrics.temperature<8||v.metrics.temperature>35?1.8f:1,edge);
 }
 void glassFood(const std::vector<Vector2>& path,const MaterialView& v,float at,float diameter){
  Color c=foodColor(v);if(v.vapor)c=tint(c,white,.48f);float half=.13f;Vector2 last=glassPoint(path,std::max(0.f,at-half));
@@ -64,17 +65,17 @@ std::vector<Vector2> pathPart(const std::vector<Vector2>& p,float from,float to)
 
 }
 void Interface::drawFactoryMap(){
- DrawRectangleRec(factoryView,{224,234,232,255});DrawRectangleLinesEx(factoryView,1,line);beginClip(factoryView);
+ DrawRectangleRec(factoryView,{236,243,254,255});DrawRectangleLinesEx(factoryView,1,line);beginClip(factoryView);
  float tile=38*factoryZoom;double now=GetTime();
  auto first=factoryPosition({factoryView.x,factoryView.y}),last=factoryPosition({factoryView.x+factoryView.width,factoryView.y+factoryView.height});int stride=std::max(1,int(std::ceil(12/tile)));
  auto factoryArea=factory.enclosedFactoryTiles();
- for(auto p:factoryArea){if(p.x<first.x||p.x>last.x||p.y<first.y||p.y>last.y)continue;DrawRectangleRec(factoryTile(p),{204,232,218,255});}
- for(int x=int(std::floor(double(first.x)/stride))*stride;x<=last.x+1;x+=stride){auto r=factoryTile({x,0});DrawLineEx({r.x,factoryView.y},{r.x,factoryView.y+factoryView.height},1,{206,220,218,255});}
- for(int y=int(std::floor(double(first.y)/stride))*stride;y<=last.y+1;y+=stride){auto r=factoryTile({0,y});DrawLineEx({factoryView.x,r.y},{factoryView.x+factoryView.width,r.y},1,{206,220,218,255});}
+ for(auto p:factoryArea){if(p.x<first.x||p.x>last.x||p.y<first.y||p.y>last.y)continue;DrawRectangleRec(factoryTile(p),{218,248,228,255});}
+ for(int x=int(std::floor(double(first.x)/stride))*stride;x<=last.x+1;x+=stride){auto r=factoryTile({x,0});DrawLineEx({r.x,factoryView.y},{r.x,factoryView.y+factoryView.height},1,{208,224,247,255});}
+ for(int y=int(std::floor(double(first.y)/stride))*stride;y<=last.y+1;y+=stride){auto r=factoryTile({0,y});DrawLineEx({factoryView.x,r.y},{factoryView.x+factoryView.width,r.y},1,{208,224,247,255});}
  drawEnergyRoutes();
  auto inputs=[&](Position p,const Machine& m){std::vector<int> result;for(int d=0;d<4;d++){auto q=nextPosition(p,d);auto src=factory.at(q);if(src&&src->kind!=MachineKind::Wall&&!isUtilityEquipment(src->kind)&&!isSensor(src->kind)&&!isFarmInfrastructure(src->kind)&&(nextPosition(q,src->dir)==p||(hasSideOutlet(src->kind)&&nextPosition(q,(src->dir+1)%4)==p)))result.push_back(d);}if(result.empty()&&!isUtilityEquipment(m.kind)&&!isSensor(m.kind)&&!isFarmInfrastructure(m.kind)&&m.kind!=MachineKind::Wall)result.push_back((m.dir+2)%4);return result;};
  auto portDirection=[](Position from,Position to){if(to.x>from.x)return 0;if(to.y>from.y)return 1;if(to.x<from.x)return 2;return 3;};
- auto farmColor=[](FarmFlowKind kind){switch(kind){case FarmFlowKind::Seed:return Color{165,123,55,255};case FarmFlowKind::Nutrients:return Color{46,159,179,255};case FarmFlowKind::Light:return Color{211,175,54,255};case FarmFlowKind::Pollination:return Color{218,160,56,255};case FarmFlowKind::Harvest:return Color{53,145,84,255};case FarmFlowKind::Storage:return Color{53,145,84,255};case FarmFlowKind::Compost:return Color{129,103,64,255};}return ink;};
+ auto farmColor=[](FarmFlowKind kind){switch(kind){case FarmFlowKind::Seed:return Color{165,123,55,255};case FarmFlowKind::Nutrients:return Color{26,99,235,255};case FarmFlowKind::Light:return Color{255,211,22,255};case FarmFlowKind::Pollination:return Color{255,211,22,255};case FarmFlowKind::Harvest:return Color{13,183,76,255};case FarmFlowKind::Storage:return Color{13,183,76,255};case FarmFlowKind::Compost:return Color{129,103,64,255};}return ink;};
  // Actual farm connections share the floor with food routes. Their thinner,
  // dashed paths identify seed and growing inputs separately from conveyors.
  if(floorFlow&&tile>=13)for(const auto& [p,m]:factory.machines){
@@ -119,9 +120,9 @@ void Interface::drawFactoryMap(){
  if(tile>=20)for(const auto& [p,m]:factory.machines)if(m.kind==MachineKind::ReagentAnalyzer){auto q=nextPosition(p,m.dir);auto target=factory.at(q);if(!target||!acceptsReagentMaterial(target->kind))continue;auto a=centre(factoryTile(p)),b=centre(factoryTile(q));for(int n=0;n<8;n++){float t=(n+.3f)/8;DrawCircleV({a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t},std::max(.8f,tile*.012f),Color{146,103,155,255});}}
 
  auto node=[&](Position pos,const Machine& m,bool ghost){
-  Rectangle full=factoryTile(pos);if(!CheckCollisionRecs(full,factoryView))return;const auto& spec=machineSpec(m.kind);Color tone=pigment(spec.color);float pad=std::max(1.f,tile*.065f);Rectangle r={full.x+pad,full.y+pad,full.width-2*pad,full.height-2*pad};
+  Rectangle full=factoryTile(pos);if(!CheckCollisionRecs(full,factoryView))return;Color tone=theme::machinePaint(m.kind);float pad=std::max(1.f,tile*.065f);Rectangle r={full.x+pad,full.y+pad,full.width-2*pad,full.height-2*pad};
   if(tile<13){DrawRectangleRec(r,ghost?Fade(tone,.4f):tone);return;}
-  if(m.kind==MachineKind::Wall){float inset=std::max(2.f,tile*.055f);Color dark={74,92,95,255},face={185,201,198,255},cap={137,158,158,255};if(ghost){dark=Fade(dark,.45f);face=Fade(face,.45f);cap=Fade(cap,.45f);}Rectangle slab={full.x+inset,full.y+inset,full.width-inset*2,full.height-inset*2};DrawRectangleRec(slab,dark);Rectangle top={slab.x+1,slab.y+1,slab.width-2,std::max(2.f,slab.height*.20f)};DrawRectangleRec(top,cap);Rectangle brick={slab.x+2,top.y+top.height+1,slab.width-4,slab.height-top.height-5};DrawRectangleRec(brick,face);if(tile>=24){DrawLineEx({brick.x,brick.y+brick.height*.52f},{brick.x+brick.width,brick.y+brick.height*.52f},1,dark);DrawLineEx({brick.x+brick.width*.5f,brick.y},{brick.x+brick.width*.5f,brick.y+brick.height*.52f},1,dark);DrawLineEx({brick.x+brick.width*.27f,brick.y+brick.height*.52f},{brick.x+brick.width*.27f,brick.y+brick.height},1,dark);DrawLineEx({brick.x+brick.width*.76f,brick.y+brick.height*.52f},{brick.x+brick.width*.76f,brick.y+brick.height},1,dark);}return;}
+  if(m.kind==MachineKind::Wall){float inset=std::max(2.f,tile*.055f);Color dark={72,95,132,255},face={225,234,249,255},cap={162,190,229,255};if(ghost){dark=Fade(dark,.45f);face=Fade(face,.45f);cap=Fade(cap,.45f);}Rectangle slab={full.x+inset,full.y+inset,full.width-inset*2,full.height-inset*2};DrawRectangleRec(slab,dark);Rectangle top={slab.x+1,slab.y+1,slab.width-2,std::max(2.f,slab.height*.20f)};DrawRectangleRec(top,cap);Rectangle brick={slab.x+2,top.y+top.height+1,slab.width-4,slab.height-top.height-5};DrawRectangleRec(brick,face);if(tile>=24){DrawLineEx({brick.x,brick.y+brick.height*.52f},{brick.x+brick.width,brick.y+brick.height*.52f},1,dark);DrawLineEx({brick.x+brick.width*.5f,brick.y},{brick.x+brick.width*.5f,brick.y+brick.height*.52f},1,dark);DrawLineEx({brick.x+brick.width*.27f,brick.y+brick.height*.52f},{brick.x+brick.width*.27f,brick.y+brick.height},1,dark);DrawLineEx({brick.x+brick.width*.76f,brick.y+brick.height*.52f},{brick.x+brick.width*.76f,brick.y+brick.height},1,dark);}return;}
   if(m.kind==MachineKind::UtilityLine){Color service=utilityColor(m.utility);auto c=centre(full);float width=std::max(2.2f,tile*.12f);bool connected=false;for(int d=0;d<4;d++){auto neighbor=factory.at(nextPosition(pos,d));if(!neighbor||!isUtilityEquipment(neighbor->kind)||neighbor->utility!=m.utility)continue;connected=true;auto delta=directions[d];Vector2 end{c.x+delta[0]*tile*.48f,c.y+delta[1]*tile*.48f};if(m.utility==UtilityKind::Water)drawInfrastructureRoute({c,end},EnergyMedium::CleanWater,tile,!ghost);else DrawLineEx(c,end,width,ghost?Fade(service,.55f):service);}DrawCircleV(c,std::max(3.f,tile*.10f),ghost?Fade(service,.55f):service);DrawCircleLines(int(c.x),int(c.y),std::max(3.f,tile*.10f),ink);if(!connected)DrawCircleV(c,std::max(1.f,tile*.035f),white);return;}
   if(isGlassConduit(m.kind)){
    auto in=ghost?std::vector<int>{(m.dir+2)%4}:inputs(pos,m);float diameter=std::max(3.f,tile*(m.kind==MachineKind::GlassCoil?.115f:.18f));
@@ -225,7 +226,7 @@ void Interface::drawFactoryMap(){
  }
  endClip();
  float miniW=factoryView.width<450?64:94,miniH=factoryView.width<450?44:64;factoryMiniMap={factoryView.x+factoryView.width-miniW-9,factoryView.y+9,miniW,miniH};DrawRectangleRec(factoryMiniMap,Fade(white,.94f));DrawRectangleLinesEx(factoryMiniMap,1,line);
- int minx=-4,maxx=4,miny=-4,maxy=4;if(!factory.machines.empty()){auto p=factory.machines.begin()->first;minx=p.x-2;maxx=p.x+2;miny=p.y-2;maxy=p.y+2;}for(auto& [p,m]:factory.machines){minx=std::min(minx,p.x-2);maxx=std::max(maxx,p.x+2);miny=std::min(miny,p.y-2);maxy=std::max(maxy,p.y+2);}for(auto& [p,m]:factory.machines){float xx=factoryMiniMap.x+5+float(p.x-minx)/(maxx-minx)*(miniW-10),yy=factoryMiniMap.y+5+float(p.y-miny)/(maxy-miny)*(miniH-10);DrawRectangle(int(xx),int(yy),2,2,pigment(machineSpec(m.kind).color));}
+ int minx=-4,maxx=4,miny=-4,maxy=4;if(!factory.machines.empty()){auto p=factory.machines.begin()->first;minx=p.x-2;maxx=p.x+2;miny=p.y-2;maxy=p.y+2;}for(auto& [p,m]:factory.machines){minx=std::min(minx,p.x-2);maxx=std::max(maxx,p.x+2);miny=std::min(miny,p.y-2);maxy=std::max(maxy,p.y+2);}for(auto& [p,m]:factory.machines){float xx=factoryMiniMap.x+5+float(p.x-minx)/(maxx-minx)*(miniW-10),yy=factoryMiniMap.y+5+float(p.y-miny)/(maxy-miny)*(miniH-10);DrawRectangle(int(xx),int(yy),2,2,theme::machinePaint(m.kind));}
  float px=factoryMiniMap.x+5+(factoryCamera.x-minx)/(maxx-minx)*(miniW-10),py=factoryMiniMap.y+5+(factoryCamera.y-miny)/(maxy-miny)*(miniH-10);DrawCircleLines(int(px),int(py),4,orange);hit(factoryMiniMap,[this,minx,maxx,miny,maxy]{auto m=pointer();factoryCamera={minx+(m.x-factoryMiniMap.x)/factoryMiniMap.width*(maxx-minx),miny+(m.y-factoryMiniMap.y)/factoryMiniMap.height*(maxy-miny)};},true,"Click to jump to another production district");
  Position readout=over?factoryHovered:Position{int(std::floor(factoryCamera.x)),int(std::floor(factoryCamera.y))};if(!CheckCollisionRecs(annotation,{factoryView.x+8,factoryView.y+8,180,18}))text(std::string(over?"TILE ":"VIEW ")+positionName(readout)+"   "+roundTo(factoryZoom*100,0)+"%",factoryView.x+12,factoryView.y+12,10,muted,true);
  if(floorFlow){bool hasWalls=std::any_of(factory.machines.begin(),factory.machines.end(),[](const auto& item){return item.second.kind==MachineKind::Wall;});bool hasFarm=!floorTelemetry.farmReadings.empty();bool hasPower=!factory.energyLinks.empty();bool hasWater=std::any_of(factory.machines.begin(),factory.machines.end(),[](const auto& p){return isWaterMachine(p.second.kind);});bool hasChem=std::any_of(factory.machines.begin(),factory.machines.end(),[](const auto& p){return isReagentMachine(p.second.kind);});float height=37+(hasChem?14:0)+(hasWater?14:0)+(hasWalls?14:0)+(hasFarm?14:0)+(hasPower?14:0),x=factoryView.x+10,y=factoryView.y+factoryView.height-height+5,w=factoryView.width-20;DrawRectangleRec({x-2,y-5,w+4,height},Fade(white,.93f));text("LIVE FOOD / colour = ingredient mixture",x+5,y,10,ink,true);text(fit("AIR bubbles · GEL mesh · ICE crystals · FAT droplets · HOT/COLD rim / FOOD PORTS: cyan in · dark main · orange side",w-10,8.5f),x+5,y+15,8.5f,muted);float row=y+29;if(hasPower){drawInfrastructureRoute({{x+5,row+4},{x+36,row+4}},EnergyMedium::AC,42);drawInfrastructureFitting({x+20,row+4},{1,0},EnergyMedium::AC,42);text(fit("ELECTRICITY / GOLD cable · square plugs · AC bright gold / DC amber",w-53,8.5f),x+47,row,8.5f,Color{155,104,5,255});row+=14;}if(hasWater){drawInfrastructureRoute({{x+5,row+4},{x+36,row+4}},EnergyMedium::CleanWater,42);drawInfrastructureFitting({x+20,row+4},{1,0},EnergyMedium::CleanWater,42);text(fit("WATER / BLUE pipe · round flanges · separate raw, clean and return streams",w-53,8.5f),x+47,row,8.5f,Color{23,106,181,255});row+=14;}if(hasChem){drawGlassWall({{x+5,row+4},{x+36,row+4}},5,false,false,true);text(fit("CHEMICALS / VIOLET glass · twin collars · colour inside = actual material",w-53,8.5f),x+47,row,8.5f,Color{132,47,188,255});row+=14;}if(hasFarm){text(fit("FARM / seeds → crops → harvest → wash → grade → chill → factory / stock · soil dots wash away · blue rim = chilled",w-10,8.5f),x+5,row,8.5f,Color{34,116,94,255});row+=14;}if(hasWalls)text(fit(factoryArea.empty()?"WALLS / close a loop to mark FACTORY AREA · untinted floor is outside":"FACTORY AREA / tinted floor · untinted floor is outside",w-10,8.5f,true),x+5,row,8.5f,Color{34,116,94,255},true);}

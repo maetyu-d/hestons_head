@@ -1,10 +1,11 @@
+#include "Theme.h"
 #include "Interface.h"
 #include "rlgl.h"
 #include <algorithm>
 #include <sstream>
 namespace aftertaste {
 namespace {
-const Color paper={237,243,241,255},ink={23,48,57,255},line={199,215,216,255},white={255,255,255,255};
+const Color paper={246,249,255,255},ink={22,41,75,255},line={183,205,236,255},white={255,255,255,255};
 Color blend(Color a,Color b,double f){return {static_cast<unsigned char>(std::round(a.r*(1-f)+b.r*f)),static_cast<unsigned char>(std::round(a.g*(1-f)+b.g*f)),static_cast<unsigned char>(std::round(a.b*(1-f)+b.b*f)),255};}
 void border(Rectangle r,Color c,float thickness=1){DrawRectangleLinesEx(r,thickness,c);}
 std::string firstExisting(const std::vector<std::string>& paths){for(auto& path:paths)if(std::filesystem::exists(path))return path;return {};}
@@ -48,9 +49,9 @@ float Interface::paragraph(const std::string& s,float x,float y,float maxWidth,f
 }
 void Interface::hit(Rectangle r,std::function<void()> action,bool enabled,const std::string& tip){if(clipping){if(!CheckCollisionRecs(r,clipRect))return;r=GetCollisionRec(r,clipRect);}hits.push_back({r,std::move(action),enabled,tip,{}});}
 void Interface::button(Rectangle r,const std::string& s,std::function<void()> action,bool active,bool enabled,const std::string& tip,Color fill,float size){
- bool over=CheckCollisionPointRec(pointer(),r);Color bg=fill.a?fill:(active?ink:white);bool dark=(.2126*bg.r+.7152*bg.g+.0722*bg.b)/255<.52;Color fg=dark?white:ink;
+ bool over=CheckCollisionPointRec(pointer(),r);Color bg=fill.a?fill:(active?theme::Blue:white);bool dark=(.2126*bg.r+.7152*bg.g+.0722*bg.b)/255<.52;Color fg=dark?white:ink;
  if(!enabled){bg=blend(bg,paper,.58);fg=blend(fg,paper,.45);}else if(over)bg=blend(bg,active?white:ink,.06);
- DrawRectangleRounded(r,.13f,6,bg);border(r,active?ink:line);auto label=fit(s,r.width-12,size,true);text(label,r.x+(r.width-width(label,size,true))*.5f,r.y+(r.height-size)*.5f,size,fg,true);
+ DrawRectangleRounded(r,.13f,6,bg);border(r,active?theme::Blue:line);auto label=fit(s,r.width-12,size,true);text(label,r.x+(r.width-width(label,size,true))*.5f,r.y+(r.height-size)*.5f,size,fg,true);
  size_t before=hits.size();hit(r,std::move(action),enabled,tip);if(hits.size()>before)hits.back().label=s;
 }
 } // namespace aftertaste
