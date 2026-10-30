@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(Aftertaste VERSION 3.21.0 LANGUAGES C CXX)
+project(Aftertaste VERSION 3.22.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -23,7 +23,7 @@ if(AFTERTASTE_BUILD_APP)
     add_executable(Aftertaste MACOSX_BUNDLE src/Main.cpp src/Interface.cpp src/FactoryInterface.cpp src/WorkspacePanels.cpp src/FloorRendering.cpp src/MachineArt.cpp src/PowerArt.cpp src/PowerInterface.cpp src/GlassArt.cpp)
     set_target_properties(Aftertaste PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME "Aftertaste"
       MACOSX_BUNDLE_GUI_IDENTIFIER "studio.aftertaste.reactor"
-      MACOSX_BUNDLE_BUNDLE_VERSION "3.21.0" MACOSX_BUNDLE_SHORT_VERSION_STRING "3.21.0"
+      MACOSX_BUNDLE_BUNDLE_VERSION "3.22.0" MACOSX_BUNDLE_SHORT_VERSION_STRING "3.22.0"
       MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in")
   else()
     add_executable(Aftertaste src/Main.cpp src/Interface.cpp src/FactoryInterface.cpp src/WorkspacePanels.cpp src/FloorRendering.cpp src/MachineArt.cpp src/PowerArt.cpp src/PowerInterface.cpp src/GlassArt.cpp)
@@ -42,6 +42,9 @@ if(AFTERTASTE_BUILD_APP)
 endif()
 include(CTest)
 if(BUILD_TESTING)
+  add_executable(power_rack_tests tests/PowerRackTests.cpp)
+  target_link_libraries(power_rack_tests PRIVATE aftertaste_core)
+  add_test(NAME contact_power_rack COMMAND power_rack_tests)
   add_executable(compact_power_tests tests/CompactPowerTests.cpp)
   target_link_libraries(compact_power_tests PRIVATE aftertaste_core)
   add_test(NAME compact_power_campus COMMAND compact_power_tests)

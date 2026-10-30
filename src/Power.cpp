@@ -13,7 +13,7 @@ E storageMedium(K k){return k==K::BatteryRack?E::DC:k==K::Flywheel?E::Shaft:k==K
 }
 bool isEnergyConduit(K k){return (k>=K::PowerCable&&k<=K::CoolingPipe)||k==K::VacuumHose||k==K::InstrumentLead;}
 bool isEnergyMachine(K k){return k>=K::SolarPanel&&k<K::Count&&!isEnergyConduit(k);}
-bool isContactService(E e){return e==E::AC||e==E::DC||e==E::Cooling||e==E::Vacuum||e==E::Instrument;}
+bool isContactService(E e){return e==E::AC||e==E::DC||e==E::Water||e==E::Cooling||e==E::Vacuum||e==E::Instrument;}
 bool powerContactSupports(K a,K b,E e){return isEnergyMachine(a)&&isEnergyMachine(b)&&isContactService(e)&&((a!=K::SolarPanel&&b!=K::SolarPanel)||e==E::DC);}
 bool acceptsEnergyFuel(K k){return k==K::Macerator||k==K::BiomassBoiler||k==K::AnaerobicDigester;}
 E conduitMedium(K k){return k==K::VacuumHose?E::Vacuum:k==K::InstrumentLead?E::Instrument:E(int(k)-int(K::PowerCable));}K energyConduit(E e){return e==E::Vacuum?K::VacuumHose:e==E::Instrument?K::InstrumentLead:K(int(K::PowerCable)+int(e));}
@@ -45,7 +45,8 @@ std::vector<EnergyPort> energyPorts(const Machine& m){
  case K::Switchboard:case K::PowerRelay:add(E::AC,2,false);add(E::AC,0,false);add(E::AC,3,false);add(E::AC,1,false);break;
  case K::GridInlet:add(E::AC,0,true);break;
  case K::CoolingPlant:add(E::AC,2,false);add(E::Heat,3,false);add(E::Cooling,0,true);break;
- case K::BatteryRack:case K::Flywheel:case K::SteamAccumulator:case K::GasHolder:case K::HeatTank:{E e=storageMedium(m.kind);add(e,2,true);add(e,0,true);break;}
+ case K::HeatTank:add(E::Heat,2,true);add(E::Heat,0,true);add(E::Heat,3,true);break;
+ case K::BatteryRack:case K::Flywheel:case K::SteamAccumulator:case K::GasHolder:{E e=storageMedium(m.kind);add(e,2,true);add(e,0,true);break;}
  default:break;
  }return p;
 }
@@ -68,7 +69,7 @@ std::vector<MachineSpec> energyMachineSpecs(){return {
  {K::SteamAccumulator,"Steam accumulator","SA","Dock directly between boiler and turbine on matching steam ports. Stores a finite reserve with a separate discharge rate and insulation losses.","#b58c6b",90,0,0,0},
  {K::SteamTurbine,"Steam turbine","TU","Turns live steam into shaft power and equal-mass exhaust. Needs a clear exhaust route.","#8b9ba7",140,0,0,0},
  {K::PowerCondenser,"Return condenser","RC","Condenses turbine exhaust into reusable boiler water and recoverable low-grade heat.","#70acb7",85,0,0,0},
- {K::FeedPump,"Boiler feed pump","FP","Uses AC power to introduce makeup water. Stops filling once the connected return loop has sufficient water.","#5f9ab2",42,0,0,0},
+ {K::FeedPump,"Boiler feed pump","FP","Introduces measured makeup water into the adjoining rack manifold. Touching chassis share return water; pipes bridge gaps. Stops filling when the connected loop is full.","#5f9ab2",42,0,0,0},
  {K::HeatExchanger,"Heat recovery exchanger","HX","Makes recovered heat available to adjacent factory heaters. Its own output has conversion losses.","#c57f56",65,0,0,0},
  {K::Macerator,"Residue macerator","MC","Processes actual food batches for a boiler or digester. Connect conveyors to its food inlet and outlet.","#879369",55,2,0,0},
  {K::AnaerobicDigester,"Anaerobic digester","AD","Converts organic compounds from a real incoming batch into raw gas. Heat affects conversion; retained digestate leaves the side port.","#879a5c",125,18,0,0},
@@ -81,7 +82,7 @@ std::vector<MachineSpec> energyMachineSpecs(){return {
  {K::Switchboard,"Switchboard","SB","Joins rated AC branches. Open its breaker to isolate the circuit; overload heat can trip it.","#ad9569",65,0,0,0},
  {K::PowerRelay,"Reserve relay","RL","Starts connected automatic engines below its low battery threshold and stops them above its high threshold.","#b5975c",45,0,0,0},
  {K::GridInlet,"Metered grid inlet","GI","Optional imported AC with a per-tick limit. Draws only from the delivered electricity reserve; economy charges actual imports.","#a7a38b",40,0,0,0},
- {K::HeatTank,"Insulated heat tank","HTK","Stores recovered heat with standing losses, separating generation from later heating demand.","#b58669",75,0,0,0},
+ {K::HeatTank,"Insulated heat tank","HTK","Stores recovered heat with standing losses. Side ports dock into recovery equipment; the top service tap supplies a short factory heat header.","#b58669",75,0,0,0},
  {K::CoolingPlant,"Recovery cooling plant","CP","Uses AC electricity and optional recovered heat to supply a connected cooling circuit.","#6aa7bc",115,0,0,0},
  {K::CuriosityPile,"Sealed curiosity pile","NU","A tabletop nuclear experiment in a shielded bell jar. A finite fictional oddium cartridge releases heat; a docked recorder and quench bath keep it stable. Scram stops excitation, with residual heat left to cool.","#8caa64",180,0,0,0},
  {K::StarChamber,"Jam-jar star chamber","STAR","A fictional pulsed nuclear bench. Consumes AC excitation and sealed cartridge charge. Vacuum, resonance tuning and cooling determine heat yield; poor tuning can cost more electricity than the calorimeter recovers.","#ac80b5",210,0,0,0},

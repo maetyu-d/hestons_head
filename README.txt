@@ -1,24 +1,31 @@
-AFTERTASTE / MOLECULAR WORKS 3.21.0
+AFTERTASTE / MOLECULAR WORKS 3.22.0
 Invent dishes on the actual factory floor / native C++17
 
-Compact power campus
----------------------
-Power now frames a single 12 by 10 campus beside the factory. The solar bank and
-nuclear experiment bench sit together at the top, above close-set wind, steam
-and gas trains. The boiler feed pump sits beside the boiler; the condenser sits
-under the turbine; the exchanger, heat tank and cooler form an adjoining bench.
-The old scattered grid inlet sits with the reserve relay and export switchboard.
-All 44 existing devices are retained in roughly a quarter of their former area.
-Local stages dock by contact. Short square pipes close the water, exhaust and
-heat loops; an outside cable follows the campus edge into the factory corridor.
-Power shows every service, so support connections remain visible in that view.
+Contact power rack / one factory feed
+-------------------------------------
+The same 44 power and laboratory devices now fit a 10 by 7 rack. Electrical
+collection happens through touching chassis, so the rack needs no internal
+power cables or perimeter collector. One straight two-cell AC lead reaches the
+existing factory trunk. The output switchboard is the single electrical exit;
+opening it disconnects their AC supply. No parallel feed bypasses it.
 
-Save format 15 moves only the unchanged stock layout. It retains complete live
-machine state, food, fuel, charge, readings, input buffers and clock. The cooling
-plant's ports turn to receive heat directly from its neighbouring tank. Custom
-construction, altered routes or directions block automatic relocation. Custom
-plans and downstream factory/farm cables are retained. No new energy or fuel is
-granted. Lab and Solar still provide close views within the same workspace.
+Return water uses the actual chassis manifold. The feed pump introduces finite
+supplied water, the boiler consumes it, and the condenser returns working fluid.
+Steam, exhaust, gas and shafts dock directly at their matching process ports.
+Heat remains a separate measured process: short recovery pipes feed the
+exchanger and tank. A top tap on the tank and the cooler's contact manifold
+export heat and cooling alongside the same straight factory service corridor.
+Water, heat, cooling, AC and DC remain separate media with real source budgets.
+
+Power frames the complete rack above the floor legend. Lab and Solar focus
+individual experiments in the same workspace. Visible couplers show actual
+contact transfers; isolated or missing equipment opens those connections.
+
+Save format 16 moves only the unchanged stock campus and its standard routes.
+It retains all live material, fuel, charge, wear, readings, records, input buffers
+and clock. Only the condenser's sockets turn to dock into the turbine exhaust.
+Custom construction, cable ratings, route masks, isolation and directions block
+automatic rearrangement. No fuel or stored energy is granted during relocation.
 
 
 Solar banks and docked generator trains

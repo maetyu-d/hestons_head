@@ -61,20 +61,24 @@ bool compactLegacyNuclearLabIn(FactoryState& state){
 bool installNuclearLabIn(FactoryState& state){
  using K=MachineKind;using E=EnergyMedium;
  if(std::any_of(state.machines.begin(),state.machines.end(),[](const auto& p){return isNuclearEquipment(p.second.kind);}))return false;
- auto board=state.machines.find({powerCampusOrigin.x+4,powerCampusOrigin.y+2});bool campus=board!=state.machines.end()&&board->second.kind==K::Switchboard;
+ auto board=state.machines.find({powerRackOrigin.x+9,powerRackOrigin.y+3});bool rack=board!=state.machines.end()&&board->second.kind==K::Switchboard;
+ if(!rack)board=state.machines.find({powerCampusOrigin.x+4,powerCampusOrigin.y+2});bool campus=rack||(board!=state.machines.end()&&board->second.kind==K::Switchboard);
  if(!campus){board=state.machines.find({-14,1});if(board==state.machines.end()||board->second.kind!=K::Switchboard)return false;}
- auto plan=Factory::nuclearLabBlueprint();auto origin=campus?powerCampusLabOrigin:nuclearLabOrigin;
+ auto plan=Factory::nuclearLabBlueprint();auto origin=rack?powerRackLabOrigin:campus?powerCampusLabOrigin:nuclearLabOrigin;
  // Only the campus plan's own perimeter/service lines may already occupy the
  // bench. A player cable, changed rating or apparatus still blocks installation.
- std::map<Position,std::vector<PowerLink>> planned;
- if(campus)for(const auto& n:Factory::powerDistrictBlueprint().links)planned[{powerCampusOrigin.x+n.at.x,powerCampusOrigin.y+n.at.y}].push_back(n.link);
- for(int y=0;y<plan.height;y++)for(int x=0;x<plan.width;x++){Position p{origin.x+x,origin.y+y};if(state.machines.count(p))return false;auto i=state.energyLinks.find(p);if(i!=state.energyLinks.end()){
+ std::map<Position,std::vector<PowerLink>> planned;std::map<Position,Machine> neighbours;
+ if(campus){auto generation=Factory::powerDistrictBlueprint();auto generationOrigin=rack?powerRackOrigin:powerCampusOrigin;for(const auto& n:generation.links)planned[{generationOrigin.x+n.at.x,generationOrigin.y+n.at.y}].push_back(n.link);for(const auto& n:generation.parts)neighbours[{generationOrigin.x+n.at.x,generationOrigin.y+n.at.y}]=n.machine;}
+ for(int y=0;y<plan.height;y++)for(int x=0;x<plan.width;x++){Position p{origin.x+x,origin.y+y};if(auto existing=state.machines.find(p);existing!=state.machines.end()){
+  auto adjacent=neighbours.find(p);bool apparatus=std::any_of(plan.parts.begin(),plan.parts.end(),[&](const auto& n){return Position{origin.x+n.at.x,origin.y+n.at.y}==p;});
+  if(!rack||apparatus||adjacent==neighbours.end()||existing->second.kind!=adjacent->second.kind||existing->second.dir!=adjacent->second.dir)return false;
+ }auto i=state.energyLinks.find(p);if(i!=state.energyLinks.end()){
   auto expected=planned.find(p);if(expected==planned.end()||i->second.size()!=expected->second.size())return false;
   for(const auto& l:i->second){auto q=std::find_if(expected->second.begin(),expected->second.end(),[&](const auto& e){return e.medium==l.medium;});if(q==expected->second.end()||q->ports!=l.ports||q->rating!=l.rating||q->enabled!=l.enabled||l.tripped)return false;}
  }}
  for(int x=-28;!campus&&x<-27;x++)if(state.machines.count({x,1})||state.energyLinks.count({x,1}))return false;
  for(const auto& part:plan.parts)state.machines.emplace(Position{origin.x+part.at.x,origin.y+part.at.y},part.machine);
- for(const auto& node:plan.links){auto& v=state.energyLinks[{origin.x+node.at.x,origin.y+node.at.y}];auto i=std::find_if(v.begin(),v.end(),[&](const auto& l){return l.medium==node.link.medium;});if(i==v.end())v.push_back(node.link);else if(!campus)i->ports|=node.link.ports;}
+ if(!rack)for(const auto& node:plan.links){auto& v=state.energyLinks[{origin.x+node.at.x,origin.y+node.at.y}];auto i=std::find_if(v.begin(),v.end(),[&](const auto& l){return l.medium==node.link.medium;});if(i==v.end())v.push_back(node.link);else if(!campus)i->ports|=node.link.ports;}
  connectLabExport(state,campus);
  auto& pile=state.machines.at({origin.x+1,origin.y+1});pile.power.lab.fuel=60;pile.power.lab.armed=true;
  auto& star=state.machines.at({origin.x+1,origin.y+2});star.power.lab.fuel=30;star.power.lab.armed=true;
