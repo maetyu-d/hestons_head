@@ -34,10 +34,21 @@ void drawInfrastructureFitting(Vector2 at,Vector2 tangent,EnergyMedium e,float t
  else{float s=std::max(2.f,w*.75f);DrawRectangleRec({at.x-s*.5f,at.y-s*.5f,s,s},color);}
 }
 void drawInfrastructureJunction(Vector2 at,EnergyMedium e,float tile){float w=infrastructureWidth(e,tile);if(lineFamily(e)==LineFamily::Water){DrawCircleV(at,w*.72f,pipeEdge);DrawCircleV(at,std::max(1.f,w*.47f),blend(energyColor(e),WHITE,.15f));}else{float s=w+1.8f;DrawRectangleRec({at.x-s*.5f,at.y-s*.5f,s,s},lineFamily(e)==LineFamily::Electricity?cableJacket:serviceEdge);DrawRectangleRec({at.x-w*.3f,at.y-w*.3f,w*.6f,w*.6f},energyColor(e));}}
+void drawInfrastructureDirection(const std::vector<Vector2>& path,EnergyMedium e,float tile,bool reverse,bool active,bool blocked){
+ if(path.size()<2||tile<22)return;
+ auto p=point(path,.5f),a=point(path,.45f),b=point(path,.55f);float dx=b.x-a.x,dy=b.y-a.y,span=std::hypot(dx,dy);if(span<.01f)return;dx/=span;dy/=span;if(reverse){dx=-dx;dy=-dy;}
+ float size=std::clamp(tile*.085f,2.8f,6.f);Color c=blocked?theme::Red:active?theme::Ink:blend(energyColor(e),theme::Ink,.3f);
+ if(blocked){DrawCircleV(p,size+1,WHITE);DrawLineEx({p.x-size,p.y-size},{p.x+size,p.y+size},1.5f,c);DrawLineEx({p.x-size,p.y+size},{p.x+size,p.y-size},1.5f,c);return;}
+ Vector2 tip{p.x+dx*size,p.y+dy*size},left{p.x-dx*size-dy*size*.72f,p.y-dy*size+dx*size*.72f},right{p.x-dx*size+dy*size*.72f,p.y-dy*size-dx*size*.72f};
+ DrawLineEx(left,tip,3.5f,WHITE);DrawLineEx(right,tip,3.5f,WHITE);DrawLineEx(left,tip,1.6f,c);DrawLineEx(right,tip,1.6f,c);
+ if(active)DrawLineEx({p.x-dx*size,p.y-dy*size},tip,1.6f,c);
+}
 void drawInfrastructureFlow(const std::vector<Vector2>& path,EnergyMedium e,float tile,float phase,bool reverse){
- if(path.size()<2)return;if(reverse)phase=1-phase;auto p=point(path,phase);float w=infrastructureWidth(e,tile);
- if(lineFamily(e)==LineFamily::Electricity){float size=std::max(1.3f,w*.7f);DrawRectangleRec({p.x-size*.5f,p.y-size*.5f,size,size},Color{255,241,160,255});}
- else if(lineFamily(e)==LineFamily::Water){float radius=std::max(.9f,w*.26f);DrawCircleV(p,radius,energyColor(e));DrawCircleV({p.x-radius*.25f,p.y-radius*.25f},std::max(.45f,radius*.42f),WHITE);}
+ if(path.size()<2)return;float total=0;for(size_t n=1;n<path.size();n++)total+=length(path[n-1],path[n]);int count=std::clamp(int(total/24),1,8);float w=infrastructureWidth(e,tile);
+ for(int n=0;n<count;n++){float t=std::fmod(phase+float(n)/count,1.f);if(reverse)t=1-t;auto p=point(path,t);
+ if(lineFamily(e)==LineFamily::Electricity){float size=std::max(2.3f,w*1.15f);DrawRectangleRec({p.x-size*.5f-1,p.y-size*.5f-1,size+2,size+2},theme::Ink);DrawRectangleRec({p.x-size*.5f,p.y-size*.5f,size,size},theme::Yellow);}
+ else if(lineFamily(e)==LineFamily::Water){float radius=std::max(1.6f,w*.35f);DrawCircleV(p,radius+.8f,WHITE);DrawCircleV(p,radius,energyColor(e));DrawCircleV({p.x-radius*.25f,p.y-radius*.25f},std::max(.45f,radius*.42f),WHITE);}
  else DrawCircleV(p,std::max(1.f,w*.28f),Color{255,244,207,255});
+ }
 }
 }

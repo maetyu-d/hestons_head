@@ -1,3 +1,13 @@
+AFTERTASTE 3.26.0 - CLEAR WATER AND POWER FLOWS
+Route overlay renders above machinery. Port arrows, measured transfer arrows,
+repeated droplets/pulses, isolated/tripped markers and measured bench-contact
+readouts. Water treatment and heat/steam routes visible in the default overlay.
+Rendering only; saved resources, routing and simulation unchanged.
+Native compile/link passed without compiler warnings. Native Water and Power
+close-ups checked: single direction markers, visible pipes/cables and transfer
+packets, readable small water rates, white backgrounds retained. Save JSON
+exactly matches the pre-install snapshot; paused at tick 14461. No model changes.
+
 AFTERTASTE 3.25.1 - WHITE BACKGROUND AND CLARITY
 White app, floor and preview backgrounds; quiet neutral grid and borders.
 Factory zoning is a green perimeter, leaving floor white. Neutral meter tracks

@@ -1,5 +1,15 @@
-AFTERTASTE / MOLECULAR WORKS 3.25.1
+AFTERTASTE / MOLECULAR WORKS 3.26.0
 Invent dishes on the actual factory floor / native C++17
+
+Reading production flows
+------------------------
+Water and electricity flow markers draw above equipment, including edge-to-edge
+bench connections. Port chevrons show input/output direction even when paused.
+Larger repeated water droplets and square electrical pulses show actual transfer;
+solid arrows show its measured direction. Isolated/tripped routes have a red X.
+Water treatment streams and heat/steam conversion routes are visible by default.
+Cable/pipe inspectors distinguish flowing, idle and isolated states; bench
+contacts list measured incoming/outgoing transfers by medium and rate.
 
 Bright primary palette
 ------------------------
