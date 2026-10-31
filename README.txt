@@ -1,5 +1,53 @@
-AFTERTASTE / MOLECULAR WORKS 3.27.0
+AFTERTASTE / MOLECULAR WORKS 3.28.0
 Invent dishes on the actual factory floor / native C++17
+
+Physical feedback control
+------------------------
+Seven new build items add process sensors, threshold controllers, AND/OR/NOT
+permissive gates, signal timers, actuators, dotted signal leads and a three-way
+water valve. Everything is built on the same factory floor and adjusted in the
+right inspector; there is no separate circuit editor.
+
+A sensor measures its front target and publishes the reading at its rear.
+Controllers take a rear input and emit at the front. Gates also have a left input.
+Actuators take a rear signal and point toward a target, with an explicit range of
+1 to 6 tiles. Dotted navy leads carry information, separate from gold electricity,
+blue water and violet chemical glass. Their junctions respect drawn port masks;
+branches may feed many inputs, but two sources joined together produce a fault.
+
+Threshold tolerance is a full band centred on the setpoint. A decision is retained
+inside the band, preventing chatter. Logic chains advance one stage per simulation
+tick; timers pause with the factory and keep their phase across saves. Missing,
+disabled or conflicting sources fail off. An empty sample is displayed as waiting.
+
+Actuators can:
+- Permit a machine to run, including a glass stopcock or fertigation mixer.
+- Hold a real batch in a doser/burette and add measured ingredient pulses until
+  the threshold switches off, then release that batch. Pulse interval, ingredient
+  and grams are physical settings. Doses from 0.001 g are supported; every pulse
+  consumes actual stock, chemical/farm supply and operating resources.
+- Select heating and cooling targets for a thermal vessel. The actual food changes
+  temperature and uses connected heat/cooling or electricity. Manual settings stay
+  saved and manual disabling always wins.
+- Divert a water valve's complete parcel and contaminants from its main clean line
+  into its side greywater return. Signal failure defaults toward treatment. The
+  factory water inlet keeps its independent quality hold.
+- Disarm reactor excitation unless a permissive is valid. Cooling remains active;
+  a restored permit never automatically re-arms the reactor.
+
+Controls in the top toolbar installs five example loops into a compatible integrated
+campus without resetting it. It requires an empty research burette and flask and
+clear apparatus positions; otherwise build the parts directly. One construction
+Undo restores the entire retrofit before the next simulation tick. The examples
+include metered pH, a thermal jacket, moisture-gated timed irrigation, water-quality
+retreatment, and an AND interlock combining cooling and reactor temperature.
+
+New demos include the loops and four additional reusable plans. Demo staging arms
+one sealed specimen once, after its permissive has warmed up; the live interlock
+never performs automatic re-arming. Process plans retain settings, ranges, directions
+and signal routes while clearing transient readings, timers, food and stored energy.
+Save format 19 reads earlier worlds with safe default control settings and an empty
+new signal channel. Existing worlds are never automatically rewired.
 
 Integrated demo campus
 ------------------------

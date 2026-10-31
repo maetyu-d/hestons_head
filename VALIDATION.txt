@@ -1,3 +1,42 @@
+AFTERTASTE 3.28.0 - PHYSICAL FEEDBACK CONTROL
+31 October 2026 / native C++17 / macOS Apple Silicon
+
+Process sensors, threshold controllers with hysteresis, AND/OR/NOT gates, gated
+or free-running timers, actuators and a physical clean/greywater diverter. A new
+typed navy dotted signal layer is separate from power and materials. Controllers
+read a deterministic snapshot; chained logic advances one stage per tick.
+
+Actuation changes actual dosing, run permits, thermal environments, water routing
+and reactor excitation. Manual enable/settings are preserved, failed signals hold
+or divert, and reactor excitation stays disarmed until manually re-armed. Pulse
+doses charge exact resource quantities. Empty vessels can admit a batch before
+measurement; a missing measurement holds existing food rather than releasing it.
+
+Save format 19 preserves controller decisions, readings, timer phase and pulse
+interval state. v18 worlds gain only safe default control fields/empty signal store;
+process-plan stamping preserves topology/settings and clears transient states.
+The demo has five wired loops. Controls can retrofit the compatible campus as a
+single undoable operation, preserving current food, stocks, water and clock.
+
+Final 3.28.0 validation:
+- Native compile/link: PASS, no compiler warnings.
+- Physical feedback: 92 checks PASS, including hysteresis, missing/conflicting
+  sources, timer phase, logic snapshots, exact metered-resource consumption,
+  empty-vessel admission, failed-measurement holds, thermal switching, complete
+  water parcels, reactor scram/manual re-arm, plans and persistence.
+- AddressSanitizer + UndefinedBehaviorSanitizer: all 92 feedback checks PASS;
+  integrated demo PASS with no sanitizer diagnostics.
+- Integrated demo: PASS. 383 placed items, 344 route cells, 48 staging ticks
+  plus 360 test ticks. At tick 408: 20 dishes served, 1169.67 L extracted,
+  196.935 L delivered, three real fraction collections and thermal recovery.
+- Existing glass: 60 checks PASS; physical power: 41; waterworks: 142;
+  reagentworks: 306. Exterior serving zones and exact demo round trip PASS.
+- A frozen copy of the current v18 world at tick 7904 (365 placed items) loads
+  with every prior field unchanged, round-trips through v19 exactly, accepts
+  the example retrofit, and restores exactly with one Undo. Live save untouched.
+- Native visual inspection/relaunch is pending: the Mac is locked. The compiled
+  app and its automatic checks are complete; on-screen layout is unverified.
+
 AFTERTASTE 3.27.0 - REBUILT INTEGRATED DEMO CAMPUS
 31 October 2026 / native C++17 / macOS Apple Silicon
 

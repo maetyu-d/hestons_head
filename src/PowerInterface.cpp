@@ -1,4 +1,5 @@
 #include "Theme.h"
+#include "Control.h"
 #include "ReagentWorks.h"
 #include "Interface.h"
 #include "Power.h"
@@ -25,7 +26,7 @@ void Interface::drawEnergyRoutes(bool overlay){
  if(energyLinkSelected){focused.insert(selectedEnergyMedium);equipmentFocus=true;}
  else if(auto m=factory.at(factorySelected);m&&isEnergyMachine(m->kind)){for(auto port:energyPorts(*m))focused.insert(port.medium);equipmentFocus=true;}
  if(!equipmentFocus)focused={E::AC,E::DC,E::Shaft,E::Steam,E::Heat,E::RawWater,E::FilteredWater,E::PurifiedWater,E::CleanWater,E::Greywater,E::Concentrate};
- auto visible=[&](E medium){return energyRoutesAll||focused.count(medium);};
+ auto visible=[&](E medium){return medium!=E::Control&&(energyRoutesAll||focused.count(medium));};
  auto terminal=[&](Position p,E medium,int side)->std::optional<Vector2>{
   auto m=factory.at(p);if(!m||!isEnergyMachine(m->kind))return {};
   Machine unrotated;unrotated.kind=m->kind;auto ports=energyPorts(unrotated);
@@ -40,7 +41,7 @@ void Interface::drawEnergyRoutes(bool overlay){
  for(const auto& [p,links]:factory.energyLinks)for(const auto& link:links)if(visible(link.medium)){auto r=factoryTile(p);rails.emplace(Key{p,link.medium},Rail{{r.x+tile*.5f,r.y+tile*.5f},&link,0});}
  // Align whole straight runs with their real terminal, rather than inserting a
  // tiny dogleg at each machine. Horizontal and vertical rails solve independently.
- const std::array<float,EnergyCount> lane={0,-.08f,0,.06f,-.06f,.10f,-.10f,.08f,-.08f,.12f,.14f,-.14f,.18f,.20f,.22f,.24f,-.18f,-.22f};
+ const std::array<float,EnergyCount> lane={0,-.08f,0,.06f,-.06f,.10f,-.10f,.08f,-.08f,.12f,.14f,-.14f,.18f,.20f,.22f,.24f,-.18f,-.22f,0};
  for(int axis=0;axis<2;axis++){std::set<Key> seen;int mask=axis?10:5;
   for(const auto& [key,rail]:rails){if(!(rail.link->ports&mask)||seen.count(key))continue;
    std::vector<Key> group{key};seen.insert(key);bool shared=false;std::optional<float> anchor;
@@ -116,7 +117,7 @@ void Interface::drawEnergyRoutes(bool overlay){
 void Interface::drawPowerInspector(Rectangle r){
  const Color ink{22,41,75,255},muted{77,99,131,255},line{196,205,217,255},orange{240,43,43,255},green{13,162,65,255};DrawRectangleRec(r,WHITE);DrawRectangleLinesEx(r,1,line);float x=r.x+12,y=r.y+12,w=r.width-24;auto m=factory.at(factorySelected);auto link=energyLinkSelected?factory.energyLink(factorySelected,selectedEnergyMedium):nullptr;
  text(link?upper(energyName(link->medium)):m?upper(machineSpec(m->kind).name):"POWER ENGINEERING",x,y,11,ink,true);y+=23;
- text("TILE "+positionName(factorySelected),x,y,9.5f,muted);y+=20;
+ text("TILE "+positionName(factorySelected),x,y,9.5f,muted);y+=20;if(m&&m->control.driven&&m->control.appliedAction==ControlAction::ReactorInterlock){y+=paragraph(m->control.permit?"INTERLOCK PERMIT / manual arm required":"INTERLOCK OPEN / excitation disarmed",x,y,w,9.5f,m->control.permit?green:orange,true)+8;}
  Rectangle art{x,y,w,160};DrawRectangleRounded(art,.08f,5,Color{255,255,255,255});MachineAppearance look;look.kind=link?energyConduit(link->medium):m?m->kind:MachineKind::PowerCable;look.direction=m?m->dir:0;look.active=factory.running&&(link?link->enabled&&!link->tripped&&link->flow>.001:m&&m->enabled&&!m->power.tripped&&(m->power.flow>.001||m->power.generated>.001||m->power.rpm>20||m->power.lab.flux>.01));look.closed=link?link->tripped:m&&!m->enabled;look.time=factory.tick+(factory.running?factoryAccumulator/.55:0);if(m){look.labFlux=m->power.lab.flux;look.labVacuum=m->power.lab.vacuum;look.labStability=m->power.lab.stability;look.labCooling=m->power.lab.cooling;look.labArmed=m->power.lab.armed;double stored=0;for(auto v:m->power.store)stored+=v;look.progress=stored/std::max(1.,m->power.capacity);if(isReagentMachine(m->kind)){look.active=factory.running&&m->enabled&&m->power.delivered>.001;look.reagentFill=m->item?std::min(1.,analyse(m->item->food).mass/100):m->reagentProcess.minerals/500;look.reagentPurity=m->item?reagentPurity(*m->item):1;look.reagentKey=m->item?m->item->reagent.key:m->ingredient;}if(isWaterMachine(m->kind)){auto q=waterSample(*m);if(q.volume>1e-8){look.waterDirt=q.solids/q.volume;look.waterSalt=q.salt/q.volume;look.waterBio=q.bio/q.volume;}}}else if(link)look.progress=link->flow/link->rating;
  drawMachineHousing({art.x+5,art.y+5,145,145},look);drawMachineMechanism({art.x+5,art.y+5,145,145},look);float tx=x+154,tw=w-160;if(tw>30){text(link?(lineFamily(link->medium)==LineFamily::Water?"WATER PIPE":lineFamily(link->medium)==LineFamily::Electricity?"ELECTRICITY CABLE":"SERVICE CONDUIT"):m&&isNuclearEquipment(m->kind)?"LAB APPARATUS":m&&isWaterMachine(m->kind)?"LIVE WATER":m&&isReagentMachine(m->kind)?"LIVE REAGENT":"LIVE POWER",tx,y+13,8.5f,muted,true);text(fit(link?(link->tripped?"TRIPPED":link->enabled?(link->flow>.001?"FLOWING":"IDLE / NO TRANSFER"):"ISOLATED"):m?m->status:"",tw,10,true),tx,y+34,10,link&&link->tripped?orange:green,true);text(m&&isReagentMachine(m->kind)?(m->item?roundTo(analyse(m->item->food).mass,1)+" g / LOT":"NO LOT"):link?roundTo(link->flow,1)+(lineFamily(link->medium)==LineFamily::Water?" L/TICK":" / TICK"):m?roundTo(m->kind==MachineKind::CuriosityPile||m->kind==MachineKind::StarChamber?m->power.flow:isWaterMachine(m->kind)?m->power.flow:m->power.generated,1)+(isWaterMachine(m->kind)?" L/TICK":m->kind==MachineKind::CuriosityPile||m->kind==MachineKind::StarChamber?" HEAT":" GEN"):"",tx,y+62,11,ink,true);text(m&&isReagentMachine(m->kind)?(m->item?roundTo(reagentPurity(*m->item)*100,1)+"% PURE":"AC "+roundTo(m->power.delivered,2)):link?"HEAT "+roundTo(link->heat*100,0)+"%":m?(m->kind==MachineKind::WaterOutlet?roundTo(m->waterProcess.delivered,1)+" L SUPPLIED":roundTo(m->power.delivered,1)+(isWaterMachine(m->kind)?" L OUT":" OUT")):"",tx,y+83,9,muted);}
  y+=170;

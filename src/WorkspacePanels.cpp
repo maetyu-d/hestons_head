@@ -1,4 +1,5 @@
 #include "Theme.h"
+#include "Control.h"
 #include "Interface.h"
 #include "MachineArt.h"
 #include "Power.h"
@@ -47,6 +48,7 @@ void Interface::drawLibrary(Rectangle r){
  float third=(w-8)/3;button({x,y,third,29},"Feeder",[this]{armSource(MachineKind::Feeder);},false,true,"Place a real single-dose feeder for this ingredient",{},9.5f);button({x+third+4,y,third,29},"Doser",[this]{armSource(MachineKind::Doser);},false,true,"Place a precision doser to add this ingredient to an incoming batch",{},9.5f);button({x+2*(third+4),y,third,29},"Seeder",[this]{armSource(MachineKind::SeedHopper);},false,ingredient(sourceIngredient).category=="Produce","Place a crop seed hopper for the selected produce variety",{},9.5f);
 }
 void Interface::drawInspector(Rectangle r){
+ if((energyLinkSelected&&selectedEnergyMedium==EnergyMedium::Control)||(factory.at(factorySelected)&&isControlDevice(factory.at(factorySelected)->kind))){drawControlInspector(r);return;}
  if((energyLinkSelected&&factory.energyLink(factorySelected,selectedEnergyMedium))||(factory.at(factorySelected)&&isEnergyMachine(factory.at(factorySelected)->kind))){drawPowerInspector(r);return;}
  panel(r);float x=r.x+12,w=r.width-24,y=r.y+12;auto machine=factory.at(factorySelected);auto b=inspectedBatch();auto ref=factory.dish(referenceRecipe);const CulinaryBatch* sample=ref?&ref->sample:b?&b->food:nullptr;FoodMetrics m=sample?analyse(*sample):FoodMetrics{};bool archived=b&&machine&&machine->lastOutput&&b==&*machine->lastOutput;bool wallFocus=machine&&machine->kind==MachineKind::Wall;bool utilityFocus=machine&&isUtilityEquipment(machine->kind);bool sensorFocus=machine&&isSensor(machine->kind);int enclosedTiles=wallFocus?int(factory.enclosedFactoryTiles().size()):0;bool latticeFocus=machine&&machine->kind==MachineKind::LatticeReactor&&!ref&&batchSlot==0&&machine->item.has_value();if(latticeFocus)factory.prepareLattice(factorySelected);
  if(wallFocus){text("FACTORY WALL",x,y,10.5f,muted,true);y+=22;text(enclosedTiles?"FACTORY AREA / "+std::to_string(enclosedTiles)+" TILES":"NO ENCLOSED FACTORY AREA",x,y,12,ink,true);y+=19;text(enclosedTiles?"Tinted floor is inside the wall loop.":"Close a continuous loop to mark factory floor.",x,y,10,muted);y+=36;}
@@ -89,6 +91,7 @@ void Interface::drawInspector(Rectangle r){
  if(ref){y+=paragraph(ref->name,x,y,w,16,ink,true)+7;y+=paragraph("Read-only result of an earlier dish. Build line places its physical machines. Legacy references without a layout cannot produce food.",x,y,w,11,muted)+15;}
  else if(machine){
   y+=paragraph(machineSpec(machine->kind).name,x,y,w,16,ink,true)+6;
+  if(machine->control.driven){std::string message=!machine->control.valid?"FEEDBACK HOLD / "+machine->control.fault:machine->control.appliedAction==ControlAction::HeatCool?"THERMAL CONTROL / "+roundTo(machine->control.value,1)+" C":machine->control.appliedAction==ControlAction::DosePulse?"FEEDBACK DOSING / "+std::string(machine->control.output?"metering":"target reached"):"FEEDBACK / "+std::string(machine->control.output?"ON":"OFF");y+=paragraph(message,x,y,w,9.5f,machine->control.valid?green:accent,true)+10;}
   if(wallFocus){y+=paragraph("A closed loop marks enclosed floor as factory area. Place any number of serve points outside it; a dock or conveyor can fill a straight wall opening and still complete the boundary.",x,y,w,11,muted)+10;button({x,y,w-5,27},"Reclaim wall",[this]{factory.demolish(factorySelected);},false,true,"Remove this segment; open loops no longer designate a factory area",{},10.5f);y+=36;}
   else{
   if(machine->kind==MachineKind::Feeder){button({x,y,w-5,30},"Dispense once",[this]{factory.dispense(factorySelected);},false,!machine->item,"Load one measured batch in this real feeder; Run or Step moves it through the line",accent,11.5f);y+=37;button({x,y,w-5,27},machine->automatic?"Auto feed: on":"Single-batch mode",[this]{factory.configure(factorySelected,"automatic");},machine->automatic,true,"Toggle continuous supply; single mode waits for Dispense once",{},11);y+=35;}

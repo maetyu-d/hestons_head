@@ -48,7 +48,7 @@ private:
  Vector2 pointer()const;float viewWidth()const;float viewHeight()const;
  void beginClip(Rectangle r);void endClip();void drawTooltip();void editText(std::string& value,size_t limit);
  void stepFactory();void updateFactory();void advanceFactory();void drawFactory();void drawFactoryMap();void drawFactoryOverlay();
- void drawLibrary(Rectangle r);void drawInspector(Rectangle r);void drawPowerInspector(Rectangle r);void drawEnergyRoutes(bool overlay=false);
+ void drawLibrary(Rectangle r);void drawInspector(Rectangle r);void drawPowerInspector(Rectangle r);void drawEnergyRoutes(bool overlay=false);void drawControlRoutes(bool overlay=false);void drawControlInspector(Rectangle r);
  Position factoryPosition(Vector2 point)const;Rectangle factoryTile(Position p)const;
  void paintFactory(Position p);void fitFactory();void homeFactory();void selectMachine(Position p);
  const Batch* inspectedBatch()const;bool commitDose();void setSource();void armSource(MachineKind kind);

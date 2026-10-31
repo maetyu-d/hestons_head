@@ -14,7 +14,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Position,x,y)
 Position nextPosition(Position p,int direction);
 std::string positionName(Position p);
 
-enum class MachineKind {Belt,Feeder,Mixer,Gel,Aerator,Chiller,Heater,Dryer,Cloche,Cycler,Dispatch,Bin,Doser,Homogenizer,Spherifier,SousVide,Fermenter,EnzymeReactor,Centrifuge,Filter,VacuumChamber,FreezeDryer,Extruder,Plater,Smoker,Mill,Binder,RecipeKitchen,GlassTube,GlassCoil,GlassValve,GlassBeaker,GlassFlask,GlassCondenser,Burette,GlassJunction,FractionatingStill,FractionatingColumn,FractionReceiver,LatticeReactor,Wall,UtilityLine,UtilityStation,PHProbe,TemperatureLogger,DropletViewer,AromaSensor,FieldBed,RaisedBed,HydroponicBed,SeedHopper,Fertigation,GrowLight,PollinatorHive,SoilProbe,Harvester,Washer,Grader,ColdStore,ProduceIntake,CompostBin,PowerCable,DCCable,DriveShaft,SteamPipe,ExhaustPipe,RawGasPipe,GasPipe,ReturnPipe,HeatPipe,CoolingPipe,SolarPanel,WindRotor,Gearbox,Alternator,BiomassBoiler,SteamAccumulator,SteamTurbine,PowerCondenser,FeedPump,HeatExchanger,Macerator,AnaerobicDigester,GasScrubber,GasHolder,GasEngine,BatteryRack,Flywheel,Inverter,Switchboard,PowerRelay,GridInlet,HeatTank,CoolingPlant,CuriosityPile,StarChamber,LabVacuumPump,QuenchBath,Calorimeter,ExperimentConsole,VacuumHose,InstrumentLead,RawWaterPipe,FilteredWaterPipe,PurifiedWaterPipe,CleanWaterPipe,GreywaterPipe,ConcentratePipe,BoreholePump,RainCollector,RawWaterTank,SandFilter,MembraneFilter,UVSterilizer,CleanWaterTank,WaterOutlet,GreywaterDrain,ReedReclaimer,ConcentrateTank,WaterAnalyzer,MineralHopper,ReagentExtractor,CultureVat,SaltReactor,ReagentSeparator,ReagentEvaporator,ReagentPolisher,ReagentTank,ReagentAnalyzer,ReagentIntake,ReagentRecovery,Count};
+enum class MachineKind {Belt,Feeder,Mixer,Gel,Aerator,Chiller,Heater,Dryer,Cloche,Cycler,Dispatch,Bin,Doser,Homogenizer,Spherifier,SousVide,Fermenter,EnzymeReactor,Centrifuge,Filter,VacuumChamber,FreezeDryer,Extruder,Plater,Smoker,Mill,Binder,RecipeKitchen,GlassTube,GlassCoil,GlassValve,GlassBeaker,GlassFlask,GlassCondenser,Burette,GlassJunction,FractionatingStill,FractionatingColumn,FractionReceiver,LatticeReactor,Wall,UtilityLine,UtilityStation,PHProbe,TemperatureLogger,DropletViewer,AromaSensor,FieldBed,RaisedBed,HydroponicBed,SeedHopper,Fertigation,GrowLight,PollinatorHive,SoilProbe,Harvester,Washer,Grader,ColdStore,ProduceIntake,CompostBin,PowerCable,DCCable,DriveShaft,SteamPipe,ExhaustPipe,RawGasPipe,GasPipe,ReturnPipe,HeatPipe,CoolingPipe,SolarPanel,WindRotor,Gearbox,Alternator,BiomassBoiler,SteamAccumulator,SteamTurbine,PowerCondenser,FeedPump,HeatExchanger,Macerator,AnaerobicDigester,GasScrubber,GasHolder,GasEngine,BatteryRack,Flywheel,Inverter,Switchboard,PowerRelay,GridInlet,HeatTank,CoolingPlant,CuriosityPile,StarChamber,LabVacuumPump,QuenchBath,Calorimeter,ExperimentConsole,VacuumHose,InstrumentLead,RawWaterPipe,FilteredWaterPipe,PurifiedWaterPipe,CleanWaterPipe,GreywaterPipe,ConcentratePipe,BoreholePump,RainCollector,RawWaterTank,SandFilter,MembraneFilter,UVSterilizer,CleanWaterTank,WaterOutlet,GreywaterDrain,ReedReclaimer,ConcentrateTank,WaterAnalyzer,MineralHopper,ReagentExtractor,CultureVat,SaltReactor,ReagentSeparator,ReagentEvaporator,ReagentPolisher,ReagentTank,ReagentAnalyzer,ReagentIntake,ReagentRecovery,ProcessSensor,ThresholdController,LogicGate,ControlTimer,ControlActuator,SignalLead,WaterDiverter,Count};
 enum class UtilityKind {Power,Heat,Cooling,Water,Vacuum,Count};
 enum class ServeStyle {OrderPass,ResearchTasting,ChilledPickup};
 std::string serveStyleName(ServeStyle style);
@@ -44,7 +44,7 @@ bool isMixingMachine(MachineKind kind);
 bool isDosingMachine(MachineKind kind);
 bool isTastingDock(MachineKind kind);
 bool isProcessingMachine(MachineKind kind);
-enum class EnergyMedium {AC,DC,Shaft,Steam,Exhaust,RawGas,Gas,Water,Heat,Cooling,Vacuum,Instrument,RawWater,FilteredWater,PurifiedWater,CleanWater,Greywater,Concentrate,Count};
+enum class EnergyMedium {AC,DC,Shaft,Steam,Exhaust,RawGas,Gas,Water,Heat,Cooling,Vacuum,Instrument,RawWater,FilteredWater,PurifiedWater,CleanWater,Greywater,Concentrate,Control,Count};
 constexpr size_t EnergyCount=size_t(EnergyMedium::Count);
 struct LabTrial {int tick=0;double heat=0,draw=0,dc=0,stability=0;std::string settings;};
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(LabTrial,tick,heat,draw,dc,stability,settings)
@@ -99,8 +99,18 @@ struct WaterWorksState {
  WaterParcel greywater,disposed,supply;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(WaterWorksState,aquifer,aquiferCapacity,extracted,rainCollected,recharged,delivered,recovered,killed,greywater,disposed,supply)
+enum class ControlMetric {PH,Temperature,Moisture,Droplet,Aroma,WaterQuality,Solids,Salinity,Biology,ReactorCooling,ReactorTemperature,Count};
+enum class ControlAction {RunPermit,DosePulse,HeatCool,DivertWater,ReactorInterlock,Count};
+struct ControlState {
+ ControlMetric metric=ControlMetric::PH;ControlAction action=ControlAction::RunPermit,appliedAction=ControlAction::RunPermit;
+ double setpoint=7,deadband=.2,step=.1,hot=90,cold=4,value=0;
+ int range=1,period=8,onTicks=4,phase=0,gate=0,sampled=-1,lastPulse=-1000000,appliedPeriod=1;
+ bool below=false,freeRun=false,monitor=false,valid=false,output=false,driven=false,permit=false;
+ std::string fault;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(ControlState,metric,action,appliedAction,setpoint,deadband,step,hot,cold,value,range,period,onTicks,phase,gate,sampled,lastPulse,appliedPeriod,below,freeRun,monitor,valid,output,driven,permit,fault)
 struct Machine {
- PowerState power;WaterState waterProcess;ReagentState reagentProcess;
+ ControlState control;PowerState power;WaterState waterProcess;ReagentState reagentProcess;
  MachineKind kind=MachineKind::Belt;int dir=0,duration=4,progress=0,cooldown=0;
  std::string ingredient="brine",status="Idle";
  double temperature=90,wear=0,dose=1,shear=.8;
@@ -168,7 +178,7 @@ public:
  std::string notice="Sandbox ready. Press Space to run the sample factory, or build anywhere.";
  std::filesystem::path storageFile;
  std::deque<FactoryState> history;
- void reset();void resetDemo();
+ void reset();void resetDemo();bool addFeedbackControls();
  void snapshot();void undo();
  bool build(Position p,MachineKind kind,int dir=0);
  bool demolish(Position p);bool rotate(Position p);bool configure(Position p,const std::string& setting);
@@ -208,7 +218,7 @@ public:
  std::set<Position> enclosedFactoryTiles()const;
  Quality assess(const Batch& b,int requestIndex=-1)const;
  double marketValue(const Batch& b)const;
- bool captureBlueprint(Position a,Position b,const std::string& name="");
+ bool captureBlueprint(Position a,Position b,const std::string& name="",bool withUndo=true);
  static Blueprint rotatedBlueprint(Blueprint b);
  bool stamp(const Blueprint& b,Position origin);
  bool canStamp(const Blueprint& b,Position origin)const;

@@ -1,4 +1,5 @@
 #include "Factory.h"
+#include "Control.h"
 #include "Power.h"
 #include "WaterWorks.h"
 #include <iostream>
@@ -11,7 +12,8 @@ int main(){try{
  auto area=f.enclosedFactoryTiles();if(area.empty())throw std::runtime_error("Cooking hall is not enclosed");
  for(const auto& [p,m]:f.machines)if(isTastingDock(m.kind)&&area.count(p))throw std::runtime_error("Serving dock enclosed at "+positionName(p));
  if(!f.at({6,-11})||!f.at({-1,-2})||!f.at({5,-11})->forward)throw std::runtime_error("Direct harvest route missing");
- auto original=json(static_cast<const FactoryState&>(f));f.storageFile="/private/tmp/aftertaste-integrated-demo-test.json";if(!f.save())throw std::runtime_error("Demo save failed");Factory restored;restored.storageFile=f.storageFile;if(!restored.load()||json(static_cast<const FactoryState&>(restored))!=original)throw std::runtime_error("Demo save round trip changed world");
+ for(Position p:std::vector<Position>{{-2,-6},{0,-6},{-15,-10},{-11,-12},{-9,-12},{-13,-6}}){auto m=f.at(p);if(!m||!m->control.valid)throw std::runtime_error("Demo signal fault at "+positionName(p)+" / "+(m?m->control.fault:"missing"));}
+ auto original=json(static_cast<const FactoryState&>(f));f.storageFile="/private/tmp/aftertaste-integrated-demo-test.json";if(!f.save())throw std::runtime_error("Demo save failed");Factory restored;restored.storageFile=f.storageFile;bool loaded=restored.load();if(!loaded||json(static_cast<const FactoryState&>(restored))!=original){std::cerr<<"Loaded="<<loaded<<"\n";if(loaded)std::cerr<<json::diff(original,json(static_cast<const FactoryState&>(restored))).dump(2)<<"\n";else for(const auto& [p,m]:f.machines)if(!validControl(m.control)||!validPowerState(m.power)||!validWaterState(m))std::cerr<<"Invalid apparatus "<<positionName(p)<<" control "<<validControl(m.control)<<" power "<<validPowerState(m.power)<<" water "<<validWaterState(m)<<"\n";throw std::runtime_error("Demo save round trip changed world");}
  double generated=0,delivered=0,heat=0;for(int i=0;i<360;i++){f.step();generated+=f.grid.generated;delivered+=f.grid.delivered;heat+=f.grid.recoveredHeat;}
  std::cout<<"After "<<f.tick<<" shipped "<<f.shipped<<" water produced "<<f.waterworks.extracted<<" delivered "<<f.waterworks.delivered<<" farm "<<f.farmProduce<<" reagent "<<f.chemicals<<" gen "<<generated<<" delivered "<<delivered<<" recovered "<<heat<<"\n";
  for(const auto& [p,m]:f.machines)if(isWaterMachine(m.kind)||m.kind==MachineKind::CoolingPlant||m.kind==MachineKind::Dispatch||m.kind==MachineKind::ReagentIntake||m.kind==MachineKind::AnaerobicDigester||m.kind==MachineKind::CuriosityPile||m.kind==MachineKind::LatticeReactor)std::cout<<positionName(p)<<" "<<machineSpec(m.kind).name<<" "<<m.status<<"\n";

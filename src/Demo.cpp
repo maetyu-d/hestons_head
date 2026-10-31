@@ -1,4 +1,5 @@
 #include "Factory.h"
+#include "Control.h"
 #include "Power.h"
 #include "WaterWorks.h"
 #include "ReagentWorks.h"
@@ -105,8 +106,9 @@ void Factory::resetDemo(){
  captureBlueprint({0,12},{17,18},"08 / Three-cut aroma collection");
  // Load only manual research feeds; continuous lanes obtain their inputs normally.
  dispense({-1,8});dispense({1,6});dispense({1,12});
+ installDemoFeedback(*this);
  // Stage the showcase by running its real processes, without granting outputs.
- for(int n=0;n<48;n++)step();
+ for(int n=0;n<48;n++){step();if(n==7){auto interlock=at({-11,-7});auto pile=at({-11,-9});if(interlock&&interlock->control.valid&&interlock->control.output&&pile&&!pile->power.tripped)pile->power.lab.armed=true;}}
  running=false;history.clear();dirty=false;
  notice="New integrated campus (48 real ticks, paused): northern crops feed the cooking hall; western power, water and reagent labs share one service spine. Extraction leftovers fuel biogas; kitchen side fractions rejoin at the plater. Serve east, collect fractions south, and experiment in the lattice line.";
 }

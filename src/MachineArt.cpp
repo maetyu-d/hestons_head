@@ -1,4 +1,5 @@
 #include "Theme.h"
+#include "ControlArt.h"
 #include "MachineArt.h"
 #include "PowerArt.h"
 #include "GlassArt.h"
@@ -117,6 +118,7 @@ void drawCropProduce(Rectangle bounds,const std::string& crop,double dirt,double
  int dots=std::clamp(int(std::ceil(dirt*25)),0,16);for(int n=0;n<dots;n++)d.oval(.23f+float((n*37)%53)/100,.38f+float((n*23)%37)/100,.024f,.024f,Color{110,78,46,255},false);
 }
 void drawMachineHousing(Rectangle bounds,const MachineAppearance& look){
+ if(drawControlHousing(bounds,look))return;
  if(isEnergyMachine(look.kind)||isEnergyConduit(look.kind)){drawEnergyHousing(bounds,look);return;}
  Art d(bounds,look);auto k=look.kind;
  if(isGlassConduit(k)){drawGlassWall(glassPath(bounds,k,(look.direction+2)%4,look.direction),std::min(bounds.width,bounds.height)*(k==MachineKind::GlassCoil?.115f:.18f),look.ghost,look.monochrome);return;}
@@ -247,6 +249,7 @@ void drawMachineHousing(Rectangle bounds,const MachineAppearance& look){
  if(k!=MachineKind::Belt&&k!=MachineKind::Wall&&!isUtilityEquipment(k)&&!isSensor(k)&&!isFarmInfrastructure(k)){if(k==MachineKind::LatticeReactor){d.box(.07f,.465f,.12f,.07f,d.steel,false);d.box(.81f,.465f,.12f,.07f,d.steel,false);d.line(.08f,.50f,.18f,.50f,d.glass,.65f);d.line(.82f,.50f,.92f,.50f,d.glass,.65f);}else{if(k!=MachineKind::Bin)d.port(.94f,.50f);if(k!=MachineKind::Feeder)d.port(.06f,.50f);}if(k==MachineKind::Mixer||k==MachineKind::Plater)d.port(.50f,.055f);if(hasSideOutlet(k))d.port(.50f,.94f,true);}
 }
 void drawMachineMechanism(Rectangle bounds,const MachineAppearance& look){
+ if(look.kind>=MachineKind::ProcessSensor&&look.kind!=MachineKind::SignalLead){drawControlMechanism(bounds,look);return;}
  if(isEnergyMachine(look.kind)||isEnergyConduit(look.kind)){drawEnergyMechanism(bounds,look);return;}
  Art d(bounds,look);float t=look.active?float(look.time):0;bool fine=std::min(bounds.width,bounds.height)>=29;
  switch(look.kind){
