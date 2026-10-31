@@ -177,6 +177,11 @@ void Interface::drawFactoryMap(){
  };
  for(auto& [p,m]:factory.machines)node(p,m,false);
  drawEnergyRoutes(true);
+ if(std::any_of(factory.blueprints.begin(),factory.blueprints.end(),[](const Blueprint& b){return b.name=="08 / Three-cut aroma collection";})&&tile>=13){
+  auto label=[&](Position p,const std::string& title){auto r=factoryTile(p);if(CheckCollisionRecs(r,factoryView))text(title,r.x,r.y+tile*.16f,std::clamp(tile*.24f,7.5f,11.f),muted,true);};
+  label({-14,-13},"POWER / CONTACT LAB");label({-2,-13},"FARM / HARVEST TO KITCHEN");label({-16,-6},"WATER / TREAT + REUSE");label({-16,2},"REAGENTS / EXTRACT + ASSAY");label({-16,14},"RECOVERY / BIOGAS + SOIL");label({-2,5},"GLASS + LATTICE RESEARCH");label({0,11},"AROMA / THREE-CUT DISTILLATION");
+ }
+
  if(floorFlow&&tile>=13)for(const auto& flow:floorTelemetry.farmFlows){float t=float(std::clamp((now-flow.start)/flow.duration,0.,1.));if(t>=1)continue;auto a=centre(factoryTile(flow.from)),b=centre(factoryTile(flow.to));Color color=farmColor(flow.kind);
   if(flow.kind==FarmFlowKind::Storage){DrawCircleLines(int(a.x),int(a.y),tile*(.18f+.36f*t),Fade(color,1-t));if(tile>=32){std::string caption="+"+roundTo(flow.amount,0)+"g STORED";float fs=std::clamp(tile*.16f,8.f,11.f);text(caption,a.x-width(caption,fs,true)*.5f,a.y-tile*.50f-t*8,fs,color,true);}continue;}
   Vector2 point={a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t};

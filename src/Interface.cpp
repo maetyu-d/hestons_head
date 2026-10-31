@@ -18,7 +18,7 @@ Interface::Interface(const std::filesystem::path& storage){
  regular=regularPath.empty()?GetFontDefault():LoadFontEx(regularPath.c_str(),72,codepoints.data(),int(codepoints.size()));ownsRegular=!regularPath.empty();bold=boldPath.empty()?GetFontDefault():LoadFontEx(boldPath.c_str(),72,codepoints.data(),int(codepoints.size()));ownsBold=!boldPath.empty();mono=monoPath.empty()?GetFontDefault():LoadFontEx(monoPath.c_str(),72,codepoints.data(),int(codepoints.size()));ownsMono=!monoPath.empty();
  for(auto f:{regular,bold,mono})SetTextureFilter(f.texture,TEXTURE_FILTER_BILINEAR);
  lastMouse=pointer();
- factory.storageFile=storage.parent_path()/"factory.json";if(!factory.load())factory.notice="Factory save could not be read. The sample sandbox is available; the saved file is unchanged.";
+ factory.storageFile=storage.parent_path()/"factory.json";if(!std::filesystem::exists(factory.storageFile))factory.resetDemo();if(!factory.load())factory.notice="Factory save could not be read. The sample sandbox is available; the saved file is unchanged.";
 }
 Interface::~Interface(){if(factory.dirty)factory.save();if(ownsRegular)UnloadFont(regular);if(ownsBold)UnloadFont(bold);if(ownsMono)UnloadFont(mono);}
 Vector2 Interface::pointer()const{auto p=GetMousePosition();return {p.x/uiScale,p.y/uiScale};}

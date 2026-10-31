@@ -168,7 +168,7 @@ public:
  std::string notice="Sandbox ready. Press Space to run the sample factory, or build anywhere.";
  std::filesystem::path storageFile;
  std::deque<FactoryState> history;
- void reset();
+ void reset();void resetDemo();
  void snapshot();void undo();
  bool build(Position p,MachineKind kind,int dir=0);
  bool demolish(Position p);bool rotate(Position p);bool configure(Position p,const std::string& setting);

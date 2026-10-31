@@ -1,3 +1,35 @@
+AFTERTASTE 3.27.0 - REBUILT INTEGRATED DEMO CAMPUS
+31 October 2026 / native C++17 / macOS Apple Silicon
+
+Fresh campus builder: balanced northern farm, compact northwest contact power
+lab, western water/reagent/biogas services, central cooking hall, eastern service
+front and southern distillate collection. One AC spine, cooling header, recovered
+heat, direct tomato harvest delivery and useful side-stream recombination.
+Demo preserves the old world and checkpoint before rebuilding. Existing saves
+are never migrated into this arrangement. Save format remains 18.
+Passive zero-power processes advance at full rate on an active power grid; they
+do not require an allocated voltage or consume invented electrical energy.
+
+Final 3.27.0 validation:
+- Native compile/link: PASS, no compiler warnings.
+- Integrated demo: PASS. 365 placed items (295 machines plus 70 walls), 48 real
+  staging ticks, followed by 360 test ticks. Direct harvested tomato provenance
+  reaches a served dish; all three distillate vessels receive real fractions.
+  Water extraction 1171.39 L; factory delivery 196.15 L; 19 dishes served by tick
+  408. Named reagent inventory and measured thermal recovery are nonzero.
+- Closed factory zoning and every exterior serving threshold: PASS.
+- Exact demo save/load round trip, including staged food and lab state: PASS.
+- Passive coil regression on an active electrical grid: PASS, one original batch
+  traverses the residence coil and serves with zero invented energy consumption.
+- Existing glass laboratory: 60 checks PASS. Updated its stale condenser history
+  assertion from Freeze to the existing Condense operation.
+- Existing physical power: 41 checks PASS; waterworks: 142 checks PASS;
+  reagentworks: 299 checks PASS.
+- Native Demo and Load controls: previous tick-14461 factory was backed up,
+  rebuilt, then restored exactly with Load. Earlier checkpoints also preserved.
+- Native overview and lattice preview checked. Fit leaves the legend clear of
+  the campus; resource bays, north farm, cooking hall and serving fronts align.
+
 AFTERTASTE 3.26.0 - CLEAR WATER AND POWER FLOWS
 Route overlay renders above machinery. Port arrows, measured transfer arrows,
 repeated droplets/pulses, isolated/tripped markers and measured bench-contact

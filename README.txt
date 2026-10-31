@@ -1,5 +1,34 @@
-AFTERTASTE / MOLECULAR WORKS 3.26.0
+AFTERTASTE / MOLECULAR WORKS 3.27.0
 Invent dishes on the actual factory floor / native C++17
+
+Integrated demo campus
+------------------------
+Demo rebuilds the showcase as one balanced campus on the same white floor:
+- North: six complete growing/harvest/wash/grade/chill lanes. Tomato produce
+  travels directly down the receiving aisle into the cooking hall. Other crops
+  become named farm stock for actual measured feeds.
+- Northwest: compact solar, wind and sealed experimental nuclear benches share
+  chassis contacts; a single AC spine distributes their measured output.
+- West: water collection/treatment/reuse and four reagent lines supply the farm
+  and kitchen. Pectin, nutrients, xanthan and yolk-derived lecithin are made from
+  real feeds. Organic extraction residue goes to a biogas train, whose digestate
+  feeds a nursery composter. Cooling and recovered engine heat reach the kitchen.
+- Centre: tomato emulsion separates a side fraction, cultures/aerates it, then
+  recombines it at a plater. A carrot/cream line and a glass/lattice research lane
+  share the services. Measurement instruments sit beside the actual processes.
+- East: tasting docks outside the cooking hall. South: three separate distillate
+  receivers occupy valid wall openings. White aisles and spare floor allow edits.
+
+The demo is staged with 48 real simulation ticks and opens paused. Feedstocks,
+seeds, experimental cartridges and reserves are finite; filter backwashing and
+resource balancing remain part of play. Eight named process plans preserve the
+new districts and their settings/routes. Farm, Power, Water and Chem centre the
+same floor; Fit reserves space for the legend and includes the whole campus.
+
+Demo saves the previous factory to a timestamped factory-before-demo JSON and
+sets it as the Load checkpoint. Any earlier checkpoint also gets a timestamped
+backup. Existing saved worlds are never automatically rearranged. New installs
+and --fresh-factory use this campus; legacy fixtures/migrations remain supported.
 
 Reading production flows
 ------------------------

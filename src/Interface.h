@@ -53,6 +53,6 @@ private:
  void paintFactory(Position p);void fitFactory();void homeFactory();void selectMachine(Position p);
  const Batch* inspectedBatch()const;bool commitDose();void setSource();void armSource(MachineKind kind);
  void recordSelectedDish(uint64_t expectedBatch=0);void buildDishLine(uint64_t id);
- void saveFactoryCheckpoint();void loadFactoryCheckpoint();
+ void startDemo();void saveFactoryCheckpoint();void loadFactoryCheckpoint();
 };
 } // namespace aftertaste

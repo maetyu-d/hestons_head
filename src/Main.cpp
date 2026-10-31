@@ -39,7 +39,7 @@ int main(int argc,char** argv){
  SetExitKey(KEY_NULL);SetTargetFPS(60);int exitCode=0;
  try{
   auto storage=(check||flowCheck||machineCheck||glassCheck)&&!std::getenv("AFTERTASTE_DATA_DIR")?std::filesystem::temp_directory_path()/"aftertaste-one-view-test"/"notebook.json":storagePath();
-  aftertaste::Interface ui(storage);if(check||flowCheck||machineCheck||glassCheck||fresh)ui.factory.reset();for(int n=0;n<factoryTicks;n++)ui.factory.step();
+  aftertaste::Interface ui(storage);if(check||flowCheck||machineCheck||glassCheck)ui.factory.reset();if(fresh)ui.factory.resetDemo();for(int n=0;n<factoryTicks;n++)ui.factory.step();
   int frames=0;while(!WindowShouldClose()){
    ui.update();BeginDrawing();ui.draw();EndDrawing();frames++;
    if(check)ui.checkWorkspaceStep(frames);
